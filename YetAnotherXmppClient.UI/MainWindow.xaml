@@ -1,0 +1,9 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="YetAnotherXmppClient.UI">
+  <Grid RowDefinitions="Auto,Auto,*">
+    <Button Content="Login" Command="{Binding LoginCommand}"/>
+    <TextBlock Text="test" Grid.Row="1" />
+    <TextBox Text="{Binding LogText}" Grid.Row="2" IsReadOnly="True" />
+  </Grid>
+</Window>
