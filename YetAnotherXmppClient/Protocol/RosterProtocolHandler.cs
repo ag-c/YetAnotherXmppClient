@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
+using YetAnotherXmppClient.Extensions;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol
@@ -57,7 +58,7 @@ namespace YetAnotherXmppClient.Protocol
             return iq;
         }
     }
-    public class RosterProtocolHandler : IServerIqCallback
+    public class RosterProtocolHandler : IIqReceivedCallback
     {
         private readonly AsyncXmppStream xmppStream;
         private readonly Dictionary<string, string> runtimeParameters;
@@ -70,7 +71,7 @@ namespace YetAnotherXmppClient.Protocol
         {
             this.xmppStream = xmppStream;
             this.iqFactory = new DefaultClientIqFactory(() => runtimeParameters["jid"]);
-            this.xmppStream.RegisterServerIqCallback(XNamespaces.roster, this);
+            this.xmppStream.RegisterIqNamespaceCallback(XNamespaces.roster, this);
         }
         
         
@@ -125,7 +126,7 @@ namespace YetAnotherXmppClient.Protocol
 
             var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
 
-            if (iqResp.HasErrorType())
+            if (iqResp.IsErrorType())
             {
                 Log.Logger.Error($"Failed to add roster item: {iqResp}");
                 return false;
@@ -195,7 +196,7 @@ namespace YetAnotherXmppClient.Protocol
 
             var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
 
-            if (iqResp.HasErrorType())
+            if (iqResp.IsErrorType())
             {
                 Log.Logger.Error($"Failed to delete roster item: {iqResp}");
                 return false;
@@ -206,7 +207,7 @@ namespace YetAnotherXmppClient.Protocol
             return true;
         }
 
-        void IServerIqCallback.IqReceived(XElement iqElem)
+        void IIqReceivedCallback.IqReceived(XElement iqElem)
         {
             Log.Logger.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iqElem);
 

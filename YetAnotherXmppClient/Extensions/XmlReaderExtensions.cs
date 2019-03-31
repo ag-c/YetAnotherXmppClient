@@ -7,7 +7,7 @@ using Serilog;
 
 namespace YetAnotherXmppClient.Extensions
 {
-    internal static class XmlReaderExtensions
+    public static class XmlReaderExtensions
     {
         public static async Task<Dictionary<string, string>> GetAllAttributesAsync(this XmlReader xmlReader)
         {
@@ -40,7 +40,7 @@ namespace YetAnotherXmppClient.Extensions
 
             wasLastEmpty = xElem.IsEmpty;
 
-            Log.Logger.Verbose("Read xml element from stream: " + xElem);
+            Log.Logger.Verbose("Read element from stream: " + xElem);
 
             return xElem;
         }

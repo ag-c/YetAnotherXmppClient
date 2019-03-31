@@ -9,18 +9,21 @@ namespace YetAnotherXmppClient.UI
     {
         static void Main(string[] args)
         {
-            var vm = new MainViewModel();
+            //var vm = new MainViewModel();
 
             Log.Logger = new LoggerConfiguration()
-                .WriteTo.TextWriter(vm.stringWriter)
+                .MinimumLevel.Verbose()
+                .WriteTo.TextWriter(MainViewModel.stringWriter)
                 .CreateLogger();
 
-            BuildAvaloniaApp().Start<MainWindow>(() => vm);
+            BuildAvaloniaApp().Start<MainWindow>(() => new MainViewModel());
         }
 
         public static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
                 .UsePlatformDetect()
+                //.UseWin32()
+                //.UseAvaloniaModules()
                 .LogToDebug();
     }
 }

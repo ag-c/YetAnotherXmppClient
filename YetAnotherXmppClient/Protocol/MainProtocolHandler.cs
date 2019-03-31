@@ -45,7 +45,7 @@ namespace YetAnotherXmppClient
     //{
     //    public static FeatureOptionsDictionary Build(Dictionary<string, string> configuration);
     //}
-    public class ProtocolHandler : ProtocolHandlerBase
+    public class MainProtocolHandler : ProtocolHandlerBase
     {
         private static readonly string Version = "1.0";
         private static readonly IEnumerable<string> Mechanisms = new[] {"PLAIN"};
@@ -69,7 +69,7 @@ namespace YetAnotherXmppClient
         public ImProtocolHandler ImProtocolHandler { get; }
 
 
-        public ProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider) : base(serverStream)
+        public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider) : base(serverStream)
         {
             this.featureOptionsProvider = featureOptionsProvider;
             this.xmppServerStream = new AsyncXmppStream(serverStream);
@@ -113,7 +113,7 @@ namespace YetAnotherXmppClient
 
                         if (features.Any(f => f.Name == XNames.session_session))
                         {
-//                            var rosterItems = await this.RosterHandler.RequestRosterAsync();
+                            var rosterItems = await this.RosterHandler.RequestRosterAsync();
 
 //                            await RosterHandler.AddRosterItemAsync("agg1n@jabber.ccc.de", "agg1nccc", new[]{"Ichgruppe2"});
 
@@ -134,7 +134,7 @@ namespace YetAnotherXmppClient
 
 
 
-                            this.xmppServerStream.StartReadLoop();
+                            this.xmppServerStream.StartAsyncReadLoop();
 
                             //var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
                             //await imHandler.EstablishSessionAsync();
@@ -194,7 +194,7 @@ namespace YetAnotherXmppClient
             Log.Logger.Verbose("Restarting stream..");
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
             this.RecreateStreams(this.serverStream);
-            this.xmppServerStream.RecreateStreams(this.serverStream);
+            this.xmppServerStream.Reinitialize(this.serverStream);
 
             await this.WriteInitialStreamHeaderAsync(jid);
 
@@ -228,7 +228,7 @@ namespace YetAnotherXmppClient
 
                 this.serverStream = sslStream;
                 this.RecreateStreams(sslStream);
-                this.xmppServerStream.RecreateStreams(sslStream);
+                this.xmppServerStream.Reinitialize(sslStream);
             }
             else
             {
@@ -303,7 +303,7 @@ namespace YetAnotherXmppClient
 
             //var xElem = XElement.Parse(xmlFragment.RawXml);
 
-            Log.Logger.Verbose("Read element from stream: " + xElem);
+            //Log.Logger.Verbose("Read element from stream: " + xElem);
 
             return xElem;
         }

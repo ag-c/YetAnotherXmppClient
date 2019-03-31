@@ -1,59 +1,78 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using Serilog;
-using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
-using YetAnotherXmppClient.Protocol;
 using Presence = YetAnotherXmppClient.Core.Stanza.Presence;
 
 namespace YetAnotherXmppClient.Core
 {
+    public interface IIqReceivedCallback
+    {
+        void IqReceived(XElement xElem);
+    }
+
+    public interface IMessageReceivedCallback
+    {
+        void MessageReceived(XElement messageElem);
+    }
+
+    public interface IPresenceReceivedCallback
+    {
+        void PresenceReceived(XElement presenceXElem);
+    }
+
     public class AsyncXmppStream
     {
         //private readonly Stream serverStream;
         private XmlReader xmlReader;
         private TextWriter textWriter;
+        //TCS by ids of outgoing iq-stanzas that are expecting responses from the server
         private readonly ConcurrentDictionary<string, TaskCompletionSource<XElement>> iqCompletionSources = new ConcurrentDictionary<string, TaskCompletionSource<XElement>>();
-        private readonly ConcurrentDictionary<XNamespace, IServerIqCallback> serverIqCallbacks = new ConcurrentDictionary<XNamespace, IServerIqCallback>();
-        private IPresenceCallback presenceCallback;
-        private IMessageStanzaCallback messageCallback;
+        //iq-callbacks registered by xml-namespaces of iq child elements
+        private readonly ConcurrentDictionary<XNamespace, IIqReceivedCallback> serverIqCallbacks = new ConcurrentDictionary<XNamespace, IIqReceivedCallback>();
+        //callback for incoming presence-stanzas
+        private IPresenceReceivedCallback presenceCallback;
+        //callback for incoming message-stanzas
+        private IMessageReceivedCallback messageCallback;
 
 
         public AsyncXmppStream(Stream serverStream)
         {
             //this.serverStream = serverStream;
-            this.RecreateStreams(serverStream);
+            this.Reinitialize(serverStream);
         }
 
-        public void RecreateStreams(Stream serverStream)
+        public void Reinitialize(Stream serverStream)
         {
             this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true });
             this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
         }
 
-        public void RegisterServerIqCallback(XNamespace iqContentNamespace, IServerIqCallback callback)
+        public void RegisterIqNamespaceCallback(XNamespace iqContentNamespace, IIqReceivedCallback callback)
         {
             serverIqCallbacks.TryAdd(iqContentNamespace, callback);
         }
 
-        public async Task<XElement> WritePresenceAndReadReponseAsync(Presence presence)
+        public void RegisterPresenceCallback(IPresenceReceivedCallback callback)
         {
-            Log.Logger.Verbose($"WriteIqAndReadReponseAsync ({presence.Id})");
-
-            var tcs = new TaskCompletionSource<XElement>(TaskCreationOptions.RunContinuationsAsynchronously);
-
-            this.iqCompletionSources.TryAdd(presence.Id, tcs);
-
-            await this.textWriter.WriteAndFlushAsync(presence);
-
-            return await this.ReadUntilReponseReceivedAsync(presence.Id);
+            this.presenceCallback = callback;
         }
+
+        public void RegisterMessageCallback(IMessageReceivedCallback callback)
+        {
+            this.messageCallback = callback;
+        }
+
+        private readonly ConcurrentDictionary<XName, IMessageReceivedCallback> messageContentHandlers = new ConcurrentDictionary<XName, IMessageReceivedCallback>();
+        public void RegisterMessageContentCallback(XName elementName, IMessageReceivedCallback callback)
+        {
+            this.messageContentHandlers.TryAdd(elementName, callback);
+        }
+
 
         public async Task<XElement> WriteIqAndReadReponseAsync(Iq iq)
         {
@@ -65,109 +84,105 @@ namespace YetAnotherXmppClient.Core
 
             await this.textWriter.WriteAndFlushAsync(iq);
 
-            return await this.ReadUntilReponseReceivedAsync(iq.Id);
+            return await this.ReadUntilResponseAsync(iq.Id);
         }
 
-        private async Task<XElement> ReadUntilReponseReceivedAsync(string id)
+        private async Task<XElement> ReadUntilResponseAsync(string id)
         { 
             XElement xElem;
             do
             {
-                xElem = await this.ReadSingleElementInternalAsync();
-                if (xElem.IsIq() || xElem.Name == "presence")
-                    this.OnIqReceived(xElem);
-                else if (xElem.Name == "message")
-                    this.OnMessageReceived(xElem);
-                else
-                    this.OnOtherElementReceived(xElem);
-            } while (!(xElem.IsIq() || xElem.Name == "presence") || (xElem.IsIq() || xElem.Name == "presence") && xElem.Attribute("id").Value != id);
+                xElem = await this.xmlReader.ReadNextElementAsync();
+                this.ProcessInboundElement(xElem);
 
+            } while (!xElem.IsStanza() || xElem.IsStanza() && xElem.Attribute("id")?.Value != id);
 
             return xElem;
         }
 
+        private void ProcessInboundElement(XElement xElem)
+        {
+            switch (xElem.Name.LocalName)
+            {
+                case "iq":
+                    this.OnIqReceived(xElem);
+                    break;
+                case "presence":
+                    this.OnPresenceReceived(xElem);
+                    break;
+                case "message":
+                    this.OnMessageReceived(xElem);
+                    break;
+                default:
+                    this.OnNonStanzaElementReceived(xElem);
+                    break;
+            }
+        }
 
         private void OnIqReceived(XElement iqElement)
         {
-            if (iqElement.HasAttribute("id") && this.iqCompletionSources.TryRemove(iqElement.Attribute("id").Value, out var tcs))
+            var id = iqElement.Attribute("id")?.Value;
+
+            if (iqElement.HasAttribute("id") && this.iqCompletionSources.TryRemove(id, out var tcs))
             {
-                Log.Logger.Verbose($"Received iq/presence with awaiter ({iqElement.Attribute("id")?.Value})");
+                Log.Logger.Verbose($"Received iq with awaiter ({id})");
                 tcs.SetResult(iqElement);
             }
             else
             {
-                if (iqElement.Name == "presence")
+                if (iqElement.FirstNode is XElement iqChildElem &&
+                    this.serverIqCallbacks.TryGetValue(iqChildElem.Name.Namespace, out var callback))
                 {
-                    this.presenceCallback?.PresenceReceived(iqElement);
-                }
-                else if (iqElement.FirstNode is XElement iqContentElem &&
-                    this.serverIqCallbacks.TryGetValue(iqContentElem.Name.Namespace, out var callback))
-                {
+                    //UNDONE sind weitere kindelemente möglich?
                     callback.IqReceived(iqElement);
                 }
                 else
                 {
-                    Log.Logger.Verbose($"Received iq/presence WITHOUT awaiter or callback ({iqElement.Attribute("id")?.Value})");
+                    Log.Logger.Verbose($"Received iq WITHOUT awaiter or callback ({id})");
 
                     if (iqElement.Name == "iq")
                     {
-                        //UNDONE z.b. <service-unavailable/>
+                        //UNDONE e.g. <service-unavailable/>
                     }
                 }
             }
         }
 
+
+        private void OnPresenceReceived(XElement presenceElement)
+        {
+            this.presenceCallback?.PresenceReceived(presenceElement);
+        }
+
         private void OnMessageReceived(XElement messageElem)
         {
             this.messageCallback?.MessageReceived(messageElem);
-        }
 
-        private void OnOtherElementReceived(XElement xElem)
-        {
-            Log.Logger.Error($"Received not expected element which is not handled ({xElem})");
-        }
-
-        private async Task<XElement> ReadSingleElementInternalAsync()
-        {
-            var xElem = await this.xmlReader.ReadNextElementAsync();
-            //if (xElem.IsIq())
-            //{
-            //    this.OnIqReceived(xElem);
-            //}
-
-            return xElem;
-        }
-
-        public async Task<XElement> ReadNonIqElementAsync()
-        {
-            XElement xElem;
-            do
+            // handle specific content/child elements
+            foreach (var contentElem in messageElem.Elements())
             {
-                xElem = await this.ReadSingleElementInternalAsync();
-                if (xElem.IsIq())
+                if (this.messageContentHandlers.TryGetValue(contentElem.Name, out var callback))
                 {
-                    this.OnIqReceived(xElem);
+                    callback.MessageReceived(messageElem);
                 }
-            } while (xElem.IsIq());
-
-            return xElem;
+            }
         }
 
+        private void OnNonStanzaElementReceived(XElement xElem)
+        {
+            Log.Logger.Error($"Received non-stanza element, which was not expected and is not handled: ({xElem})");
+        }
 
-        public void StartReadLoop()
+        public void StartAsyncReadLoop()
         {
             Task.Run(async () =>
             {
                 try
                 {
-                    XElement xElem;
                     while (true)
                     {
-                        xElem = await this.ReadSingleElementInternalAsync();
-                        if (xElem.IsIq() || xElem.Name == "presence")
-                            this.OnIqReceived(xElem);
-                        else
-                            this.OnOtherElementReceived(xElem);
+                        var xElem = await this.xmlReader.ReadNextElementAsync();
+                        this.ProcessInboundElement(xElem);
                     }
                 }
                 catch (Exception e)
@@ -180,29 +195,6 @@ namespace YetAnotherXmppClient.Core
         public Task WriteAsync(string message)
         {
             return this.textWriter.WriteAndFlushAsync(message);
-        }
-
-        public void RegisterPresenceCallback(IPresenceCallback callback)
-        {
-            this.presenceCallback = callback;
-        }
-
-        public void RegisterMessageCallback(IMessageStanzaCallback callback)
-        {
-            this.messageCallback = callback;
-        }
-    }
-
-    public interface IPresenceCallback
-    {
-        void PresenceReceived(XElement presenceXElem);
-    }
-
-    static class XElementExtensions
-    {
-        public static bool IsIq(this XElement xElem)
-        {
-            return xElem.Name == "iq";
         }
     }
 }

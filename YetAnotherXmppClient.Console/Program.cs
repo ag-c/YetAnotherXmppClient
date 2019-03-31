@@ -58,7 +58,7 @@ namespace YetAnotherXmppClient.Console
                 xmppClient.OnSubscriptionRequestReceived = requestingJid =>
                 {
                     Debugger.Break();
-                    return true;
+                    return Task.FromResult(true);
                 };
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
                 xmppClient.OnMessageReceived += (senderJid, text) => Debugger.Break();

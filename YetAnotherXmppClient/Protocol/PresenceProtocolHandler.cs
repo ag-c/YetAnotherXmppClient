@@ -9,6 +9,8 @@ using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
+using YetAnotherXmppClient.Extensions;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol
 {
@@ -21,11 +23,11 @@ namespace YetAnotherXmppClient.Protocol
         public IEnumerable<string> Stati { get; set; }
     }
 
-    public class PresenceProtocolHandler : IPresenceCallback
+    public class PresenceProtocolHandler : IPresenceReceivedCallback
     {
         private readonly AsyncXmppStream xmppStream;
 
-        public Func<string, bool> OnSubscriptionRequestReceived { get; set; }
+        public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
 
         // <full-jid, presence>
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
@@ -34,6 +36,7 @@ namespace YetAnotherXmppClient.Protocol
         public PresenceProtocolHandler(AsyncXmppStream xmppStream)
         {
             this.xmppStream = xmppStream;
+
             this.xmppStream.RegisterPresenceCallback(this);
         }
 
@@ -44,13 +47,13 @@ namespace YetAnotherXmppClient.Protocol
                 To = contactJid.ToBareJid()
             };
 
-            var presenceResp = await this.xmppStream.WritePresenceAndReadReponseAsync(presence);
-
-            if (presenceResp.HasErrorType())
-            {
-                Log.Logger.Error("Failed to request presence subscription");
-                return false;
-            }
+            await this.xmppStream.WriteAsync(presence);
+            //UNDONE no response
+            //if (presenceResp.IsErrorType())
+            //{
+            //    Log.Logger.Error("Failed to request presence subscription");
+            //    return false;
+            //}
 
             return true;
         }
@@ -75,15 +78,16 @@ namespace YetAnotherXmppClient.Protocol
             await this.xmppStream.WriteAsync(presence);
         }
 
-        void IPresenceCallback.PresenceReceived(XElement presenceXElem)
+        //UNDONE async
+        async void IPresenceReceivedCallback.PresenceReceived(XElement presenceXElem)
         {
-            Expectation.Expect("presence", presenceXElem.Name, presenceXElem);
+            Expect("presence", presenceXElem.Name, presenceXElem);
 
             if (presenceXElem.Attribute("type")?.Value == PresenceType.subscribe.ToString())
             {
                 var fromValue = presenceXElem.Attribute("from").Value;
 
-                var responseType = this.OnSubscriptionRequestReceived?.Invoke(fromValue) ?? false
+                var responseType = await (this.OnSubscriptionRequestReceived?.Invoke(fromValue) ?? Task.FromResult(false))
                     ? PresenceType.subscribed
                     : PresenceType.unsubscribed;
 
@@ -92,26 +96,36 @@ namespace YetAnotherXmppClient.Protocol
                     To = fromValue
                 };
 
-                this.xmppStream.WriteAsync(response);
+                await this.xmppStream.WriteAsync(response);
             }
             else if(!presenceXElem.HasAttribute("type"))
             {
-                Expectation.Expect(() => presenceXElem.HasAttribute("from"), presenceXElem);
+                Expect(() => presenceXElem.HasAttribute("from"), presenceXElem);
 
                 var fromVal = presenceXElem.Attribute("from").Value;
                 var showElem = presenceXElem.Element("show");
                 var prioElem = presenceXElem.Element("priority");
 
-                new Presence
-                {
-                    From = fromVal,
-                    Show = showElem != null
-                        ? (PresenceShow) Enum.Parse(typeof(PresenceShow), showElem.Value) : PresenceShow.None,
-                    Stati = presenceXElem.Elements("status").Select(xe => xe.Value),
-                    Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?) null
-                };
 
-                this.PresenceByJid.AddOrUpdate(fromVal, _ => )
+                this.PresenceByJid.AddOrUpdate(fromVal, _ => new Presence
+                    {
+                        From = fromVal,
+                        Show = showElem != null
+                            ? (PresenceShow) Enum.Parse(typeof(PresenceShow), showElem.Value)
+                            : PresenceShow.None,
+                        Stati = presenceXElem.Elements("status").Select(xe => xe.Value),
+                        Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?) null
+                    },
+                    (_, existing) =>
+                    {
+                        existing.From = fromVal;
+                        existing.Show = showElem != null
+                            ? (PresenceShow) Enum.Parse(typeof(PresenceShow), showElem.Value)
+                            : PresenceShow.None;
+                        existing.Stati = presenceXElem.Elements("status").Select(xe => xe.Value);
+                        existing.Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?) null;
+                        return existing;
+                    });
             }
         }
 

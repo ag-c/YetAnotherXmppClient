@@ -14,7 +14,7 @@ namespace YetAnotherXmppClient.Tests
         {
             var x = XElement.Parse("</stream>");
             var serverStream = new MemoryStream();
-            var handler = new ProtocolHandler(serverStream, null);
+            var handler = new MainProtocolHandler(serverStream, null);
             handler.RunAsync(new Jid("user@server"));
 
         }

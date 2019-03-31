@@ -22,7 +22,7 @@ namespace YetAnotherXmppClient
         private Jid jid;
         private string password;
 
-        public Func<string, bool> OnSubscriptionRequestReceived { get; set; }
+        public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
         public Action<Jid, string> OnMessageReceived { get; set; }
 
@@ -38,7 +38,7 @@ namespace YetAnotherXmppClient
             
             Log.Logger.Information($"Connection established");
 
-            var protocolHandler = new ProtocolHandler(this.tcpClient.GetStream(), this);
+            var protocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
             protocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
             protocolHandler.RosterHandler.RosterUpdated += (s, e) => this.RosterUpdated?.Invoke(this, e);
             protocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.OnSubscriptionRequestReceived;

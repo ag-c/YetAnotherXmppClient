@@ -27,6 +27,9 @@ namespace YetAnotherXmppClient
         public static readonly XName roster_query = "{jabber:iq:roster}query";
         public static readonly XName roster_item = "{jabber:iq:roster}item";
         public static readonly XName roster_group = "{jabber:iq:roster}group";
+
+        public static readonly XName receipts_request = "{urn:xmpp:receipts}request";
+        public static readonly XName receipts_received = "{urn:xmpp:receipts}received";
     }
 
     public class XNamespaces

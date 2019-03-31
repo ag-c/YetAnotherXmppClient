@@ -1,9 +1,24 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YetAnotherXmppClient.UI">
-  <Grid RowDefinitions="Auto,Auto,*">
+        Title="YetAnotherXmppClient.UI" Height="150" Width="150" Name="myWindow">
+ 
+     
+  <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="100,*">
+        <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
+          <Popup.Child>
+          <AddRosterItemControl />
+        </Popup.Child>
+      </Popup>-->
+     
     <Button Content="Login" Command="{Binding LoginCommand}"/>
-    <TextBlock Text="test" Grid.Row="1" />
-    <TextBox Text="{Binding LogText}" Grid.Row="2" IsReadOnly="True" />
+    <Grid RowDefinitions="*,Auto" Grid.Row="1">
+      <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" MinHeight="50"  />
+      <StackPanel Orientation="Horizontal" Grid.Row="1">
+        <Button Content="+" Command="{Binding AddRosterItemCommand}" />
+        <Button Content="-" Command="{Binding DeleteRosterItemCommand}" />
+      </StackPanel>
+    </Grid>
+    <!--<TextBlock Text="test" Grid.Row="1" />-->
+    <TextBox Text="{Binding LogText}" Grid.Row="2" Grid.ColumnSpan="2" IsReadOnly="True" />
   </Grid>
 </Window>
