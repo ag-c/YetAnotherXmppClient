@@ -11,13 +11,13 @@ namespace YetAnotherXmppClient.Protocol
         //protected XmlStreamReader xmlReader;
         protected TextWriter textWriter;
 
-        protected XmppStream xmppServerStream;
+        //protected AsyncXmppStream xmppServerStream;
         
         public ProtocolHandlerBase(Stream serverStream)
         {
             this.RecreateStreams(serverStream);
             //-----
-            this.xmppServerStream = new XmppStream(serverStream);
+            //this.xmppServerStream = new AsyncXmppStream(serverStream);
         }
         
         protected void RecreateStreams(Stream serverStream)
@@ -27,7 +27,7 @@ namespace YetAnotherXmppClient.Protocol
             //this.xmlReader = new XmlStreamReader(serverStream);
             this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
             //-----
-            this.xmppServerStream = new XmppStream(serverStream);
+            //this.xmppServerStream = new AsyncXmppStream(serverStream);
         }
     }
 }

@@ -55,6 +55,13 @@ namespace YetAnotherXmppClient.Console
             try
             {
                 var xmppClient = new XmppClient();
+                xmppClient.OnSubscriptionRequestReceived = requestingJid =>
+                {
+                    Debugger.Break();
+                    return true;
+                };
+                //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
+                xmppClient.OnMessageReceived += (senderJid, text) => Debugger.Break();
                 await xmppClient.StartAsync(jid, "gehe1m");
 
                 Console.ReadLine();

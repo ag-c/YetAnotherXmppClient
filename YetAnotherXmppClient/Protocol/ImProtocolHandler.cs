@@ -1,36 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Serilog;
 using YetAnotherXmppClient.Core;
-using YetAnotherXmppClient.Extensions;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol
 {
-    interface IServerIqCallback
+    public interface IServerIqCallback
     {
         void IqReceived(XElement xElem);
     }
 
-    class ImProtocolHandler : /*ProtocolHandlerBase,*/
+    public interface IMessageStanzaCallback
     {
-        private readonly XmppStream xmppServerStream;
+        void MessageReceived(XElement messageElem);
+    }
+
+    public class ImProtocolHandler : IMessageStanzaCallback//: /*ProtocolHandlerBase,*/
+    {
+        private readonly AsyncXmppStream xmppServerStream;
         private readonly Dictionary<string, string> runtimeParameters;
 
-        public ImProtocolHandler(XmppStream xmppStream/*Stream serverStream*/, Dictionary<string, string> runtimeParameters)
+        public ImProtocolHandler(AsyncXmppStream xmppStream/*Stream serverStream*/, Dictionary<string, string> runtimeParameters)
             //: base(serverStream)
         {
             this.xmppServerStream = xmppStream;
             this.runtimeParameters = runtimeParameters;
-            
-            
+
+            this.xmppServerStream.RegisterMessageCallback(this);
         }
 
+        public Action<Jid, string> OnMessageReceived { get; set; }
+
+        //rfc3921
         public async Task EstablishSessionAsync()
         {
             var iq = new Iq(IqType.set, new XElement(XNames.session_session))
@@ -58,7 +61,15 @@ namespace YetAnotherXmppClient.Protocol
         }
 
 
+        void IMessageStanzaCallback.MessageReceived(XElement messageElem)
+        {
+            Expect("message", messageElem.Name, messageElem);
 
+            var sender = messageElem.Attribute("from").Value;
+            var text = messageElem.Element("body").Value;
+
+            this.OnMessageReceived?.Invoke(new Jid(sender), text);
+        }
     }
 
     static class StringExtensions

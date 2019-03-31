@@ -39,5 +39,14 @@ namespace YetAnotherXmppClient
                 throw new NotExpectedProtocolException($"false=='{conditionExpr.Body}'", $"true == '{conditionExpr.Body}'", callerMemberName);
             }
         }
+
+        public static void Expect(Expression<Func<bool>> conditionExpr, object context, [CallerMemberName] string callerMemberName = "")
+        {
+            var conditionFunc = conditionExpr.Compile();
+            if (!conditionFunc())
+            {
+                throw new NotExpectedProtocolException($"false=='{conditionExpr.Body}'", $"true == '{conditionExpr.Body}'", context, callerMemberName);
+            }
+        }
     }
 }

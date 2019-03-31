@@ -1,8 +1,13 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.StanzaParts;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol
 {
@@ -11,69 +16,114 @@ namespace YetAnotherXmppClient.Protocol
         public string Jid { get; set; }
         public string Name { get; set; }
         public IEnumerable<string> Groups { get; set; }
+        public string Subscription { get; set; }
+        public bool IsSubscriptionPending { get; set; }
+
+        public override string ToString()
+        {
+            return this.Jid + "\t\t\t" + this.Name + "\t\t\t" + this.Subscription.ToUpper();
+        }
     }
-    
+
+    interface IIqFactory
+    {
+        Iq CreateSetIq(object content);
+        Iq CreateGetIq(object content);
+    }
+    class DefaultClientIqFactory : IIqFactory
+    {
+        private readonly Func<string> fromFunc;
+
+        public DefaultClientIqFactory(Func<string> fromFunc)
+        {
+            this.fromFunc = fromFunc;
+        }
+
+        public Iq CreateSetIq(object content)
+        {
+            return this.CreateInternal(IqType.set, content);
+        }
+
+        public Iq CreateGetIq(object content)
+        {
+            return this.CreateInternal(IqType.get, content);
+        }
+
+        private Iq CreateInternal(IqType iqType, object content)
+        {
+            var iq = new Iq(iqType, content);
+            if (this.fromFunc != null)
+                iq.From = this.fromFunc();
+            return iq;
+        }
+    }
     public class RosterProtocolHandler : IServerIqCallback
     {
-        private readonly XmppStream xmppStream;
+        private readonly AsyncXmppStream xmppStream;
         private readonly Dictionary<string, string> runtimeParameters;
+        private IIqFactory iqFactory;
+
+        public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
 
 
-        public RosterProtocolHandler(XmppStream xmppStream)
+        public RosterProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
         {
             this.xmppStream = xmppStream;
+            this.iqFactory = new DefaultClientIqFactory(() => runtimeParameters["jid"]);
             this.xmppStream.RegisterServerIqCallback(XNamespaces.roster, this);
         }
         
         
         List<RosterItem> currentRosterItems = new List<RosterItem>();
         
+
         public async Task<IEnumerable<RosterItem>> RequestRosterAsync()
         {
-            var iq = new Iq(IqType.get, new XElement(XNames.roster_query))
-            {
-                From = this.runtimeParameters["jid"]
-            };
+            var iq = this.iqFactory.CreateGetIq(new RosterQuery());
 
-//            await this.textWriter.WriteAndFlushAsync(iq);
-
-//            var iqResp = await this.ReadIqStanzaAsync();
-            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
-
+            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
 
             Expect("result", iqResp.Attribute("type")?.Value, iqResp);
-            Expect(iq.Id, iqResp.Attribute("id")?.Value, iqResp);
 
-            var ver = iqResp.Element(XNames.roster_query).Attribute("ver");
-            if (iqResp.Element(XNames.roster_query).IsEmpty)
+            if (iqResp.IsEmpty)
+            {
+                Debugger.Break();
+                //UNDONE
+                //6121/2.6.3.: ...an empty IQ-result (thus
+                //indicating that any roster modifications will be sent via roster
+                //pushes..
+            }
+
+            var queryElem = iqResp.Element(XNames.roster_query);
+
+            var ver = queryElem?.Attribute("ver").Value; //UNDONE
+
+            if (queryElem.IsEmpty)
                 return new RosterItem[0];
 
             var rosterItems = new List<RosterItem>();
-            foreach (var item in iqResp.Elements(XNames.roster_query).Elements(XNames.roster_item))
+            foreach (var item in queryElem.Elements(XNames.roster_item))
             {
                 rosterItems.Add(new RosterItem
                 {
                     Jid = item.Attribute("jid").Value,
-                    Name = item.Attribute("name").Value,
-                    Groups = item.Elements(XNames.roster_group)?.Select(xe => xe.Value)
+                    Name = item.Attribute("name")?.Value,
+                    Groups = item.Elements(XNames.roster_group)?.Select(xe => xe.Value),
+                    Subscription = item.Attribute("subscription")?.Value ?? "<not set>"
                 });
             }
 
             this.currentRosterItems = rosterItems;
+            Log.Logger.CurrentRosterItems(this.currentRosterItems);
+            this.RosterUpdated?.Invoke(this, this.currentRosterItems);
             return rosterItems;
         }
 
-        public async Task<bool> AddRosterItemAsync(string bareJid, string name, string group)
+        public async Task<bool> AddRosterItemAsync(string bareJid, string name, IEnumerable<string> groups)
         {
-            var iq = new Iq(IqType.set,
-                new XElement(XNames.roster_query,
-                    new XElement(XNames.roster_item, new XAttribute("jid", bareJid), new XAttribute("name", name),
-                        string.IsNullOrEmpty(group) ? null : new XElement("group", group))));
+            var iq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, name, groups));
 
-//            await this.textWriter.WriteAndFlushAsync(iq);
-
-//            var iqResp = await this.ReadIqStanzaAsync();
-            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
 
             if (iqResp.HasErrorType())
             {
@@ -82,19 +132,68 @@ namespace YetAnotherXmppClient.Protocol
             }
 
             Expect("result", iqResp.Attribute("type")?.Value, iqResp);
-            Expect(iq.Id, iqResp.Attribute("id")?.Value, iqResp);
 
             return true;
         }
 
+        //class IqBuilder
+        //{
+        //    public static IqBuilder New => new IqBuilder();
+
+        //    private IqType iqType;
+        //    public IqBuilder SetType
+        //    {
+        //        get
+        //        {
+        //            this.iqType = IqType.set;
+        //            return this;
+        //        }
+        //    }
+        //    public IqBuilder GetType
+        //    {
+        //        get
+        //        {
+        //            this.iqType = IqType.get;
+        //            return this;
+        //        }
+        //    }
+
+        //    private string from;
+        //    public IqBuilder From(string from)
+        //    {
+        //        this.from = from;
+        //        return this;
+        //    }
+
+        //    private object content;
+        //    public IqBuilder WithContent(object obj)
+        //    {
+        //        this.content = content;
+        //        return this;
+        //    }
+
+        //    public Iq Build()
+        //    {
+        //        var iq = new Iq(this.iqType, this.content);
+        //        if (this.@from != null)
+        //            iq.From = this.@from;
+        //        return iq;
+        //    }
+        //}
+
         public async Task<bool> DeleteRosterItemAsync(string bareJid)
         {
-            var iq = new Iq(IqType.set,
-                new XElement(XNames.roster_query,
-                    new XElement(XNames.roster_item, new XAttribute("jid", bareJid),
-                        new XAttribute("subscription", "remove"))));
+            var iq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, remove: true));
+            //var iq = new Iq(IqType.set, new RosterQuery(bareJid, remove: true))
+            //{
+            //    From = this.runtimeParameters["jid"]
+            //};
+            //IqBuilder.New.SetType
+            //    .From(this.runtimeParameters["jid"])
+            //    .WithContent(new RosterQuery(bareJid, remove: true))
+            //    .Build();
 
-            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
 
             if (iqResp.HasErrorType())
             {
@@ -103,14 +202,13 @@ namespace YetAnotherXmppClient.Protocol
             }
 
             Expect("result", iqResp.Attribute("type")?.Value, iqResp);
-            //Expect(iq.Id, iqResp.Attribute("id")?.Value, iqResp);
 
             return true;
         }
 
-        public void IqReceived(XElement iqElem)
+        void IServerIqCallback.IqReceived(XElement iqElem)
         {
-            Log.Logger.Verbose($"ImProtocolHandler handles iq sent by server: " + iqElem);
+            Log.Logger.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iqElem);
 
 
             if (iqElem.HasAttribute("from") &&
@@ -123,21 +221,43 @@ namespace YetAnotherXmppClient.Protocol
                 return;
             }
 
+            // Roster push
             if (iqElem.FirstNode is XElement queryElem && queryElem.Name == XNames.roster_query)
             {
+                Expect(IqType.set.ToString(), iqElem.Attribute("type")?.Value, iqElem);
+
                 var itemElem = queryElem.Element(XNames.roster_item);
                 if (itemElem.Attribute("subscription")?.Value == "remove")
                 {
-                    this.currentRosterItems.RemoveAll(ri => ri.Jid == itemElem.Attribute())
+                    this.currentRosterItems.RemoveAll(ri => ri.Jid == itemElem.Attribute("jid")?.Value);
                 }
                 else
                 {
-                    //update
+                    bool needsAdd = false;
+                    var localRosterItem = this.currentRosterItems.FirstOrDefault(ri => ri.Jid == itemElem.Attribute("jid")?.Value);
+                    if (localRosterItem == null)
+                    {
+                        needsAdd = true;
+                        localRosterItem = new RosterItem();
+                    }
+
+                    localRosterItem.Name = itemElem.Attribute("name")?.Value;
+                    localRosterItem.Groups = itemElem.Elements(XNames.roster_group)?.Select(xe => xe.Value);
+                    localRosterItem.Subscription = itemElem.Attribute("subscription")?.Value ?? "<not set>";
+                    if (itemElem.Attribute("ask")?.Value == "subscribe")
+                        localRosterItem.IsSubscriptionPending = true;
+
+                    if(needsAdd)
+                        this.currentRosterItems.Add(localRosterItem);
                 }
+
+                Log.Logger.CurrentRosterItems(this.currentRosterItems);
+                this.RosterUpdated?.Invoke(this, this.currentRosterItems);
 
                 //UNDONE reply to server (2.1.6.  Roster Push)
             }
 
         }
+
     }
 }

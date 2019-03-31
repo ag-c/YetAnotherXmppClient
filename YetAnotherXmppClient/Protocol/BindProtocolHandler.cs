@@ -21,7 +21,7 @@ namespace YetAnotherXmppClient.Protocol
 
     public class BindProtocolHandler : /*ProtocolHandlerBase,*/ IFeatureProtocolHandler
     {
-        private readonly XmppStream xmppServerStream;
+        private readonly AsyncXmppStream xmppServerStream;
         private readonly Dictionary<string, string> runtimeParameters;
 
         public Jid JidForConnectedResource { get; set; }
@@ -29,7 +29,7 @@ namespace YetAnotherXmppClient.Protocol
         public XName FeatureName { get; } = XNames.bind_bind;
 
 
-        public BindProtocolHandler(XmppStream xmppServerStream/*Stream serverStream*/, Dictionary<string, string> runtimeParameters) : base(serverStream)
+        public BindProtocolHandler(AsyncXmppStream xmppServerStream/*Stream serverStream*/, Dictionary<string, string> runtimeParameters) //: base(serverStream)
         {
             this.xmppServerStream = xmppServerStream;
             this.runtimeParameters = runtimeParameters;
@@ -38,7 +38,7 @@ namespace YetAnotherXmppClient.Protocol
 
         public async Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
         {
-            var resource = (string)options["resource"];
+            var resource = options["resource"];
 
             var iq = new Iq(IqType.set, new Bind(resource));
 

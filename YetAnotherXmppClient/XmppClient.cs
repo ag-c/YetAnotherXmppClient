@@ -7,9 +7,12 @@ using System.Xml.Linq;
 using Serilog;
 using Serilog.Core;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Protocol;
 
 namespace YetAnotherXmppClient
 {
+    public delegate bool OnSubscriptionRequestReceivedDelegate(Jid jid);
+
     public class XmppClient : IFeatureOptionsProvider
     {
         public static readonly int DefaultPort = 5222;
@@ -18,7 +21,11 @@ namespace YetAnotherXmppClient
 
         private Jid jid;
         private string password;
-        
+
+        public Func<string, bool> OnSubscriptionRequestReceived { get; set; }
+        public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
+        public Action<Jid, string> OnMessageReceived { get; set; }
+
         public async Task StartAsync(Jid jid, string password)
         {
             this.jid = jid;
@@ -33,6 +40,9 @@ namespace YetAnotherXmppClient
 
             var protocolHandler = new ProtocolHandler(this.tcpClient.GetStream(), this);
             protocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
+            protocolHandler.RosterHandler.RosterUpdated += (s, e) => this.RosterUpdated?.Invoke(this, e);
+            protocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.OnSubscriptionRequestReceived;
+            protocolHandler.ImProtocolHandler.OnMessageReceived = this.OnMessageReceived;
 
             Task.Run(() => protocolHandler.RunAsync(jid).ContinueWith(_ => HandleProtocolHandlingEnded()));
         }

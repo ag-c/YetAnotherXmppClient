@@ -19,6 +19,7 @@ using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol;
 using static YetAnotherXmppClient.Expectation;
 using FeatureOptions = System.Collections.Generic.Dictionary<string, string>;
+//using FeatureOptionsDictionary = System.Collections.Generic.Dictionary<System.Xml.Linq.XName, System.Collections.Generic.Dictionary<string, string>>;
 
 namespace YetAnotherXmppClient
 {
@@ -40,6 +41,10 @@ namespace YetAnotherXmppClient
     //    }
     //}
 
+    //static class FeatureOptionsBuilder
+    //{
+    //    public static FeatureOptionsDictionary Build(Dictionary<string, string> configuration);
+    //}
     public class ProtocolHandler : ProtocolHandlerBase
     {
         private static readonly string Version = "1.0";
@@ -47,6 +52,9 @@ namespace YetAnotherXmppClient
 
         private readonly IEnumerable<IFeatureProtocolHandler> featureHandlers;
         private readonly IFeatureOptionsProvider featureOptionsProvider;
+        //private readonly FeatureOptionsDictionary featureOptionsDict = new FeatureOptionsDictionary();
+
+        readonly Dictionary<string, string> runtimeParameters = new Dictionary<string, string>();
 
         private string streamId;
         
@@ -54,12 +62,21 @@ namespace YetAnotherXmppClient
         public event EventHandler NegotiationFinished;
 
         //---
-        private XmppStream xmppServerStream;
-        
+        private readonly AsyncXmppStream xmppServerStream;
+
+        public RosterProtocolHandler RosterHandler { get; }
+        public PresenceProtocolHandler PresenceHandler { get; }
+        public ImProtocolHandler ImProtocolHandler { get; }
+
+
         public ProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider) : base(serverStream)
         {
             this.featureOptionsProvider = featureOptionsProvider;
-            this.xmppServerStream = new XmppStream(serverStream);
+            this.xmppServerStream = new AsyncXmppStream(serverStream);
+
+            this.RosterHandler = new RosterProtocolHandler(this.xmppServerStream, runtimeParameters);
+            this.PresenceHandler = new PresenceProtocolHandler(this.xmppServerStream);
+            this.ImProtocolHandler = new ImProtocolHandler(this.xmppServerStream, this.runtimeParameters);
         }
 
 
@@ -88,8 +105,7 @@ namespace YetAnotherXmppClient
                     var feature = mandatoryFeatures.First();
                     if (feature.Name == XNames.bind_bind)
                     {
-                        var runtimeParameters = new Dictionary<string, string>();
-                        var bindHandler = new BindProtocolHandler(this.serverStream, runtimeParameters);
+                        var bindHandler = new BindProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
 
                         await bindHandler.NegotiateAsync(feature, this.featureOptionsProvider.GetOptions(XNames.bind_bind));
 
@@ -97,25 +113,33 @@ namespace YetAnotherXmppClient
 
                         if (features.Any(f => f.Name == XNames.session_session))
                         {
-                            var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
+//                            var rosterItems = await this.RosterHandler.RequestRosterAsync();
 
-                            await imHandler.EstablishSessionAsync();
+//                            await RosterHandler.AddRosterItemAsync("agg1n@jabber.ccc.de", "agg1nccc", new[]{"Ichgruppe2"});
 
-                            var rosterItems = await imHandler.RequestRosterAsync();
+//                            rosterItems = await RosterHandler.RequestRosterAsync();
 
-                            await imHandler.AddRosterItemAsync("agg1n@draugr.de", "agg1ndraugr", "Ichgruppe");
+////                            rosterHandler.UpdateRosterItemAsync()
 
-                            rosterItems = await imHandler.RequestRosterAsync();
+//                            await RosterHandler.DeleteRosterItemAsync("jf@draugr.de");
 
-                            await imHandler.DeleteRosterItemAsync("agg1n@draugr.de");
+//                            rosterItems = await RosterHandler.RequestRosterAsync();
 
-                            rosterItems = await imHandler.RequestRosterAsync();
-
-                            //await imHandler.SendMessage("agg1n@jabber.ccc.de", "test2");
 
                             //var x = await ReadElementFromStreamAsync();
-                            
+
+
+                            await PresenceHandler.BroadcastPresenceAsync();
+                            await PresenceHandler.RequestSubscriptionAsync("jf@draugr.de");
+
+
+
                             this.xmppServerStream.StartReadLoop();
+
+                            //var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
+                            //await imHandler.EstablishSessionAsync();
+
+                            //await imHandler.SendMessage("agg1n@jabber.ccc.de", "test2");
                         }
 
                         if (features.Any(f => f.Name == XNames.rosterver_ver))
@@ -170,7 +194,7 @@ namespace YetAnotherXmppClient
             Log.Logger.Verbose("Restarting stream..");
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
             this.RecreateStreams(this.serverStream);
-            this.xmppServerStream = new XmppStream(this.serverStream);
+            this.xmppServerStream.RecreateStreams(this.serverStream);
 
             await this.WriteInitialStreamHeaderAsync(jid);
 
@@ -202,8 +226,9 @@ namespace YetAnotherXmppClient
                 await sslStream.AuthenticateAsClientAsync(jid.Server);
                 //UNDONE 5.4.3.3. TLS Success
 
-                RecreateStreams(sslStream);
-                this.xmppServerStream = new XmppStream(this.serverStream);
+                this.serverStream = sslStream;
+                this.RecreateStreams(sslStream);
+                this.xmppServerStream.RecreateStreams(sslStream);
             }
             else
             {
@@ -283,16 +308,11 @@ namespace YetAnotherXmppClient
             return xElem;
         }
 
-        public static async Task<string> GenerateInitialStreamHeaderAsync(Jid jid)
+        private async Task TerminateSessionAsync()
         {
-            return "<?xml version='1.0'?>" +
-                   "<stream:stream" +
-                   $" from='{jid}'" +
-                   $" to='{jid.Server}'" +
-                   "  version='1.0'" +
-                   "  xml:lang='en'" +
-                   "  xmlns='jabber:client'" +
-                   "  xmlns:stream='http://etherx.jabber.org/streams'>";
+            await this.PresenceHandler.SendUnavailableAsync();
+
+            await this.xmppServerStream.WriteAsync("</stream:stream");
         }
     }
 }
