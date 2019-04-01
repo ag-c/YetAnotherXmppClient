@@ -1,13 +1,21 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
 namespace YetAnotherXmppClient
 {
-    public class Feature
+    public class Feature : IEquatable<Feature>
     {
         public XName Name { get; set; }
         public bool IsRequired { get; set; }
+
+        public bool Equals(Feature other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(Name, other.Name);
+        }
     }
 
     //    public class Features : List<IFeature>

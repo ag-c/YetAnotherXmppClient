@@ -12,12 +12,12 @@ using YetAnotherXmppClient.Core;
 
 namespace YetAnotherXmppClient.Protocol
 {
-    class StartTlsProtocolHandler : IFeatureProtocolNegotiator
+    class StartTlsProtocolNegotiator : IFeatureProtocolNegotiator
     {
         private readonly AsyncXmppStream xmppServerStream;
         public XName FeatureName { get; } = XNames.starttls;
 
-        public StartTlsProtocolHandler(AsyncXmppStream xmppServerStream)
+        public StartTlsProtocolNegotiator(AsyncXmppStream xmppServerStream)
         {
             this.xmppServerStream = xmppServerStream;
         }

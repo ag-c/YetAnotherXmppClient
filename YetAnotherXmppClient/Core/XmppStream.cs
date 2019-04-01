@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,7 +57,11 @@ namespace YetAnotherXmppClient.Core
         public void Reinitialize(Stream serverStream)
         {
             this.BaseStream = serverStream;
-            this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true });
+            var nt = new NameTable();
+            var nsmgr = new XmlNamespaceManager(nt);
+            nsmgr.AddNamespace("stream", "http://etherx.jabber.org/streams");
+            var context = new XmlParserContext(nt, nsmgr, null, XmlSpace.None);
+            this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true }, context);
             this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
         }
 
@@ -100,14 +105,17 @@ namespace YetAnotherXmppClient.Core
         public async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
         {
             if (this.isLoopRunning)
-                throw new InvalidOperationException("Cannot read manually, stream is in read loop");
+                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
 
             Log.Debug("Reading response stream header..");
 
-            //while (xmlReader.NodeType == XmlNodeType.EndElement)
-            //    await xmlReader.ReadAsync();
-
             await this.xmlReader.MoveToContentAsync();
+
+            if (xmlReader.Name == "stream:error")
+            {
+                var error = await xmlReader.ReadNextElementAsync();
+                throw new XmppException(error.ToString());
+            }
             Expect("stream:stream", actual: this.xmlReader.Name);
 
             return await this.xmlReader.GetAllAttributesAsync();
@@ -116,7 +124,7 @@ namespace YetAnotherXmppClient.Core
         public async Task<XElement> ReadElementAsync()
         {
             if (this.isLoopRunning)
-                throw new InvalidOperationException("Cannot read manually, stream is in read loop");
+                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
 
             var xElem = await this.xmlReader.ReadNextElementAsync();
             //TOLOG
@@ -143,7 +151,7 @@ namespace YetAnotherXmppClient.Core
         private async Task<XElement> ReadUntilResponseAsync(string id)
         {
             if (this.isLoopRunning)
-                throw new InvalidOperationException("Cannot read manually, stream is in read loop");
+                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
 
             XElement xElem;
             do

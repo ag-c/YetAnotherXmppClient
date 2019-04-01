@@ -4,6 +4,7 @@ using System.Net.Mail;
 using System.Xml.Linq;
 using Xunit;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Protocol;
 
 namespace YetAnotherXmppClient.Tests
 {

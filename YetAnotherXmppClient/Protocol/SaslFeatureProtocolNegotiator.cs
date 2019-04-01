@@ -1,6 +1,5 @@
 using Serilog;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,20 +8,19 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
-using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient
 {
-    public class SaslFeatureProtocolHandler : IFeatureProtocolNegotiator
+    public class SaslFeatureProtocolNegotiator : IFeatureProtocolNegotiator
     {
         private readonly AsyncXmppStream xmppStream;
         private readonly IEnumerable<string> clientMechanisms;
 
         public XName FeatureName { get; } = XNames.sasl_mechanisms;
 
-        public SaslFeatureProtocolHandler(AsyncXmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
+        public SaslFeatureProtocolNegotiator(AsyncXmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
         {
             this.xmppStream = xmppStream;
             this.clientMechanisms = clientMechanisms;
@@ -88,11 +86,5 @@ namespace YetAnotherXmppClient
 
             await this.xmppStream.WriteAsync(stringWriter.ToString());
         }
-        
-//        private async Task ReadChallengeAsync()
-//        {
-//            var xElem = await xmlReader.ReadNextElementAsync();
-//            Expect(XNames.sasl_challenge, actual: xElem.Name);
-//        }
     }
 }
