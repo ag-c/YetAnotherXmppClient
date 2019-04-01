@@ -35,7 +35,7 @@ namespace YetAnotherXmppClient.Tests
                                 </message>");
 
             //xmppStream.StartAsyncReadLoop();
-            xmppStream.RunLoopAsync(new CancellationTokenSource().Token);
+            xmppStream.RunReadLoopAsync(new CancellationTokenSource().Token);
 
             await Task.Delay(2000);
 

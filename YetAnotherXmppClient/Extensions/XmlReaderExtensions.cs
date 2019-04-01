@@ -40,17 +40,6 @@ namespace YetAnotherXmppClient.Extensions
 
             wasLastEmpty = xElem.IsEmpty;
 
-            Log.Logger.XmppStreamContent("Read element from stream: " + xElem);
-
-            return xElem;
-        }
-
-        public static async Task<XElement> ReadIqStanzaAsync(this XmlReader xmlReader)
-        {
-            var xElem = await xmlReader.ReadNextElementAsync();
-
-            Expectation.Expect("iq", xElem.Name.LocalName);
-
             return xElem;
         }
     }

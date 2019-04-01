@@ -53,12 +53,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
 
-        void IMessageReceivedCallback.MessageReceived(XElement messageElem)
+        void IMessageReceivedCallback.MessageReceived(Message message)
         {
-            Expectation.Expect("message", messageElem.Name, messageElem);
+            Expectation.Expect("message", message.Name, message);
 
-            var sender = messageElem.Attribute("from").Value;
-            var text = messageElem.Element("body").Value;
+            var sender = message.From;
+            var text = message.Element("body").Value;
 
             this.OnMessageReceived?.Invoke(new Jid(sender), text);
         }

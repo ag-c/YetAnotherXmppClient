@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.Stanza;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -22,7 +23,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return this.pepHandler.SubscribeToNodeAsync("eu.siacs.conversations.axolotl.devicelist");
         }
 
-        public void MessageReceived(XElement messageElem)
+        public void MessageReceived(Message message)
         {
             
         }

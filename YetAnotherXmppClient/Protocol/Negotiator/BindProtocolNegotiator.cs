@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using static YetAnotherXmppClient.Expectation;
 
@@ -27,13 +28,13 @@ namespace YetAnotherXmppClient.Protocol
         {
             var resource = options["resource"];
 
-            var iq = new Iq(IqType.set, new Bind(resource));
+            var requestIq = new Iq(IqType.set, new Bind(resource));
 
-            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
+            var responseIq = await this.xmppServerStream.WriteIqAndReadReponseAsync(requestIq);
 
-            Expect("result", iqResp.Attribute("type")?.Value, iqResp);
+            Expect("result", responseIq.Attribute("type")?.Value, responseIq);
 
-            this.runtimeParameters["jid"] = iqResp.Element(XNames.bind_bind).Element(XNames.bind_jid).Value;
+            this.runtimeParameters["jid"] = responseIq.Element(XNames.bind_bind).Element(XNames.bind_jid).Value;
 
             return true;
         }

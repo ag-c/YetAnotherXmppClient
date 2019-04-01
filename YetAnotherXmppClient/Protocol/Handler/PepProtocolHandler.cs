@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 
@@ -46,8 +47,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var iq = new Iq(IqType.set, new PubSubSubscribe(nodeId, this.RuntimeParameters["jid"].ToBareJid()))
             {
                 From = this.RuntimeParameters["jid"],
-                To = 
-            }
+                To = this.RuntimeParameters["jid"].ToBareJid() //UNDONE only server?
+            };
 
             var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
         }

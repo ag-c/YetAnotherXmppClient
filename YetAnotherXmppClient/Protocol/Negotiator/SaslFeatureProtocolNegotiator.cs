@@ -30,7 +30,9 @@ namespace YetAnotherXmppClient
         {
             //6.3.3. Mechanism Preferences
             var mechanismToTry = this.clientMechanisms.Intersect(((MechanismsFeature)feature).Mechanisms).FirstOrDefault();
+
             Log.Debug($"Trying SASL mechanism '{mechanismToTry}'");
+
             if (mechanismToTry == null)
             {
                 throw new InvalidOperationException("no supported sasl mechanism");

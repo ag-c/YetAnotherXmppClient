@@ -1,27 +1,27 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using Nito.AsyncEx;
 using Serilog;
+using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
-using Presence = YetAnotherXmppClient.Core.Stanza.Presence;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Core
 {
     public interface IIqReceivedCallback
     {
-        void IqReceived(XElement xElem);
+        void IqReceived(Iq iq);
     }
 
     public interface IMessageReceivedCallback
     {
-        void MessageReceived(XElement messageElem);
+        void MessageReceived(Message message);
     }
 
     public interface IPresenceReceivedCallback
@@ -31,9 +31,10 @@ namespace YetAnotherXmppClient.Core
 
     public class AsyncXmppStream
     {
-        //private readonly Stream serverStream;
         private XmlReader xmlReader;
         private TextWriter textWriter;
+        private readonly AsyncLock xmlReaderLock = new AsyncLock();
+
         //TCS by ids of outgoing iq-stanzas that are expecting responses from the server
         private readonly ConcurrentDictionary<string, TaskCompletionSource<XElement>> iqCompletionSources = new ConcurrentDictionary<string, TaskCompletionSource<XElement>>();
         //iq-callbacks registered by xml-namespaces of iq child elements
@@ -45,14 +46,14 @@ namespace YetAnotherXmppClient.Core
         // handlers for specific child elements in message-stanzas
         private readonly ConcurrentDictionary<XName, IMessageReceivedCallback> messageContentHandlers = new ConcurrentDictionary<XName, IMessageReceivedCallback>();
 
+        public Stream BaseStream { get; private set; }
+
 
         public AsyncXmppStream(Stream serverStream)
         {
-            //this.serverStream = serverStream;
             this.Reinitialize(serverStream);
         }
 
-        public Stream BaseStream { get; private set; }
 
         public void Reinitialize(Stream serverStream)
         {
@@ -79,7 +80,6 @@ namespace YetAnotherXmppClient.Core
         {
             this.messageCallback = callback;
         }
-
         
         public void RegisterMessageContentCallback(XName elementName, IMessageReceivedCallback callback)
         {
@@ -102,35 +102,37 @@ namespace YetAnotherXmppClient.Core
             }
         }
 
-        public async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
+        public async Task<(string Name, Dictionary<string, string> Attributes)> ReadOpeningTagAsync()
         {
-            if (this.isLoopRunning)
-                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
+            ThrowIfLoopRunning();
 
-            Log.Debug("Reading response stream header..");
+            Log.Debug("Reading opening tag ''..");
 
             await this.xmlReader.MoveToContentAsync();
+            
+            Expect(() => this.xmlReader.NodeType == XmlNodeType.Element);
 
-            if (xmlReader.Name == "stream:error")
-            {
-                var error = await xmlReader.ReadNextElementAsync();
-                throw new XmppException(error.ToString());
-            }
-            Expect("stream:stream", actual: this.xmlReader.Name);
-
-            return await this.xmlReader.GetAllAttributesAsync();
+            return (xmlReader.Name, await this.xmlReader.GetAllAttributesAsync());
         }
 
-        public async Task<XElement> ReadElementAsync()
+        public Task<XElement> ReadElementAsync()
         {
-            if (this.isLoopRunning)
-                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
+            ThrowIfLoopRunning();
 
-            var xElem = await this.xmlReader.ReadNextElementAsync();
-            //TOLOG
-            return xElem;
+            return this.InternalReadElementAsync();
         }
 
+        public async Task<XElement> InternalReadElementAsync()
+        {
+            using (await this.xmlReaderLock.LockAsync())
+            {
+                var xElem = await this.xmlReader.ReadNextElementAsync();
+
+                Log.Logger.XmppStreamContent($"Read from stream: {xElem}");
+
+                return xElem;
+            }
+        }
 
         public async Task<XElement> WriteIqAndReadReponseAsync(Iq iq)
         {
@@ -143,23 +145,24 @@ namespace YetAnotherXmppClient.Core
             await this.textWriter.WriteAndFlushAsync(iq);
 
             if (this.isLoopRunning)
+            {   // let the read loop receive the response
                 return await tcs.Task;
-            else
-                return await this.ReadUntilResponseAsync(iq.Id);
+            }
+
+            return await this.ReadUntilStanzaResponseAsync(iq.Id);
         }
 
-        private async Task<XElement> ReadUntilResponseAsync(string id)
+        private async Task<XElement> ReadUntilStanzaResponseAsync(string id)
         {
-            if (this.isLoopRunning)
-                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
+            ThrowIfLoopRunning();
 
             XElement xElem;
             do
             {
-                xElem = await this.xmlReader.ReadNextElementAsync();
+                xElem = await this.InternalReadElementAsync();
                 this.ProcessInboundElement(xElem);
-
-            } while (!xElem.IsStanza() || xElem.IsStanza() && xElem.Attribute("id")?.Value != id);
+            }
+            while (!xElem.IsStanza() || xElem.IsStanza() && xElem.Attribute("id")?.Value != id);
 
             return xElem;
         }
@@ -185,11 +188,11 @@ namespace YetAnotherXmppClient.Core
 
         private void OnIqReceived(XElement iqElement)
         {
-            var id = iqElement.Attribute("id")?.Value;
+            var iq = Iq.FromXElement(iqElement);
 
-            if (iqElement.HasAttribute("id") && this.iqCompletionSources.TryRemove(id, out var tcs))
+            if (iq.Id != null && this.iqCompletionSources.TryRemove(iq.Id, out var tcs))
             {
-                Log.Verbose($"Received iq with awaiter ({id})");
+                Log.Verbose($"Received iq with awaiter ({iq.Id})");
                 tcs.SetResult(iqElement);
             }
             else
@@ -198,11 +201,11 @@ namespace YetAnotherXmppClient.Core
                     this.serverIqCallbacks.TryGetValue(iqChildElem.Name.Namespace, out var callback))
                 {
                     //UNDONE sind weitere kindelemente möglich?
-                    callback.IqReceived(iqElement);
+                    callback.IqReceived(iq);
                 }
                 else
                 {
-                    Log.Verbose($"Received iq WITHOUT awaiter or callback ({id})");
+                    Log.Verbose($"Received iq WITHOUT awaiter or callback ({iq.Id})");
 
                     if (iqElement.Name == "iq")
                     {
@@ -212,7 +215,6 @@ namespace YetAnotherXmppClient.Core
             }
         }
 
-
         private void OnPresenceReceived(XElement presenceElement)
         {
             this.presenceCallback?.PresenceReceived(presenceElement);
@@ -220,14 +222,16 @@ namespace YetAnotherXmppClient.Core
 
         private void OnMessageReceived(XElement messageElem)
         {
-            this.messageCallback?.MessageReceived(messageElem);
+            var message = Message.FromXElement(messageElem);
+
+            this.messageCallback?.MessageReceived(message);
 
             // handle specific content/child elements
             foreach (var contentElem in messageElem.Elements())
             {
                 if (this.messageContentHandlers.TryGetValue(contentElem.Name, out var callback))
                 {
-                    callback.MessageReceived(messageElem);
+                    callback.MessageReceived(message);
                 }
             }
         }
@@ -243,31 +247,22 @@ namespace YetAnotherXmppClient.Core
         }
 
         private bool isLoopRunning;
-        public async Task RunLoopAsync(CancellationToken token)
+        public async Task RunReadLoopAsync(CancellationToken token)
         {
             this.isLoopRunning = true;
             while (true)
             {
                 token.ThrowIfCancellationRequested();
 
-                var xElem = await this.xmlReader.ReadNextElementAsync();
+                var xElem = await this.InternalReadElementAsync();
                 this.ProcessInboundElement(xElem);
             }
         }
 
-        //public void StartAsyncReadLoop()
-        //{
-        //    Task.Run(async () =>
-        //    {
-        //        try
-        //        {
-        //            await this.RunLoopAsync();
-        //        }
-        //        catch (Exception e)
-        //        {
-        //            Log.Logger.Error("XmppStream-READLOOP exited: " + e);
-        //        }
-        //    });
-        //}
+        private void ThrowIfLoopRunning()
+        {
+            if (this.isLoopRunning)
+                throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
+        }
     }
 }

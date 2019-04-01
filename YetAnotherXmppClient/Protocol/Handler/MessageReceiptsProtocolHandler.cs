@@ -17,21 +17,21 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         //UNDONE async?
         //XEP-0184/3. Protocol Format
-        async void IMessageReceivedCallback.MessageReceived(XElement messageElem)
+        async void IMessageReceivedCallback.MessageReceived(Message message)
         {
             // does <message/> contain <request/> and id-attribute?
-            if (messageElem.HasElement(XNames.receipts_request)
-                && messageElem.HasAttribute("id"))
+            if (message.HasElement(XNames.receipts_request)
+                && message.HasAttribute("id"))
             {
-                Expectation.Expect(this.RuntimeParameters["jid"], messageElem.Attribute("to")?.Value, messageElem);
+                Expectation.Expect(this.RuntimeParameters["jid"], message.Attribute("to")?.Value, message);
 
-                var message = new Message(new XElement(XNames.receipts_received))
+                var messageResp = new Message(new XElement(XNames.receipts_received))
                 {
-                    Id = messageElem.Attribute("id").Value,
+                    Id = message.Id,
                     From = this.RuntimeParameters["jid"], //alt. copy from to-attribute
-                    To = messageElem.Attribute("from").Value
+                    To = message.From
                 };
-                await this.XmppStream.WriteAsync(message);
+                await this.XmppStream.WriteAsync(messageResp);
             }
         }
     }

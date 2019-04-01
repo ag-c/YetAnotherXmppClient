@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 
-namespace YetAnotherXmppClient.Core
+namespace YetAnotherXmppClient.Core.Stanza
 {
     public enum IqType
     {
@@ -36,15 +36,32 @@ namespace YetAnotherXmppClient.Core
             set => this.SetAttributeValue("to", value);
         }
 
-        public Iq(IqType type, object content) : base("iq", content)
+        public Iq(IqType type, object content=null) : base("{jabber:client}iq", content)
         {
             this.Id = Guid.NewGuid().ToString();
             this.Type = type;
         }
 
+        private Iq(params object[] content) : base("{jabber:client}iq", content)
+        {
+        }
+
         public static implicit operator string(Iq iq)
         {
             return iq.ToString();
+        }
+
+        public static Iq FromXElement(XElement xElem)
+        {
+            var iq = new Iq(xElem.Elements());
+            foreach(var attr in xElem.Attributes())
+                iq.SetAttributeValue(attr.Name, attr.Value);
+            return iq;
+        }
+
+        public override string ToString()
+        {
+            return base.ToString();
         }
     }
 }

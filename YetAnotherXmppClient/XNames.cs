@@ -38,6 +38,7 @@ namespace YetAnotherXmppClient
 
         public static readonly XName discoinfo_query = "{http://jabber.org/protocol/disco#info}query";
         public static readonly XName discoinfo_identity = "{http://jabber.org/protocol/disco#info}identity";
+        public static readonly XName discoinfo_feature = "{http://jabber.org/protocol/disco#info}feature";
 
         public static readonly XName pubsub_pubsub = "{http://jabber.org/protocol/pubsub}pubsub";
         public static readonly XName pubsub_publish = "{http://jabber.org/protocol/pubsub}publish";
@@ -45,13 +46,17 @@ namespace YetAnotherXmppClient
         public static readonly XName pubsub_subscribe = "{http://jabber.org/protocol/pubsub}subscribe";
 
         public static readonly XName pubsub_event = "{http://jabber.org/protocol/pubsub#event}event";
+
+        public static readonly XName ping_ping = "{http://jabber.org/protocol/pubsub#event}event";
     }
 
     public class XNamespaces
     {
         public static readonly XNamespace stream = "http://etherx.jabber.org/streams";
-
         public static readonly XNamespace bind = "urn:ietf:params:xml:ns:xmpp-bind";
         public static readonly XNamespace roster = "jabber:iq:roster";
+        public static readonly XNamespace discoinfo = "http://jabber.org/protocol/disco#info";
+        public static readonly XNamespace time = "urn:xmpp:time";
+        public static readonly XNamespace ping = "urn:xmpp:ping";
     }
 }

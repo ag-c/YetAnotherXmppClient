@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol.Handler;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol
 {
@@ -86,7 +88,7 @@ namespace YetAnotherXmppClient.Protocol
 
                     await this.NegotiateFeatureAsync(feature);
 
-                    if (feature?.Name == XNames.starttls || feature?.Name == XNames.sasl_mechanisms)
+                    if (feature.IsStreamRestartRequired())
                     {   // stream needs to be restarted after these features have been negotiated
                         await this.RunAsync(jid, token);
                         return;
@@ -103,13 +105,19 @@ namespace YetAnotherXmppClient.Protocol
 
                 this.NegotiationFinished?.Invoke(this, EventArgs.Empty);
 
+                // create remaining protocol handlers
+                var discoHandler = new ServiceDiscoveryProtocolHandler(this.xmppStream, this.runtimeParameters);
+                var timeHandler = new EntityTimeProtocolHandler(this.xmppStream, runtimeParameters);
+                var pingHandler = new PingProtocolHandler(this.xmppStream, this.runtimeParameters);
+                var b = pingHandler.PingAsync();
+
                 var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
                 var y = await pepHandler.DetermineSupportAsync();
 
                 var omemoHandler = new OmemoProtocolHandler(pepHandler, this.xmppStream, this.runtimeParameters);
                 await omemoHandler.InitializeAsync();
 
-                await this.xmppStream.RunLoopAsync(new CancellationTokenSource().Token);
+                await this.xmppStream.RunReadLoopAsync(new CancellationTokenSource().Token);
 
 
                 //var mandatoryFeatures = features.Where(f => f.IsRequired);
@@ -283,7 +291,7 @@ namespace YetAnotherXmppClient.Protocol
 
             await this.xmppStream.WriteInitialStreamHeaderAsync(jid, Version);
 
-            var attributes = await this.xmppStream.ReadResponseStreamHeaderAsync();
+            var attributes = await this.ReadResponseStreamHeaderAsync();
             //foreach(var attr in attributes.Where(kvp => kvp.Key.StartsWith("xmlns:")))
             //    namespaces.Add(attr.Key, attr);
 //            ValidateInitialStreamHeaderAttributes(attributes)
@@ -291,6 +299,22 @@ namespace YetAnotherXmppClient.Protocol
             //this.streamId = attributes["id"];
 
             //4.7.2. to //MUST verify the identity of the other entity
+        }
+
+        private async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
+        {
+            Log.Debug("Reading response stream header..");
+
+            var (name, attributes) = await this.xmppStream.ReadOpeningTagAsync();
+
+            if (name == "stream:error")
+            {
+                var error = await this.xmppStream.ReadElementAsync();
+                throw new XmppException(error.ToString());
+            }
+            Expect("stream:stream", actual: name);
+
+            return attributes;
         }
 
         //4.3.2. Stream Features Format

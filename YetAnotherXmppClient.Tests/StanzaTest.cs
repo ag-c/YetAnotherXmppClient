@@ -1,7 +1,9 @@
-﻿using System.Xml.Linq;
+﻿using System.Linq;
+using System.Xml.Linq;
 using System.Xml.XmlDiff;
 using Xunit;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Protocol;
 using YetAnotherXmppClient.Tests.XmlDiff;
@@ -78,6 +80,24 @@ namespace YetAnotherXmppClient.Tests
             xmlDiff.Option = (XmlDiffOption)((int)XmlDiffOption.NormalizeNewline - 1);
 
             Assert.True(xmlDiff.Compare(iq, expectedXml));
+        }
+
+        [Fact]
+        public void Iq_FromXElement()
+        {
+            var iqXml = @"<iq type='set'
+                            from='francisco@denmark.lit/barracks'
+                            to='pubsub.shakespeare.lit'
+                            id='sub1'>
+                          <test/>
+                        </iq>";
+            var iq = Iq.FromXElement(XElement.Parse(iqXml));
+
+            Assert.Equal("francisco@denmark.lit/barracks", iq.From);
+            Assert.Equal("pubsub.shakespeare.lit", iq.To);
+            Assert.Equal("sub1", iq.Id);
+            Assert.Equal(IqType.set, iq.Type);
+            Assert.Equal("<test />", iq.Elements().Single().ToString());
         }
     }
 }

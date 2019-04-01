@@ -50,7 +50,7 @@ namespace YetAnotherXmppClient.Console
 
             //yetanotherxmppuser@jabber.de
             //yetanotherxmppuser@wiuwiu.de
-            var jid = new Jid("yetanotherxmppuser@wiuwiu.de/DefaultResource");
+            var jid = new Jid("yetanotherxmppuser@jabber.de/DefaultResource");
 
             try
             {
