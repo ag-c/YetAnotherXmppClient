@@ -88,7 +88,7 @@ namespace YetAnotherXmppClient
         {
             decoratee.Dispose();
             var str = Encoding.UTF8.GetString(this.debugStream.ToArray());
-            Log.Logger.Verbose($"Written to Stream: {str}");
+            Log.Verbose($"Written to Stream: {str}");
         }
     }
 }

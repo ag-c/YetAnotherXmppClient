@@ -40,7 +40,7 @@ namespace YetAnotherXmppClient.Extensions
 
             wasLastEmpty = xElem.IsEmpty;
 
-            Log.Logger.Verbose("Read element from stream: " + xElem);
+            Log.Verbose("Read element from stream: " + xElem);
 
             return xElem;
         }

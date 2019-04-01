@@ -12,12 +12,12 @@ namespace YetAnotherXmppClient
         {
             if (features.All(f => !f.IsRequired))
             {
-                Log.Logger.Debug("No more features required - stream negotiation is complete");
+                Log.Debug("No more features required - stream negotiation is complete");
             }
             else
             {
                 var requiredFeaturesNames = features.Where(f => f.IsRequired).Select(f => f.Name.LocalName);
-                Log.Logger.Debug($"Stream negotiation is incomplete, required features: {string.Join(", ", requiredFeaturesNames)}");
+                Log.Debug($"Stream negotiation is incomplete, required features: {string.Join(", ", requiredFeaturesNames)}");
             }
         }
 
@@ -27,7 +27,7 @@ namespace YetAnotherXmppClient
             sw.WriteLine("Current roster items in cache:");
             foreach(var (ri, index) in rosterItems.Indexed())
                 sw.WriteLine(index + " - " + ri.ToString());
-            Log.Logger.Verbose(sw.ToString());
+            Log.Verbose(sw.ToString());
         }
     }
 

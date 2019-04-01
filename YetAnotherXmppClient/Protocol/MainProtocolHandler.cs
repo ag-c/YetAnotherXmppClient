@@ -89,7 +89,7 @@ namespace YetAnotherXmppClient
                 var features = await this.ReadStreamFeaturesAsync();
                 var isStreamNegotiationComplete = features.All(f => !f.IsRequired);
 
-                Log.Logger.StreamNegotiationStatus(features);
+                Log.StreamNegotiationStatus(features);
                
                 var mandatoryFeatures = features.Where(f => f.IsRequired);
                 if (mandatoryFeatures.Any())
@@ -191,7 +191,7 @@ namespace YetAnotherXmppClient
         //4.2.Opening a Stream
         private async Task RestartStreamAsync(Jid jid)
         {
-            Log.Logger.Verbose("Restarting stream..");
+            Log.Verbose("Restarting stream..");
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
             this.RecreateStreams(this.serverStream);
             this.xmppServerStream.Reinitialize(this.serverStream);
@@ -216,7 +216,7 @@ namespace YetAnotherXmppClient
             {
                 //UNDONE If the failure case occurs, the initiating entity MAY attempt to
                 //reconnect as explained under Section 3.3.
-                Log.Logger.Fatal($"Error: Reply to 'starttls' was '{xElem.Name}'");
+                Log.Fatal($"Error: Reply to 'starttls' was '{xElem.Name}'");
                 throw new NotExpectedProtocolException(xElem.Name.ToString(), XNames.proceed.ToString());
             }
             else if (xElem.Name == XNames.proceed)
@@ -245,7 +245,7 @@ namespace YetAnotherXmppClient
 
         private async Task WriteInitialStreamHeaderAsync(Jid jid)
         {
-            Log.Logger.Debug("Writing intial stream header..");
+            Log.Debug("Writing intial stream header..");
 
             using (var xmlWriter = XmlWriter.Create(textWriter, new XmlWriterSettings { Async = true, WriteEndDocumentOnClose = false }))
             {
@@ -261,7 +261,7 @@ namespace YetAnotherXmppClient
 
         private async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
         {
-            Log.Logger.Debug("Reading response stream header..");
+            Log.Debug("Reading response stream header..");
 
             //var openingTag = await this.xmlReader.ReadOpeningTagAsync();
 
@@ -281,7 +281,7 @@ namespace YetAnotherXmppClient
         //4.3.2. Stream Features Format
         private async Task<IEnumerable<Feature>> ReadStreamFeaturesAsync()
         {
-            Log.Logger.Debug("Reading stream features..");
+            Log.Debug("Reading stream features..");
 
             //var xElem = await this.ReadElementFromStreamAsync();
 
@@ -303,7 +303,7 @@ namespace YetAnotherXmppClient
 
             //var xElem = XElement.Parse(xmlFragment.RawXml);
 
-            //Log.Logger.Verbose("Read element from stream: " + xElem);
+            //Log.Verbose("Read element from stream: " + xElem);
 
             return xElem;
         }

@@ -86,7 +86,7 @@ namespace YetAnotherXmppClient
         private void PrintAndReset()
         {
             if(!string.IsNullOrEmpty(debugWriter.ToString()))
-                Log.Logger.Verbose($"Written: {this.debugWriter}");
+                Log.Verbose($"Written: {this.debugWriter}");
             debugWriter = new StringWriter();
 
         }

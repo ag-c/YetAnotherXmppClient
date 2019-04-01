@@ -115,7 +115,7 @@ namespace YetAnotherXmppClient.Protocol
             }
 
             this.currentRosterItems = rosterItems;
-            Log.Logger.CurrentRosterItems(this.currentRosterItems);
+            Log.CurrentRosterItems(this.currentRosterItems);
             this.RosterUpdated?.Invoke(this, this.currentRosterItems);
             return rosterItems;
         }
@@ -128,7 +128,7 @@ namespace YetAnotherXmppClient.Protocol
 
             if (iqResp.IsErrorType())
             {
-                Log.Logger.Error($"Failed to add roster item: {iqResp}");
+                Log.Error($"Failed to add roster item: {iqResp}");
                 return false;
             }
 
@@ -198,7 +198,7 @@ namespace YetAnotherXmppClient.Protocol
 
             if (iqResp.IsErrorType())
             {
-                Log.Logger.Error($"Failed to delete roster item: {iqResp}");
+                Log.Error($"Failed to delete roster item: {iqResp}");
                 return false;
             }
 
@@ -209,7 +209,7 @@ namespace YetAnotherXmppClient.Protocol
 
         void IIqReceivedCallback.IqReceived(XElement iqElem)
         {
-            Log.Logger.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iqElem);
+            Log.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iqElem);
 
 
             if (iqElem.HasAttribute("from") &&
@@ -252,7 +252,7 @@ namespace YetAnotherXmppClient.Protocol
                         this.currentRosterItems.Add(localRosterItem);
                 }
 
-                Log.Logger.CurrentRosterItems(this.currentRosterItems);
+                Log.CurrentRosterItems(this.currentRosterItems);
                 this.RosterUpdated?.Invoke(this, this.currentRosterItems);
 
                 //UNDONE reply to server (2.1.6.  Roster Push)

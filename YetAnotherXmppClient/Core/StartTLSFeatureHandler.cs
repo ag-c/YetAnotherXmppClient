@@ -10,7 +10,7 @@ namespace YetAnotherXmppClient
     {
         public static async Task BeginNegotiationAsync(TextWriter writer)
         {
-            Log.Logger.Debug("Initiating TLS negotiation..");
+            Log.Debug("Initiating TLS negotiation..");
 
             XNamespace ns = "urn:ietf:params:xml:ns:xmpp-tls";
             var x = new XElement(ns + "starttls").ToString();

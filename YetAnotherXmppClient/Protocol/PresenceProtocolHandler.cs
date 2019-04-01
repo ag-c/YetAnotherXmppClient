@@ -51,7 +51,7 @@ namespace YetAnotherXmppClient.Protocol
             //UNDONE no response
             //if (presenceResp.IsErrorType())
             //{
-            //    Log.Logger.Error("Failed to request presence subscription");
+            //    Log.Error("Failed to request presence subscription");
             //    return false;
             //}
 
