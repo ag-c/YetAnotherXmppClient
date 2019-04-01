@@ -5,6 +5,8 @@ namespace YetAnotherXmppClient
 {
     public class XNames
     {
+        public static readonly XName presence = "{jabber:client}presence";
+
         public static readonly XName proceed = "{urn:ietf:params:xml:ns:xmpp-tls}proceed";
         public static readonly XName failure = "{urn:ietf:params:xml:ns:xmpp-tls}failure";
 

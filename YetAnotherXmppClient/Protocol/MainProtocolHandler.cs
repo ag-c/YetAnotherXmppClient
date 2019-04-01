@@ -51,13 +51,12 @@ namespace YetAnotherXmppClient
         private static readonly string Version = "1.0";
         private static readonly IEnumerable<string> Mechanisms = new[] {"PLAIN"};
 
-        private readonly IEnumerable<IFeatureProtocolNegotiator> featureHandlers;
+        private readonly IEnumerable<IFeatureProtocolNegotiator> featureNegotiators;
         private readonly IFeatureOptionsProvider featureOptionsProvider;
         //private readonly FeatureOptionsDictionary featureOptionsDict = new FeatureOptionsDictionary();
 
         readonly Dictionary<string, string> runtimeParameters = new Dictionary<string, string>();
 
-        private string streamId;
         private Jid jid;
 
         public event EventHandler<Exception> FatalErrorOccurred;
@@ -77,14 +76,15 @@ namespace YetAnotherXmppClient
             this.featureOptionsProvider = featureOptionsProvider;
             this.xmppStream = new AsyncXmppStream(serverStream);
 
-            this.RosterHandler = new RosterProtocolHandler(this.xmppServerStream, this.runtimeParameters);
-            this.PresenceHandler = new PresenceProtocolHandler(this.xmppServerStream);
-            this.ImProtocolHandler = new ImProtocolHandler(this.xmppServerStream, this.runtimeParameters);
+            this.RosterHandler = new RosterProtocolHandler(this.xmppStream, this.runtimeParameters);
+            this.PresenceHandler = new PresenceProtocolHandler(this.xmppStream);
+            this.ImProtocolHandler = new ImProtocolHandler(this.xmppStream, this.runtimeParameters);
 
-            this.featureHandlers = new IFeatureProtocolNegotiator[]
+            this.featureNegotiators = new IFeatureProtocolNegotiator[]
             {
-                new SaslFeatureProtocolHandler(serverStream, Mechanisms),
-                new BindProtocolHandler(this.xmppServerStream, this.runtimeParameters),
+                new StartTlsProtocolHandler(this.xmppStream), 
+                new SaslFeatureProtocolHandler(this.xmppStream, Mechanisms),
+                new BindProtocolHandler(this.xmppStream, this.runtimeParameters),
                 //new ImProtocolHandler(serverStream),
             };
         }
@@ -116,7 +116,7 @@ namespace YetAnotherXmppClient
                     var feature = mandatoryFeatures.First();
                     if (features.Any(f => f is MechanismsFeature))
                     {
-                        var saslHandler = new SaslFeatureProtocolHandler(this.serverStream, Mechanisms);
+                        var saslHandler = new SaslFeatureProtocolHandler(this.xmppStream, Mechanisms);
 
                         var mechanismsFeature = features.OfType<MechanismsFeature>().First();
 
@@ -135,7 +135,7 @@ namespace YetAnotherXmppClient
 
                         if (features.Any(f => f.Name == XNames.session_session))
                         {
-                            var pepHandler = new PepProtocolHandler(this.xmppServerStream, this.runtimeParameters);
+                            var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
                             var y = await pepHandler.DetermineSupportAsync();
 
 
@@ -161,7 +161,7 @@ namespace YetAnotherXmppClient
 
 
                             //this.xmppServerStream.StartAsyncReadLoop();
-                            await this.xmppServerStream.RunLoopAsync(new CancellationTokenSource().Token);
+                            await this.xmppStream.RunLoopAsync(new CancellationTokenSource().Token);
 
                             //var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
                             //await imHandler.EstablishSessionAsync();
@@ -230,7 +230,7 @@ namespace YetAnotherXmppClient
             //    namespaces.Add(attr.Key, attr);
 //            ValidateInitialStreamHeaderAttributes(attributes)
             Expect(() => attributes.ContainsKey("id"));
-            this.streamId = attributes["id"];
+            //this.streamId = attributes["id"];
 
             //4.7.2. to //MUST verify the identity of the other entity
         }

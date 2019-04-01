@@ -15,7 +15,7 @@ using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient
 {
-    public class SaslFeatureProtocolHandler //: ProtocolHandlerBase
+    public class SaslFeatureProtocolHandler : IFeatureProtocolNegotiator
     {
         private readonly AsyncXmppStream xmppStream;
         private readonly IEnumerable<string> clientMechanisms;

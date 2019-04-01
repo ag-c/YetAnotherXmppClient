@@ -99,6 +99,9 @@ namespace YetAnotherXmppClient.Core
 
         public async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
         {
+            if (this.isLoopRunning)
+                throw new InvalidOperationException("Cannot read manually, stream is in read loop");
+
             Log.Debug("Reading response stream header..");
 
             //while (xmlReader.NodeType == XmlNodeType.EndElement)
@@ -112,6 +115,9 @@ namespace YetAnotherXmppClient.Core
 
         public async Task<XElement> ReadElementAsync()
         {
+            if (this.isLoopRunning)
+                throw new InvalidOperationException("Cannot read manually, stream is in read loop");
+
             var xElem = await this.xmlReader.ReadNextElementAsync();
             //TOLOG
             return xElem;
@@ -135,7 +141,10 @@ namespace YetAnotherXmppClient.Core
         }
 
         private async Task<XElement> ReadUntilResponseAsync(string id)
-        { 
+        {
+            if (this.isLoopRunning)
+                throw new InvalidOperationException("Cannot read manually, stream is in read loop");
+
             XElement xElem;
             do
             {

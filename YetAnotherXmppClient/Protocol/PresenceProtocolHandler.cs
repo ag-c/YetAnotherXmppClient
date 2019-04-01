@@ -81,7 +81,7 @@ namespace YetAnotherXmppClient.Protocol
         //UNDONE async
         async void IPresenceReceivedCallback.PresenceReceived(XElement presenceElem)
         {
-            Expect("presence", presenceElem.Name, presenceElem);
+            Expect(XNames.presence, presenceElem.Name, presenceElem);
 
             if (presenceElem.Attribute("type")?.Value == PresenceType.subscribe.ToString())
             {

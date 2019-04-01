@@ -19,16 +19,11 @@ namespace YetAnotherXmppClient.Extensions
             return xElem.Element(name) != null;
         }
 
-        public static bool IsIq(this XElement xElem)
-        {
-            return xElem.Name == "iq";
-        }
-
         public static bool IsStanza(this XElement xElem)
         {
-            return xElem.Name == "iq" ||
-                   xElem.Name == "presence" ||
-                   xElem.Name == "message";
+            return xElem.Name.LocalName == "iq" ||
+                   xElem.Name.LocalName == "presence" ||
+                   xElem.Name.LocalName == "message";
         }
     }
 }
