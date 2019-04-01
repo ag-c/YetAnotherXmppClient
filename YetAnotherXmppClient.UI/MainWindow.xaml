@@ -18,6 +18,22 @@
         <Button Content="-" Command="{Binding DeleteRosterItemCommand}" />
       </StackPanel>
     </Grid>
+
+    <StackPanel Orientation="Vertical" Grid.Column="1">
+      <CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
+      <Popup IsOpen = "{Binding ElementName = PCheckBox,Path = IsChecked}"
+         PlacementTarget = "{Binding ElementName = PCheckBox}">
+
+        <Canvas Width = "125" Height = "100" Background = "LightGray">
+          <Canvas.RenderTransform>
+            <RotateTransform x:Name = "theTransform" />
+          </Canvas.RenderTransform>
+          <TextBlock TextWrapping = "Wrap" Foreground = "Blue"
+             Text = "Hi, this is Popup" />
+        </Canvas>
+      </Popup>
+    </StackPanel>
+
     <!--<TextBlock Text="test" Grid.Row="1" />-->
     <TextBox Text="{Binding LogText}" Grid.Row="2" Grid.ColumnSpan="2" IsReadOnly="True" />
   </Grid>

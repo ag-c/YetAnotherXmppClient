@@ -68,11 +68,11 @@ namespace YetAnotherXmppClient.Console
             }
             catch (NotExpectedProtocolException ex)
             {
-                Log.Logger.Fatal($"{ex.ThrownBy}: Expected {ex.Expected} but got {ex.Actual}");
+                Log.Fatal($"{ex.ThrownBy}: Expected {ex.Expected} but got {ex.Actual}");
             }
             catch (Exception ex)
             {
-                Log.Logger.Fatal($"Exception thrown: {ex}");
+                Log.Fatal($"Exception thrown: {ex}");
             }
 
 

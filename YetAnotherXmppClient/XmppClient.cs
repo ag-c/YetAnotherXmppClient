@@ -36,11 +36,11 @@ namespace YetAnotherXmppClient
             this.password = password;
             this.tcpClient = new TcpClient();
             
-            Log.Logger.Information($"Connecting to {jid.Server}:{DefaultPort}..");
+            Log.Information($"Connecting to {jid.Server}:{DefaultPort}..");
             
             await this.tcpClient.ConnectAsync(jid.Server, DefaultPort);
             
-            Log.Logger.Information($"Connection established");
+            Log.Information($"Connection established");
 
             this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
             this.ProtocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
@@ -61,21 +61,28 @@ namespace YetAnotherXmppClient
         {
             if(e is NotExpectedProtocolException ex)
             {
-                Log.Logger.Fatal($"{ex.ThrownBy}: Expected {ex.Expected}, but was {ex.Actual}.\nContext: {ex.Context}");
+                Log.Fatal($"{ex.ThrownBy}: Expected {ex.Expected}, but was {ex.Actual}.\nContext: {ex.Context}");
             }
             else
             {
-                Log.Logger.Fatal(e, $"Fatal error occurred in protocol handler: {e}");
+                Log.Fatal(e, $"Fatal error occurred in protocol handler: {e}");
             }
         }
 
         private void HandleProtocolHandlingEnded()
         {
-            Log.Logger.Information($"The protocol handler stopped working for unknown reason");
+            Log.Information($"The protocol handler stopped working for unknown reason");
         }
 
         public Dictionary<string, string> GetOptions(XName featureName)
         {
+            if (featureName == XNames.starttls)
+            {
+                return new Dictionary<string, string>
+                           {
+                               ["server"] = this.jid.Server,
+                           };
+            }
             if (featureName == XNames.sasl_mechanisms)
             {
                 return new Dictionary<string, string>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Extensions;
 using Presence = YetAnotherXmppClient.Core.Stanza.Presence;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Core
 {
@@ -49,8 +51,11 @@ namespace YetAnotherXmppClient.Core
             this.Reinitialize(serverStream);
         }
 
+        public Stream BaseStream { get; private set; }
+
         public void Reinitialize(Stream serverStream)
         {
+            this.BaseStream = serverStream;
             this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true });
             this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
         }
@@ -76,10 +81,46 @@ namespace YetAnotherXmppClient.Core
             this.messageContentHandlers.TryAdd(elementName, callback);
         }
 
+        public async Task WriteInitialStreamHeaderAsync(Jid jid, string version)
+        {
+            Log.Debug("Writing intial stream header..");
+
+            using (var xmlWriter = XmlWriter.Create(textWriter, new XmlWriterSettings { Async = true, WriteEndDocumentOnClose = false }))
+            {
+                await xmlWriter.WriteStartDocumentAsync();
+                await xmlWriter.WriteStartElementAsync("stream", "stream", "http://etherx.jabber.org/streams");
+                await xmlWriter.WriteAttributeStringAsync("", "from", null, jid);
+                await xmlWriter.WriteAttributeStringAsync("", "to", null, jid.Server);
+                await xmlWriter.WriteAttributeStringAsync("", "version", null, version);
+                await xmlWriter.WriteAttributeStringAsync("xml", "lang", null, "en");
+                await xmlWriter.WriteAttributeStringAsync("xmlns", "", null, "jabber:client");
+            }
+        }
+
+        public async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
+        {
+            Log.Debug("Reading response stream header..");
+
+            //while (xmlReader.NodeType == XmlNodeType.EndElement)
+            //    await xmlReader.ReadAsync();
+
+            await this.xmlReader.MoveToContentAsync();
+            Expect("stream:stream", actual: this.xmlReader.Name);
+
+            return await this.xmlReader.GetAllAttributesAsync();
+        }
+
+        public async Task<XElement> ReadElementAsync()
+        {
+            var xElem = await this.xmlReader.ReadNextElementAsync();
+            //TOLOG
+            return xElem;
+        }
+
 
         public async Task<XElement> WriteIqAndReadReponseAsync(Iq iq)
         {
-            Log.Logger.Verbose($"WriteIqAndReadReponseAsync ({iq.Id})");
+            Log.Verbose($"WriteIqAndReadReponseAsync ({iq.Id})");
 
             var tcs = new TaskCompletionSource<XElement>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -131,7 +172,7 @@ namespace YetAnotherXmppClient.Core
 
             if (iqElement.HasAttribute("id") && this.iqCompletionSources.TryRemove(id, out var tcs))
             {
-                Log.Logger.Verbose($"Received iq with awaiter ({id})");
+                Log.Verbose($"Received iq with awaiter ({id})");
                 tcs.SetResult(iqElement);
             }
             else
@@ -144,7 +185,7 @@ namespace YetAnotherXmppClient.Core
                 }
                 else
                 {
-                    Log.Logger.Verbose($"Received iq WITHOUT awaiter or callback ({id})");
+                    Log.Verbose($"Received iq WITHOUT awaiter or callback ({id})");
 
                     if (iqElement.Name == "iq")
                     {
@@ -176,7 +217,7 @@ namespace YetAnotherXmppClient.Core
 
         private void OnNonStanzaElementReceived(XElement xElem)
         {
-            Log.Logger.Error($"Received non-stanza element, which was not expected and is not handled: ({xElem})");
+            Log.Error($"Received non-stanza element, which was not expected and is not handled: ({xElem})");
         }
 
         public Task WriteAsync(string message)

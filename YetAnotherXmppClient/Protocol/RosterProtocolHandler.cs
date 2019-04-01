@@ -128,7 +128,7 @@ namespace YetAnotherXmppClient.Protocol
 
             if (iqResp.IsErrorType())
             {
-                Log.Logger.Error($"Failed to add roster item: {iqResp}");
+                Log.Error($"Failed to add roster item: {iqResp}");
                 return false;
             }
 
@@ -198,7 +198,7 @@ namespace YetAnotherXmppClient.Protocol
 
             if (iqResp.IsErrorType())
             {
-                Log.Logger.Error($"Failed to delete roster item: {iqResp}");
+                Log.Error($"Failed to delete roster item: {iqResp}");
                 return false;
             }
 
@@ -209,7 +209,7 @@ namespace YetAnotherXmppClient.Protocol
 
         void IIqReceivedCallback.IqReceived(XElement iqElem)
         {
-            Log.Logger.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iqElem);
+            Log.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iqElem);
 
 
             if (iqElem.HasAttribute("from") &&
