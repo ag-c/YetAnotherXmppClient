@@ -10,6 +10,7 @@ using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -28,7 +29,7 @@ namespace YetAnotherXmppClient
         Dictionary<string, string> GetOptions(XName featureName);
     }
 
-    interface IFeatureProtocolHandler
+    interface IFeatureProtocolNegotiator
     {
         XName FeatureName { get; }
         Task<bool> NegotiateAsync(Feature feature, FeatureOptions options);
@@ -50,14 +51,15 @@ namespace YetAnotherXmppClient
         private static readonly string Version = "1.0";
         private static readonly IEnumerable<string> Mechanisms = new[] {"PLAIN"};
 
-        private readonly IEnumerable<IFeatureProtocolHandler> featureHandlers;
+        private readonly IEnumerable<IFeatureProtocolNegotiator> featureHandlers;
         private readonly IFeatureOptionsProvider featureOptionsProvider;
         //private readonly FeatureOptionsDictionary featureOptionsDict = new FeatureOptionsDictionary();
 
         readonly Dictionary<string, string> runtimeParameters = new Dictionary<string, string>();
 
         private string streamId;
-        
+        private Jid jid;
+
         public event EventHandler<Exception> FatalErrorOccurred;
         public event EventHandler NegotiationFinished;
 
@@ -67,6 +69,7 @@ namespace YetAnotherXmppClient
         public RosterProtocolHandler RosterHandler { get; }
         public PresenceProtocolHandler PresenceHandler { get; }
         public ImProtocolHandler ImProtocolHandler { get; }
+        private MessageReceiptsProtocolHandler messageReceiptsHandler;
 
 
         public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider) : base(serverStream)
@@ -74,23 +77,30 @@ namespace YetAnotherXmppClient
             this.featureOptionsProvider = featureOptionsProvider;
             this.xmppServerStream = new AsyncXmppStream(serverStream);
 
-            this.RosterHandler = new RosterProtocolHandler(this.xmppServerStream, runtimeParameters);
+            this.RosterHandler = new RosterProtocolHandler(this.xmppServerStream, this.runtimeParameters);
             this.PresenceHandler = new PresenceProtocolHandler(this.xmppServerStream);
             this.ImProtocolHandler = new ImProtocolHandler(this.xmppServerStream, this.runtimeParameters);
+
+            this.featureHandlers = new IFeatureProtocolNegotiator[]
+            {
+                new SaslFeatureProtocolHandler(serverStream, Mechanisms),
+                new BindProtocolHandler(this.xmppServerStream, this.runtimeParameters),
+                //new ImProtocolHandler(serverStream),
+            };
         }
 
 
-        public async Task RunAsync(Jid jid)
+        public async Task RunAsync(Jid jid, CancellationToken token)
         {
             try
             {
                 await this.RestartStreamAsync(jid);
-                
+
                 var features = await this.ReadStreamFeaturesAsync();
                 var isStreamNegotiationComplete = features.All(f => !f.IsRequired);
 
                 Log.Logger.StreamNegotiationStatus(features);
-               
+
                 var mandatoryFeatures = features.Where(f => f.IsRequired);
                 if (mandatoryFeatures.Any())
                 {
@@ -98,11 +108,22 @@ namespace YetAnotherXmppClient
                     {
                         await NegotiateTlsAsync(jid);
 
-                        await this.RunAsync(jid);
+                        await this.RunAsync(jid, token);
                         return;
                     }
-                    
+
                     var feature = mandatoryFeatures.First();
+                    if (features.Any(f => f is MechanismsFeature))
+                    {
+                        var saslHandler = new SaslFeatureProtocolHandler(this.serverStream, Mechanisms);
+
+                        var mechanismsFeature = features.OfType<MechanismsFeature>().First();
+
+                        await saslHandler.NegotiateAsync(mechanismsFeature, this.featureOptionsProvider.GetOptions(XNames.sasl_mechanisms));
+
+                        await this.RunAsync(jid, token);
+                        return;
+                    }
                     if (feature.Name == XNames.bind_bind)
                     {
                         var bindHandler = new BindProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
@@ -113,17 +134,21 @@ namespace YetAnotherXmppClient
 
                         if (features.Any(f => f.Name == XNames.session_session))
                         {
+                            var pepHandler = new PepProtocolHandler(this.xmppServerStream, this.runtimeParameters);
+                            var y = await pepHandler.DetermineSupportAsync();
+
+
                             var rosterItems = await this.RosterHandler.RequestRosterAsync();
 
-//                            await RosterHandler.AddRosterItemAsync("agg1n@jabber.ccc.de", "agg1nccc", new[]{"Ichgruppe2"});
+                            //                            await RosterHandler.AddRosterItemAsync("agg1n@jabber.ccc.de", "agg1nccc", new[]{"Ichgruppe2"});
 
-//                            rosterItems = await RosterHandler.RequestRosterAsync();
+                            //                            rosterItems = await RosterHandler.RequestRosterAsync();
 
-////                            rosterHandler.UpdateRosterItemAsync()
+                            ////                            rosterHandler.UpdateRosterItemAsync()
 
-//                            await RosterHandler.DeleteRosterItemAsync("jf@draugr.de");
+                            //                            await RosterHandler.DeleteRosterItemAsync("jf@draugr.de");
 
-//                            rosterItems = await RosterHandler.RequestRosterAsync();
+                            //                            rosterItems = await RosterHandler.RequestRosterAsync();
 
 
                             //var x = await ReadElementFromStreamAsync();
@@ -134,7 +159,8 @@ namespace YetAnotherXmppClient
 
 
 
-                            this.xmppServerStream.StartAsyncReadLoop();
+                            //this.xmppServerStream.StartAsyncReadLoop();
+                            await this.xmppServerStream.RunLoopAsync(new CancellationTokenSource().Token);
 
                             //var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
                             //await imHandler.EstablishSessionAsync();
@@ -147,23 +173,23 @@ namespace YetAnotherXmppClient
 
                         }
                     }
-//                    if(feature)
+                    //                    if(feature)
                 }
                 else
                 {
                     //MAY negotiate voluntary features
 
-                    if (features.Any(f => f is MechanismsFeature))
-                    {
-                        var saslHandler = new SaslFeatureProtocolHandler(this.serverStream, Mechanisms);
-                        
-                        var mechanismsFeature = features.OfType<MechanismsFeature>().First();
+                    //if (features.Any(f => f is MechanismsFeature))
+                    //{
+                    //    var saslHandler = new SaslFeatureProtocolHandler(this.serverStream, Mechanisms);
 
-                        await saslHandler.Handle(mechanismsFeature);
+                    //    var mechanismsFeature = features.OfType<MechanismsFeature>().First();
 
-                        await this.RunAsync(jid);
-                        return;
-                    }
+                    //    await saslHandler.NegotiateAsync(mechanismsFeature, this.featureOptionsProvider.GetOptions(XNames.sasl_mechanisms));
+
+                    //    await this.RunAsync(jid, token);
+                    //    return;
+                    //}
                 }
             }
             catch (Exception e)
@@ -186,6 +212,7 @@ namespace YetAnotherXmppClient
 
         //    var success = await featureProtocolHandler.NegotiateAsync(options);
         //}
+
 
         Dictionary<string, string> namespaces = new Dictionary<string, string>();
         //4.2.Opening a Stream
@@ -211,7 +238,7 @@ namespace YetAnotherXmppClient
         private async Task NegotiateTlsAsync(Jid jid)
         {
             await StartTLSFeatureHandler.BeginNegotiationAsync(this.textWriter);
-            var xElem = await this.ReadElementFromStreamAsync();
+            var xElem = await this.xmlReader.ReadNextElementAsync();
             if (xElem.Name == XNames.failure)
             {
                 //UNDONE If the failure case occurs, the initiating entity MAY attempt to
@@ -289,26 +316,13 @@ namespace YetAnotherXmppClient
 
 
             //Expect("stream:features", actual: this.xmlReader.Name);
-            var xElem = await this.ReadElementFromStreamAsync();
-            Expect("features", actual: xElem.Name.LocalName);
+            var xElem = await this.xmlReader.ReadNextElementAsync();
+            Expect("features", actual: xElem.Name.LocalName, context: xElem);
             return Features.FromXElement(xElem);
         }
 
-        private async Task<XElement> ReadElementFromStreamAsync()
-        {
-            var xElem = await this.xmlReader.ReadNextElementAsync();
-            //var xmlFragment = await this.xmlReader.ReadElementOrClosingTagAsync();
 
-            //Expect(() => xmlFragment.PartType == XmlPartType.Element);
-
-            //var xElem = XElement.Parse(xmlFragment.RawXml);
-
-            //Log.Logger.Verbose("Read element from stream: " + xElem);
-
-            return xElem;
-        }
-
-        private async Task TerminateSessionAsync()
+        public async Task TerminateSessionAsync()
         {
             await this.PresenceHandler.SendUnavailableAsync();
 

@@ -245,10 +245,9 @@ namespace YetAnotherXmppClient.Protocol
                     localRosterItem.Name = itemElem.Attribute("name")?.Value;
                     localRosterItem.Groups = itemElem.Elements(XNames.roster_group)?.Select(xe => xe.Value);
                     localRosterItem.Subscription = itemElem.Attribute("subscription")?.Value ?? "<not set>";
-                    if (itemElem.Attribute("ask")?.Value == "subscribe")
-                        localRosterItem.IsSubscriptionPending = true;
+                    localRosterItem.IsSubscriptionPending = itemElem.Attribute("ask")?.Value == "subscribe";
 
-                    if(needsAdd)
+                    if (needsAdd)
                         this.currentRosterItems.Add(localRosterItem);
                 }
 

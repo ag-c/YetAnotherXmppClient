@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using YetAnotherXmppClient.Core;
 
 namespace YetAnotherXmppClient
 {
@@ -30,6 +31,16 @@ namespace YetAnotherXmppClient
 
         public static readonly XName receipts_request = "{urn:xmpp:receipts}request";
         public static readonly XName receipts_received = "{urn:xmpp:receipts}received";
+
+        public static readonly XName register_register = "{http://jabber.org/features/iq-register}register";
+
+        public static readonly XName discoinfo_query = "{http://jabber.org/protocol/disco#info}query";
+        public static readonly XName discoinfo_identity = "{http://jabber.org/protocol/disco#info}identity";
+
+        public static readonly XName pubsub_pubsub = "{http://jabber.org/protocol/pubsub}pubsub";
+        public static readonly XName pubsub_publish = "{http://jabber.org/protocol/pubsub}publish";
+        public static readonly XName pubsub_item = "{http://jabber.org/protocol/pubsub}item";
+        public static readonly XName pubsub_subscribe = "{http://jabber.org/protocol/pubsub}subscribe";
     }
 
     public class XNamespaces

@@ -1,4 +1,5 @@
-﻿using System.Xml.XmlDiff;
+﻿using System.Xml.Linq;
+using System.Xml.XmlDiff;
 using Xunit;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
@@ -55,6 +56,28 @@ namespace YetAnotherXmppClient.Tests
             xmlDiff.Option = (XmlDiffOption) ((int) XmlDiffOption.NormalizeNewline - 1);
 
             Assert.True(xmlDiff.Compare(xml, expectedXml));
+        }
+
+        [Fact]
+        public void PubSubPublish()
+        {
+            var expectedXml = @"<iq from='juliet@capulet.lit/balcony' type='set' id='pub1'>
+                                  <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+                                    <publish node='http://jabber.org/protocol/tune'>
+                                      <item>
+                                        <test/>
+                                      </item>
+                                    </publish>
+                                  </pubsub>
+                                </iq>";
+
+            var iq = new Iq(IqType.set,
+                new PubSubPublish("http://jabber.org/protocol/tune", null, new XElement("test")));
+
+            var xmlDiff = new System.Xml.XmlDiff.XmlDiff();
+            xmlDiff.Option = (XmlDiffOption)((int)XmlDiffOption.NormalizeNewline - 1);
+
+            Assert.True(xmlDiff.Compare(iq, expectedXml));
         }
     }
 }

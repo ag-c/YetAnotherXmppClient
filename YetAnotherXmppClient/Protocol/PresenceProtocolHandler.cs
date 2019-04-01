@@ -79,13 +79,13 @@ namespace YetAnotherXmppClient.Protocol
         }
 
         //UNDONE async
-        async void IPresenceReceivedCallback.PresenceReceived(XElement presenceXElem)
+        async void IPresenceReceivedCallback.PresenceReceived(XElement presenceElem)
         {
-            Expect("presence", presenceXElem.Name, presenceXElem);
+            Expect("presence", presenceElem.Name, presenceElem);
 
-            if (presenceXElem.Attribute("type")?.Value == PresenceType.subscribe.ToString())
+            if (presenceElem.Attribute("type")?.Value == PresenceType.subscribe.ToString())
             {
-                var fromValue = presenceXElem.Attribute("from").Value;
+                var fromValue = presenceElem.Attribute("from").Value;
 
                 var responseType = await (this.OnSubscriptionRequestReceived?.Invoke(fromValue) ?? Task.FromResult(false))
                     ? PresenceType.subscribed
@@ -98,36 +98,36 @@ namespace YetAnotherXmppClient.Protocol
 
                 await this.xmppStream.WriteAsync(response);
             }
-            else if(!presenceXElem.HasAttribute("type"))
+            else if(!presenceElem.HasAttribute("type"))
             {
-                Expect(() => presenceXElem.HasAttribute("from"), presenceXElem);
+                Expect(() => presenceElem.HasAttribute("from"), presenceElem);
 
-                var fromVal = presenceXElem.Attribute("from").Value;
-                var showElem = presenceXElem.Element("show");
-                var prioElem = presenceXElem.Element("priority");
+                var fromVal = presenceElem.Attribute("from").Value;
 
-
-                this.PresenceByJid.AddOrUpdate(fromVal, _ => new Presence
-                    {
-                        From = fromVal,
-                        Show = showElem != null
-                            ? (PresenceShow) Enum.Parse(typeof(PresenceShow), showElem.Value)
-                            : PresenceShow.None,
-                        Stati = presenceXElem.Elements("status").Select(xe => xe.Value),
-                        Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?) null
-                    },
-                    (_, existing) =>
-                    {
-                        existing.From = fromVal;
-                        existing.Show = showElem != null
-                            ? (PresenceShow) Enum.Parse(typeof(PresenceShow), showElem.Value)
-                            : PresenceShow.None;
-                        existing.Stati = presenceXElem.Elements("status").Select(xe => xe.Value);
-                        existing.Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?) null;
-                        return existing;
-                    });
+                this.PresenceByJid.AddOrUpdate(fromVal, _ =>
+                {
+                    var instance = new Presence();
+                    UpdatePresence(instance, presenceElem);
+                    return instance;
+                }, (_, existing) => UpdatePresence(existing, presenceElem));
             }
-        }
+
+            Presence UpdatePresence(Presence existing, XElement newPresenceElem)
+            {
+                var fromVal = presenceElem.Attribute("from").Value;
+                var showElem = newPresenceElem.Element("show");
+                var prioElem = newPresenceElem.Element("priority");
+
+                existing.From = fromVal;
+                existing.Show = showElem != null
+                    ? (PresenceShow)Enum.Parse(typeof(PresenceShow), showElem.Value)
+                    : PresenceShow.None;
+                existing.Stati = newPresenceElem.Elements("status").Select(xe => xe.Value);
+                existing.Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?)null;
+
+                return existing;
+            }
+    }
 
         public Task BroadcastPresenceAsync(PresenceShow? show = null, string status = null)
         {

@@ -23,7 +23,7 @@ namespace YetAnotherXmppClient
         private MechanismsFeature()
         {
             this.Name = XNames.sasl_mechanisms;
-            this.IsRequired = false;
+            this.IsRequired = true;
         }
         public static MechanismsFeature FromXElement(XElement xElem)
         {

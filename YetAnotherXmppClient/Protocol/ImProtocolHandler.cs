@@ -16,7 +16,7 @@ namespace YetAnotherXmppClient.Protocol
         public List<string> Messages { get; } = new List<string>(); //UNDONE
     }
 
-    public class ImProtocolHandler : IMessageReceivedCallback//: /*ProtocolHandlerBase,*/
+    public class ImProtocolHandler : IMessageReceivedCallback //: /*ProtocolHandlerBase,*/
     {
         private readonly AsyncXmppStream xmppServerStream;
         private readonly Dictionary<string, string> runtimeParameters;
@@ -36,16 +36,16 @@ namespace YetAnotherXmppClient.Protocol
         public Action<Jid, string> OnMessageReceived { get; set; }
 
         //rfc3921
-        [Obsolete]
-        public async Task EstablishSessionAsync()
-        {
-            var iq = new Iq(IqType.set, new XElement(XNames.session_session));
+        //[Obsolete]
+        //public async Task EstablishSessionAsync()
+        //{
+        //    var iq = new Iq(IqType.set, new XElement(XNames.session_session));
 
-            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
+        //    var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
 
-            Expect("result", iqResp.Attribute("type").Value);
-            Expect(iq.Id, iqResp.Attribute("id").Value);
-        }
+        //    Expect("result", iqResp.Attribute("type").Value);
+        //    Expect(iq.Id, iqResp.Attribute("id").Value);
+        //}
 
         public async Task SendMessageAsync(string recipientJid, string message)
         {

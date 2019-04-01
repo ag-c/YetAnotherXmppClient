@@ -33,7 +33,8 @@ namespace YetAnotherXmppClient.Tests
                                   <request xmlns='urn:xmpp:receipts'/>
                                 </message>");
 
-            xmppStream.StartAsyncReadLoop();
+            //xmppStream.StartAsyncReadLoop();
+            xmppStream.RunLoopAsync(new CancellationTokenSource().Token);
 
             await Task.Delay(2000);
 

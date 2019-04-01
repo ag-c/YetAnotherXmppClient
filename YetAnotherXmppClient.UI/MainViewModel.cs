@@ -31,12 +31,14 @@ namespace YetAnotherXmppClient.UI
 
         public ICommand LoginCommand { get; }
         public ICommand AddRosterItemCommand { get; }
+        public ICommand DeleteRosterItemCommand { get; }
 
 
         public MainViewModel()
         {
             this.LoginCommand = new ActionCommand(this.OnLoginCommandExecutedAsync);
             this.AddRosterItemCommand = new ActionCommand(this.OnAddRosterItemCommandExecuted);
+            this.DeleteRosterItemCommand = new ActionCommand(this.OnDeleteRosterItemCommandExecuted);
 
             this.xmppClient.RosterUpdated += this.HandleRosterUpdated;
             this.xmppClient.OnSubscriptionRequestReceived += this.HandleSubscriptionRequestReceivedAsync;
@@ -75,6 +77,9 @@ namespace YetAnotherXmppClient.UI
             }
         }
 
+        public RosterItem SelectedRosterItem { get; set; }
+
+
 
         private void OnTimer(object sender, EventArgs e)
         {
@@ -94,10 +99,20 @@ namespace YetAnotherXmppClient.UI
             }
         }
 
-        private void OnAddRosterItemCommandExecuted(object sender)
+        private async void OnAddRosterItemCommandExecuted(object sender)
         {
-            new AddRosterItemWindow().ShowDialog<bool>();
-            this.ShowAddRosterItemPopup = true;
+            var window = new AddRosterItemWindow();
+            if(await window.ShowDialog<bool>())
+                await this.xmppClient.ProtocolHandler.RosterHandler.AddRosterItemAsync(window.Jid, window.Name, new string[0]);
+            //this.ShowAddRosterItemPopup = true;
+        }
+
+        private async void OnDeleteRosterItemCommandExecuted(object sender)
+        {
+            if (this.SelectedRosterItem == null)
+                return;
+
+            await this.xmppClient.ProtocolHandler.RosterHandler.DeleteRosterItemAsync(this.SelectedRosterItem.Jid);
         }
 
         public bool ShowAddRosterItemPopup

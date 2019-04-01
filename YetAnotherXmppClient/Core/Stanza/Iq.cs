@@ -30,6 +30,12 @@ namespace YetAnotherXmppClient.Core
             set => this.SetAttributeValue("from", value);
         }
 
+        public string To
+        {
+            get => this.Attribute("to")?.Value;
+            set => this.SetAttributeValue("to", value);
+        }
+
         public Iq(IqType type, object content) : base("iq", content)
         {
             this.Id = Guid.NewGuid().ToString();

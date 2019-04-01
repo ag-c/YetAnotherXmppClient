@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Mail;
 using System.Net.Sockets;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
@@ -17,10 +18,13 @@ namespace YetAnotherXmppClient
     {
         public static readonly int DefaultPort = 5222;
         
+        private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
         private TcpClient tcpClient;
 
         private Jid jid;
         private string password;
+
+        public MainProtocolHandler ProtocolHandler { get; private set; }
 
         public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
@@ -38,13 +42,19 @@ namespace YetAnotherXmppClient
             
             Log.Logger.Information($"Connection established");
 
-            var protocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
-            protocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
-            protocolHandler.RosterHandler.RosterUpdated += (s, e) => this.RosterUpdated?.Invoke(this, e);
-            protocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.OnSubscriptionRequestReceived;
-            protocolHandler.ImProtocolHandler.OnMessageReceived = this.OnMessageReceived;
+            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
+            this.ProtocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
+            this.ProtocolHandler.RosterHandler.RosterUpdated += (s, e) => this.RosterUpdated?.Invoke(this, e);
+            this.ProtocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.OnSubscriptionRequestReceived;
+            this.ProtocolHandler.ImProtocolHandler.OnMessageReceived = this.OnMessageReceived;
 
-            Task.Run(() => protocolHandler.RunAsync(jid).ContinueWith(_ => HandleProtocolHandlingEnded()));
+            Task.Run(() => this.ProtocolHandler.RunAsync(jid, this.cancelTokenSource.Token).ContinueWith(_ => HandleProtocolHandlingEnded()));
+        }
+
+        public async Task ShutdownAsync()
+        {
+            await this.ProtocolHandler.TerminateSessionAsync();
+            this.cancelTokenSource.Cancel(false);
         }
 
         private void HandleFatalProtocolErrorOccurred(object sender, Exception e)

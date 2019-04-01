@@ -12,7 +12,7 @@
      
     <Button Content="Login" Command="{Binding LoginCommand}"/>
     <Grid RowDefinitions="*,Auto" Grid.Row="1">
-      <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" MinHeight="50"  />
+      <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" SelectedItem="{Binding SelectedRosterItem}" MinHeight="100"  />
       <StackPanel Orientation="Horizontal" Grid.Row="1">
         <Button Content="+" Command="{Binding AddRosterItemCommand}" />
         <Button Content="-" Command="{Binding DeleteRosterItemCommand}" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -38,6 +39,8 @@ namespace YetAnotherXmppClient.Core
         private IPresenceReceivedCallback presenceCallback;
         //callback for incoming message-stanzas
         private IMessageReceivedCallback messageCallback;
+        // handlers for specific child elements in message-stanzas
+        private readonly ConcurrentDictionary<XName, IMessageReceivedCallback> messageContentHandlers = new ConcurrentDictionary<XName, IMessageReceivedCallback>();
 
 
         public AsyncXmppStream(Stream serverStream)
@@ -67,7 +70,7 @@ namespace YetAnotherXmppClient.Core
             this.messageCallback = callback;
         }
 
-        private readonly ConcurrentDictionary<XName, IMessageReceivedCallback> messageContentHandlers = new ConcurrentDictionary<XName, IMessageReceivedCallback>();
+        
         public void RegisterMessageContentCallback(XName elementName, IMessageReceivedCallback callback)
         {
             this.messageContentHandlers.TryAdd(elementName, callback);
@@ -84,7 +87,10 @@ namespace YetAnotherXmppClient.Core
 
             await this.textWriter.WriteAndFlushAsync(iq);
 
-            return await this.ReadUntilResponseAsync(iq.Id);
+            if (this.isLoopRunning)
+                return await tcs.Task;
+            else
+                return await this.ReadUntilResponseAsync(iq.Id);
         }
 
         private async Task<XElement> ReadUntilResponseAsync(string id)
@@ -173,28 +179,37 @@ namespace YetAnotherXmppClient.Core
             Log.Logger.Error($"Received non-stanza element, which was not expected and is not handled: ({xElem})");
         }
 
-        public void StartAsyncReadLoop()
-        {
-            Task.Run(async () =>
-            {
-                try
-                {
-                    while (true)
-                    {
-                        var xElem = await this.xmlReader.ReadNextElementAsync();
-                        this.ProcessInboundElement(xElem);
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Logger.Error("XmppStream-READLOOP exited: " + e);
-                }
-            });
-        }
-
         public Task WriteAsync(string message)
         {
             return this.textWriter.WriteAndFlushAsync(message);
         }
+
+        private bool isLoopRunning;
+        public async Task RunLoopAsync(CancellationToken token)
+        {
+            this.isLoopRunning = true;
+            while (true)
+            {
+                token.ThrowIfCancellationRequested();
+
+                var xElem = await this.xmlReader.ReadNextElementAsync();
+                this.ProcessInboundElement(xElem);
+            }
+        }
+
+        //public void StartAsyncReadLoop()
+        //{
+        //    Task.Run(async () =>
+        //    {
+        //        try
+        //        {
+        //            await this.RunLoopAsync();
+        //        }
+        //        catch (Exception e)
+        //        {
+        //            Log.Logger.Error("XmppStream-READLOOP exited: " + e);
+        //        }
+        //    });
+        //}
     }
 }

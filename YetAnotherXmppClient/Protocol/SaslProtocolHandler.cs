@@ -15,32 +15,36 @@ using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient
 {
-    public class SaslFeatureProtocolHandler : ProtocolHandlerBase
+    public class SaslFeatureProtocolHandler : ProtocolHandlerBase, IFeatureProtocolNegotiator
     {
         private readonly IEnumerable<string> clientMechanisms;
+
+        public XName FeatureName { get; } = XNames.sasl_mechanisms;
 
         public SaslFeatureProtocolHandler(Stream serverStream, IEnumerable<string> clientMechanisms) : base(serverStream)
         {
             this.clientMechanisms = clientMechanisms;
         }
 
-        public Task<bool> Handle(MechanismsFeature feature)
+        public Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
         {
             //6.3.3. Mechanism Preferences
-            var mechanismToTry = this.clientMechanisms.Intersect(feature.Mechanisms).FirstOrDefault();
+            var mechanismToTry = this.clientMechanisms.Intersect(((MechanismsFeature)feature).Mechanisms).FirstOrDefault();
             Log.Logger.Debug($"Trying SASL mechanism '{mechanismToTry}'");
             if (mechanismToTry == null)
             {
                 throw new InvalidOperationException("no supported sasl mechanism");
             }
 
-            return this.NegotiateAsync(mechanismToTry);
+            return this.NegotiateInternalAsync(mechanismToTry, options);
         }
 
-        private async Task<bool> NegotiateAsync(string mechanism)
+        private async Task<bool> NegotiateInternalAsync(string mechanismToTry, Dictionary<string, string> options)
         {
+            var username = options["username"];
+            var password = options["password"];
             //6.4.2. Initiation
-            await this.WriteInitiationAsync(mechanism, "yetanotherxmppuser", "gehe1m");
+            await this.WriteInitiationAsync(mechanismToTry, username, password);
 
             //6.4.3. Challenge-Response Sequence
             XElement xElem;

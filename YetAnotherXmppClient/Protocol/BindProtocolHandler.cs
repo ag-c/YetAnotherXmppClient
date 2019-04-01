@@ -19,7 +19,7 @@ namespace YetAnotherXmppClient.Protocol
         }
     }
 
-    public class BindProtocolHandler : /*ProtocolHandlerBase,*/ IFeatureProtocolHandler
+    public class BindProtocolHandler : /*ProtocolHandlerBase,*/ IFeatureProtocolNegotiator
     {
         private readonly AsyncXmppStream xmppServerStream;
         private readonly Dictionary<string, string> runtimeParameters;
@@ -42,9 +42,6 @@ namespace YetAnotherXmppClient.Protocol
 
             var iq = new Iq(IqType.set, new Bind(resource));
 
-//            await this.textWriter.WriteAndFlushAsync(iq);
-
-//            var iqResp = await this.xmlReader.ReadIqStanzaAsync();
             var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
 
             Expect("result", iqResp.Attribute("type")?.Value, iqResp);
