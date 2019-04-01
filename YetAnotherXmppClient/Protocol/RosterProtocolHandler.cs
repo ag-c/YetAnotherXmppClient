@@ -115,7 +115,7 @@ namespace YetAnotherXmppClient.Protocol
             }
 
             this.currentRosterItems = rosterItems;
-            Log.CurrentRosterItems(this.currentRosterItems);
+            Log.Logger.CurrentRosterItems(this.currentRosterItems);
             this.RosterUpdated?.Invoke(this, this.currentRosterItems);
             return rosterItems;
         }
@@ -252,7 +252,7 @@ namespace YetAnotherXmppClient.Protocol
                         this.currentRosterItems.Add(localRosterItem);
                 }
 
-                Log.CurrentRosterItems(this.currentRosterItems);
+                Log.Logger.CurrentRosterItems(this.currentRosterItems);
                 this.RosterUpdated?.Invoke(this, this.currentRosterItems);
 
                 //UNDONE reply to server (2.1.6.  Roster Push)

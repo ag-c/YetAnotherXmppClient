@@ -8,6 +8,11 @@ namespace YetAnotherXmppClient
 {
     public static class ILoggerExtensions
     {
+        public static void XmppStreamContent(this ILogger logger, string message)
+        {
+            logger.ForContext("IsXmppStreamContent", true).Verbose(message);
+        }
+
         public static void StreamNegotiationStatus(this ILogger logger, IEnumerable<Feature> features)
         {
             if (features.All(f => !f.IsRequired))

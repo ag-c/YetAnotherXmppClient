@@ -66,6 +66,13 @@ namespace YetAnotherXmppClient
 
         public Dictionary<string, string> GetOptions(XName featureName)
         {
+            if (featureName == XNames.starttls)
+            {
+                return new Dictionary<string, string>
+                           {
+                               ["server"] = this.jid.Server,
+                           };
+            }
             if (featureName == XNames.sasl_mechanisms)
             {
                 return new Dictionary<string, string>

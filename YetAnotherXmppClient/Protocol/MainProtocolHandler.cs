@@ -62,7 +62,7 @@ namespace YetAnotherXmppClient
         public event EventHandler NegotiationFinished;
 
         //---
-        private readonly AsyncXmppStream xmppServerStream;
+        private readonly AsyncXmppStream xmppStream;
 
         public RosterProtocolHandler RosterHandler { get; }
         public PresenceProtocolHandler PresenceHandler { get; }
@@ -72,11 +72,11 @@ namespace YetAnotherXmppClient
         public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider) : base(serverStream)
         {
             this.featureOptionsProvider = featureOptionsProvider;
-            this.xmppServerStream = new AsyncXmppStream(serverStream);
+            this.xmppStream = new AsyncXmppStream(serverStream);
 
-            this.RosterHandler = new RosterProtocolHandler(this.xmppServerStream, runtimeParameters);
-            this.PresenceHandler = new PresenceProtocolHandler(this.xmppServerStream);
-            this.ImProtocolHandler = new ImProtocolHandler(this.xmppServerStream, this.runtimeParameters);
+            this.RosterHandler = new RosterProtocolHandler(this.xmppStream, runtimeParameters);
+            this.PresenceHandler = new PresenceProtocolHandler(this.xmppStream);
+            this.ImProtocolHandler = new ImProtocolHandler(this.xmppStream, this.runtimeParameters);
         }
 
 
@@ -89,14 +89,15 @@ namespace YetAnotherXmppClient
                 var features = await this.ReadStreamFeaturesAsync();
                 var isStreamNegotiationComplete = features.All(f => !f.IsRequired);
 
-                Log.StreamNegotiationStatus(features);
+                Log.Logger.StreamNegotiationStatus(features);
                
                 var mandatoryFeatures = features.Where(f => f.IsRequired);
                 if (mandatoryFeatures.Any())
                 {
                     if (features.Any(f => f.Name.LocalName == "starttls"))
                     {
-                        await NegotiateTlsAsync(jid);
+                        var starttlsHandler = new StartTlsProtocolHandler(this.xmppStream);
+                        await starttlsHandler.NegotiateAsync(new Feature()/*UNDONE*/, this.featureOptionsProvider.GetOptions(XNames.starttls));
 
                         await this.RunAsync(jid);
                         return;
@@ -105,7 +106,7 @@ namespace YetAnotherXmppClient
                     var feature = mandatoryFeatures.First();
                     if (feature.Name == XNames.bind_bind)
                     {
-                        var bindHandler = new BindProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
+                        var bindHandler = new BindProtocolHandler(this.xmppStream/*this.serverStream*/, runtimeParameters);
 
                         await bindHandler.NegotiateAsync(feature, this.featureOptionsProvider.GetOptions(XNames.bind_bind));
 
@@ -134,7 +135,7 @@ namespace YetAnotherXmppClient
 
 
 
-                            this.xmppServerStream.StartAsyncReadLoop();
+                            this.xmppStream.StartAsyncReadLoop();
 
                             //var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
                             //await imHandler.EstablishSessionAsync();
@@ -155,7 +156,7 @@ namespace YetAnotherXmppClient
 
                     if (features.Any(f => f is MechanismsFeature))
                     {
-                        var saslHandler = new SaslFeatureProtocolHandler(this.serverStream, Mechanisms);
+                        var saslHandler = new SaslFeatureProtocolHandler(this.xmppStream, Mechanisms);
                         
                         var mechanismsFeature = features.OfType<MechanismsFeature>().First();
 
@@ -193,12 +194,11 @@ namespace YetAnotherXmppClient
         {
             Log.Verbose("Restarting stream..");
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
-            this.RecreateStreams(this.serverStream);
-            this.xmppServerStream.Reinitialize(this.serverStream);
+            this.xmppStream.Reinitialize(this.xmppStream.BaseStream);
 
-            await this.WriteInitialStreamHeaderAsync(jid);
+            await this.xmppStream.WriteInitialStreamHeaderAsync(jid, Version);
 
-            var attributes = await this.ReadResponseStreamHeaderAsync();
+            var attributes = await this.xmppStream.ReadResponseStreamHeaderAsync();
             //foreach(var attr in attributes.Where(kvp => kvp.Key.StartsWith("xmlns:")))
             //    namespaces.Add(attr.Key, attr);
 //            ValidateInitialStreamHeaderAttributes(attributes)
@@ -206,76 +206,6 @@ namespace YetAnotherXmppClient
             this.streamId = attributes["id"];
 
             //4.7.2. to //MUST verify the identity of the other entity
-        }
-
-        private async Task NegotiateTlsAsync(Jid jid)
-        {
-            await StartTLSFeatureHandler.BeginNegotiationAsync(this.textWriter);
-            var xElem = await this.ReadElementFromStreamAsync();
-            if (xElem.Name == XNames.failure)
-            {
-                //UNDONE If the failure case occurs, the initiating entity MAY attempt to
-                //reconnect as explained under Section 3.3.
-                Log.Fatal($"Error: Reply to 'starttls' was '{xElem.Name}'");
-                throw new NotExpectedProtocolException(xElem.Name.ToString(), XNames.proceed.ToString());
-            }
-            else if (xElem.Name == XNames.proceed)
-            {
-                var sslStream = new SslStream(this.serverStream, false, this.UserCertificateValidationCallback);
-
-                await sslStream.AuthenticateAsClientAsync(jid.Server);
-                //UNDONE 5.4.3.3. TLS Success
-
-                this.serverStream = sslStream;
-                this.RecreateStreams(sslStream);
-                this.xmppServerStream.Reinitialize(sslStream);
-            }
-            else
-            {
-                //UNDONE auf localname=="proceed" prüfen
-                throw new NotExpectedProtocolException(xElem.Name.ToString(), "proceed");
-            }
-        }
-
-        private bool UserCertificateValidationCallback(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslpolicyerrors)
-        {
-            return true;
-        }
-
-
-        private async Task WriteInitialStreamHeaderAsync(Jid jid)
-        {
-            Log.Debug("Writing intial stream header..");
-
-            using (var xmlWriter = XmlWriter.Create(textWriter, new XmlWriterSettings { Async = true, WriteEndDocumentOnClose = false }))
-            {
-                await xmlWriter.WriteStartDocumentAsync();
-                await xmlWriter.WriteStartElementAsync("stream", "stream", "http://etherx.jabber.org/streams");
-                await xmlWriter.WriteAttributeStringAsync("", "from", null, jid);
-                await xmlWriter.WriteAttributeStringAsync("", "to", null, jid.Server);
-                await xmlWriter.WriteAttributeStringAsync("", "version", null, Version);
-                await xmlWriter.WriteAttributeStringAsync("xml", "lang", null, "en");
-                await xmlWriter.WriteAttributeStringAsync("xmlns", "", null, "jabber:client");
-            }
-        }
-
-        private async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
-        {
-            Log.Debug("Reading response stream header..");
-
-            //var openingTag = await this.xmlReader.ReadOpeningTagAsync();
-
-            //Expect("stream:stream", actual: openingTag.Name);
-
-            //return openingTag.Attributes;
-
-            while (xmlReader.NodeType == XmlNodeType.EndElement)
-                await xmlReader.ReadAsync();
-
-            await this.xmlReader.MoveToContentAsync();
-            Expect("stream:stream", actual: this.xmlReader.Name);
-
-            return await this.xmlReader.GetAllAttributesAsync();
         }
 
         //4.3.2. Stream Features Format
@@ -289,30 +219,17 @@ namespace YetAnotherXmppClient
 
 
             //Expect("stream:features", actual: this.xmlReader.Name);
-            var xElem = await this.ReadElementFromStreamAsync();
+            var xElem = await this.xmppStream.ReadElementAsync();
             Expect("features", actual: xElem.Name.LocalName);
             return Features.FromXElement(xElem);
         }
 
-        private async Task<XElement> ReadElementFromStreamAsync()
-        {
-            var xElem = await this.xmlReader.ReadNextElementAsync();
-            //var xmlFragment = await this.xmlReader.ReadElementOrClosingTagAsync();
-
-            //Expect(() => xmlFragment.PartType == XmlPartType.Element);
-
-            //var xElem = XElement.Parse(xmlFragment.RawXml);
-
-            //Log.Verbose("Read element from stream: " + xElem);
-
-            return xElem;
-        }
 
         private async Task TerminateSessionAsync()
         {
             await this.PresenceHandler.SendUnavailableAsync();
 
-            await this.xmppServerStream.WriteAsync("</stream:stream");
+            await this.xmppStream.WriteAsync("</stream:stream");
         }
     }
 }

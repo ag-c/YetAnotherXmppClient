@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
@@ -7,6 +8,7 @@ using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Extensions;
 using Presence = YetAnotherXmppClient.Core.Stanza.Presence;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Core
 {
@@ -46,8 +48,11 @@ namespace YetAnotherXmppClient.Core
             this.Reinitialize(serverStream);
         }
 
+        public Stream BaseStream { get; private set; }
+
         public void Reinitialize(Stream serverStream)
         {
+            this.BaseStream = serverStream;
             this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true });
             this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
         }
@@ -71,6 +76,42 @@ namespace YetAnotherXmppClient.Core
         public void RegisterMessageContentCallback(XName elementName, IMessageReceivedCallback callback)
         {
             this.messageContentHandlers.TryAdd(elementName, callback);
+        }
+
+        public async Task WriteInitialStreamHeaderAsync(Jid jid, string version)
+        {
+            Log.Debug("Writing intial stream header..");
+
+            using (var xmlWriter = XmlWriter.Create(textWriter, new XmlWriterSettings { Async = true, WriteEndDocumentOnClose = false }))
+            {
+                await xmlWriter.WriteStartDocumentAsync();
+                await xmlWriter.WriteStartElementAsync("stream", "stream", "http://etherx.jabber.org/streams");
+                await xmlWriter.WriteAttributeStringAsync("", "from", null, jid);
+                await xmlWriter.WriteAttributeStringAsync("", "to", null, jid.Server);
+                await xmlWriter.WriteAttributeStringAsync("", "version", null, version);
+                await xmlWriter.WriteAttributeStringAsync("xml", "lang", null, "en");
+                await xmlWriter.WriteAttributeStringAsync("xmlns", "", null, "jabber:client");
+            }
+        }
+
+        public async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
+        {
+            Log.Debug("Reading response stream header..");
+
+            //while (xmlReader.NodeType == XmlNodeType.EndElement)
+            //    await xmlReader.ReadAsync();
+
+            await this.xmlReader.MoveToContentAsync();
+            Expect("stream:stream", actual: this.xmlReader.Name);
+
+            return await this.xmlReader.GetAllAttributesAsync();
+        }
+
+        public async Task<XElement> ReadElementAsync()
+        {
+            var xElem = await this.xmlReader.ReadNextElementAsync();
+            //TOLOG
+            return xElem;
         }
 
 

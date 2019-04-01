@@ -6,10 +6,10 @@ namespace YetAnotherXmppClient.Protocol
 {
     public class ProtocolHandlerBase
     {
-        protected Stream serverStream;
-        protected XmlReader xmlReader;
+        //protected Stream serverStream;
+        //protected XmlReader xmlReader;
         //protected XmlStreamReader xmlReader;
-        protected TextWriter textWriter;
+        //protected TextWriter textWriter;
 
         //protected AsyncXmppStream xmppServerStream;
         
@@ -22,10 +22,10 @@ namespace YetAnotherXmppClient.Protocol
         
         protected void RecreateStreams(Stream serverStream)
         {
-            this.serverStream = serverStream;
-            this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true });
+            //this.serverStream = serverStream;
+            //this.xmlReader = XmlReader.Create(serverStream, new XmlReaderSettings { Async = true, ConformanceLevel = ConformanceLevel.Fragment, IgnoreWhitespace = true });
             //this.xmlReader = new XmlStreamReader(serverStream);
-            this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
+            //this.textWriter = new DebugTextWriter(new StreamWriter(serverStream));
             //-----
             //this.xmppServerStream = new AsyncXmppStream(serverStream);
         }
