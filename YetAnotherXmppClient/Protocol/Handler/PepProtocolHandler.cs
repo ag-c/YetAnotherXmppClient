@@ -1,24 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Handler
 {
-    class PepProtocolHandler
+    class PepProtocolHandler : ProtocolHandlerBase
     {
-        private readonly AsyncXmppStream xmppStream;
-        private readonly Dictionary<string, string> runtimeParameters;
-
         public PepProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+            : base(xmppStream, runtimeParameters)
         {
-            this.xmppStream = xmppStream;
-            this.runtimeParameters = runtimeParameters;
         }
 
         //XEP-0163/6.1
@@ -26,11 +21,11 @@ namespace YetAnotherXmppClient.Protocol
         {
             var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query))
             {
-                From = this.runtimeParameters["jid"],
-                To = this.runtimeParameters["jid"].ToBareJid()
+                From = this.RuntimeParameters["jid"],
+                To = this.RuntimeParameters["jid"].ToBareJid()
             };
 
-            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
 
             var pepSupported = iqResp.Element(XNames.discoinfo_query).Elements(XNames.discoinfo_identity)
                 .Any(idt => idt.Attribute("category")?.Value == "pubsub" &&
@@ -48,8 +43,13 @@ namespace YetAnotherXmppClient.Protocol
 
         public async Task SubscribeToNodeAsync(string nodeId)
         {
+            var iq = new Iq(IqType.set, new PubSubSubscribe(nodeId, this.RuntimeParameters["jid"].ToBareJid()))
+            {
+                From = this.RuntimeParameters["jid"],
+                To = 
+            }
 
-            var iq = new Iq(IqType.set, new PubSubSubscribe(nodeId, this.runtimeParameters["jid"].ToBareJid()));
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
         }
     }
 }

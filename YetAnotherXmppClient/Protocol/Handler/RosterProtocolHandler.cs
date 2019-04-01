@@ -8,9 +8,8 @@ using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
-using static YetAnotherXmppClient.Expectation;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Handler
 {
     public class RosterItem
     {
@@ -26,65 +25,29 @@ namespace YetAnotherXmppClient.Protocol
         }
     }
 
-    interface IIqFactory
+
+    public class RosterProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
-        Iq CreateSetIq(object content);
-        Iq CreateGetIq(object content);
-    }
-    class DefaultClientIqFactory : IIqFactory
-    {
-        private readonly Func<string> fromFunc;
-
-        public DefaultClientIqFactory(Func<string> fromFunc)
-        {
-            this.fromFunc = fromFunc;
-        }
-
-        public Iq CreateSetIq(object content)
-        {
-            return this.CreateInternal(IqType.set, content);
-        }
-
-        public Iq CreateGetIq(object content)
-        {
-            return this.CreateInternal(IqType.get, content);
-        }
-
-        private Iq CreateInternal(IqType iqType, object content)
-        {
-            var iq = new Iq(iqType, content);
-            if (this.fromFunc != null)
-                iq.From = this.fromFunc();
-            return iq;
-        }
-    }
-    public class RosterProtocolHandler : IIqReceivedCallback
-    {
-        private readonly AsyncXmppStream xmppStream;
-        private readonly Dictionary<string, string> runtimeParameters;
-        private IIqFactory iqFactory;
+        private List<RosterItem> currentRosterItems = new List<RosterItem>();
+        private readonly IIqFactory iqFactory;
 
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
 
 
         public RosterProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+            : base(xmppStream, runtimeParameters)
         {
-            this.xmppStream = xmppStream;
             this.iqFactory = new DefaultClientIqFactory(() => runtimeParameters["jid"]);
-            this.xmppStream.RegisterIqNamespaceCallback(XNamespaces.roster, this);
+            this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.roster, this);
         }
         
-        
-        List<RosterItem> currentRosterItems = new List<RosterItem>();
-        
-
         public async Task<IEnumerable<RosterItem>> RequestRosterAsync()
         {
             var iq = this.iqFactory.CreateGetIq(new RosterQuery());
 
-            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
 
-            Expect("result", iqResp.Attribute("type")?.Value, iqResp);
+            Expectation.Expect("result", iqResp.Attribute("type")?.Value, iqResp);
 
             if (iqResp.IsEmpty)
             {
@@ -124,7 +87,7 @@ namespace YetAnotherXmppClient.Protocol
         {
             var iq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, name, groups));
 
-            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
 
             if (iqResp.IsErrorType())
             {
@@ -132,7 +95,7 @@ namespace YetAnotherXmppClient.Protocol
                 return false;
             }
 
-            Expect("result", iqResp.Attribute("type")?.Value, iqResp);
+            Expectation.Expect("result", iqResp.Attribute("type")?.Value, iqResp);
 
             return true;
         }
@@ -194,7 +157,7 @@ namespace YetAnotherXmppClient.Protocol
             //    .WithContent(new RosterQuery(bareJid, remove: true))
             //    .Build();
 
-            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
 
             if (iqResp.IsErrorType())
             {
@@ -202,7 +165,7 @@ namespace YetAnotherXmppClient.Protocol
                 return false;
             }
 
-            Expect("result", iqResp.Attribute("type")?.Value, iqResp);
+            Expectation.Expect("result", iqResp.Attribute("type")?.Value, iqResp);
 
             return true;
         }
@@ -213,7 +176,7 @@ namespace YetAnotherXmppClient.Protocol
 
 
             if (iqElem.HasAttribute("from") &&
-                iqElem.Attribute("from").Value != this.runtimeParameters["jid"].ToBareJid())
+                iqElem.Attribute("from").Value != this.RuntimeParameters["jid"].ToBareJid())
             {
                 // 2.1.6.: A receiving client MUST ignore the stanza unless it has no 'from'
                 // attribute(i.e., implicitly from the bare JID of the user's
@@ -225,7 +188,7 @@ namespace YetAnotherXmppClient.Protocol
             // Roster push
             if (iqElem.FirstNode is XElement queryElem && queryElem.Name == XNames.roster_query)
             {
-                Expect(IqType.set.ToString(), iqElem.Attribute("type")?.Value, iqElem);
+                Expectation.Expect(IqType.set.ToString(), iqElem.Attribute("type")?.Value, iqElem);
 
                 var itemElem = queryElem.Element(XNames.roster_item);
                 if (itemElem.Attribute("subscription")?.Value == "remove")

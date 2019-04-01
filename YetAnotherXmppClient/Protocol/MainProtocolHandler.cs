@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.Protocol
 {
@@ -104,6 +105,9 @@ namespace YetAnotherXmppClient.Protocol
 
                 var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
                 var y = await pepHandler.DetermineSupportAsync();
+
+                var omemoHandler = new OmemoProtocolHandler(pepHandler, this.xmppStream, this.runtimeParameters);
+                await omemoHandler.InitializeAsync();
 
                 await this.xmppStream.RunLoopAsync(new CancellationTokenSource().Token);
 
@@ -236,6 +240,9 @@ namespace YetAnotherXmppClient.Protocol
 
         private async Task NegotiateFeatureAsync(Feature feature)
         {
+            if (feature == null)
+                return;
+
             var handler = this.featureNegotiators.FirstOrDefault(fh => fh.FeatureName == feature.Name);
             if (handler == null)
             {

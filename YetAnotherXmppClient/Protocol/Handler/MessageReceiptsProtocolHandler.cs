@@ -1,26 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
-using static YetAnotherXmppClient.Expectation;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Handler
 {
     //XEP-0184: Message Receipts
-    public class MessageReceiptsProtocolHandler : IMessageReceivedCallback
+    public class MessageReceiptsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
     {
-        private readonly AsyncXmppStream xmppStream;
-        private readonly Dictionary<string, string> runtimeParameters;
-
         public MessageReceiptsProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+            : base(xmppStream, runtimeParameters)
         {
-            this.xmppStream = xmppStream;
-            this.runtimeParameters = runtimeParameters;
-
-            this.xmppStream.RegisterMessageContentCallback(XNames.receipts_request, this);
+            this.XmppStream.RegisterMessageContentCallback(XNames.receipts_request, this);
         }
 
         //UNDONE async?
@@ -31,15 +23,15 @@ namespace YetAnotherXmppClient.Protocol
             if (messageElem.HasElement(XNames.receipts_request)
                 && messageElem.HasAttribute("id"))
             {
-                Expect(this.runtimeParameters["jid"], messageElem.Attribute("to")?.Value, messageElem);
+                Expectation.Expect(this.RuntimeParameters["jid"], messageElem.Attribute("to")?.Value, messageElem);
 
                 var message = new Message(new XElement(XNames.receipts_received))
                 {
                     Id = messageElem.Attribute("id").Value,
-                    From = this.runtimeParameters["jid"], //alt. copy from to-attribute
+                    From = this.RuntimeParameters["jid"], //alt. copy from to-attribute
                     To = messageElem.Attribute("from").Value
                 };
-                await this.xmppStream.WriteAsync(message);
+                await this.XmppStream.WriteAsync(message);
             }
         }
     }

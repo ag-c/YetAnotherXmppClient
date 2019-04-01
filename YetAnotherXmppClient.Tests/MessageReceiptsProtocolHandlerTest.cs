@@ -10,6 +10,7 @@ using Xunit;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol;
+using YetAnotherXmppClient.Protocol.Handler;
 using YetAnotherXmppClient.Tests.XmlDiff;
 
 namespace YetAnotherXmppClient.Tests

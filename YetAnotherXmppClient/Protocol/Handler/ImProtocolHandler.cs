@@ -6,9 +6,8 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
-using static YetAnotherXmppClient.Expectation;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Handler
 {
     class ChatSession
     {
@@ -16,21 +15,15 @@ namespace YetAnotherXmppClient.Protocol
         public List<string> Messages { get; } = new List<string>(); //UNDONE
     }
 
-    public class ImProtocolHandler : IMessageReceivedCallback //: /*ProtocolHandlerBase,*/
+    public class ImProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
     {
-        private readonly AsyncXmppStream xmppServerStream;
-        private readonly Dictionary<string, string> runtimeParameters;
-
         //<threadid, chatdata>
         private ConcurrentDictionary<string, ChatSession> chatSessions = new ConcurrentDictionary<string, ChatSession>();
 
-        public ImProtocolHandler(AsyncXmppStream xmppStream/*Stream serverStream*/, Dictionary<string, string> runtimeParameters)
-            //: base(serverStream)
+        public ImProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+            : base(xmppStream, runtimeParameters)
         {
-            this.xmppServerStream = xmppStream;
-            this.runtimeParameters = runtimeParameters;
-
-            this.xmppServerStream.RegisterMessageCallback(this);
+            this.XmppStream.RegisterMessageCallback(this);
         }
 
         public Action<Jid, string> OnMessageReceived { get; set; }
@@ -51,18 +44,18 @@ namespace YetAnotherXmppClient.Protocol
         {
             var messageElem = new Message(new XElement("body", message))
             {
-                From = this.runtimeParameters["jid"],
+                From = this.RuntimeParameters["jid"],
                 To = recipientJid.ToBareJid(),
                 Type = "chat"
             };
 
-            await this.xmppServerStream.WriteAsync(messageElem.ToString());
+            await this.XmppStream.WriteAsync(messageElem.ToString());
         }
 
 
         void IMessageReceivedCallback.MessageReceived(XElement messageElem)
         {
-            Expect("message", messageElem.Name, messageElem);
+            Expectation.Expect("message", messageElem.Name, messageElem);
 
             var sender = messageElem.Attribute("from").Value;
             var text = messageElem.Element("body").Value;

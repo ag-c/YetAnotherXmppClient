@@ -43,6 +43,8 @@ namespace YetAnotherXmppClient
         public static readonly XName pubsub_publish = "{http://jabber.org/protocol/pubsub}publish";
         public static readonly XName pubsub_item = "{http://jabber.org/protocol/pubsub}item";
         public static readonly XName pubsub_subscribe = "{http://jabber.org/protocol/pubsub}subscribe";
+
+        public static readonly XName pubsub_event = "{http://jabber.org/protocol/pubsub#event}event";
     }
 
     public class XNamespaces

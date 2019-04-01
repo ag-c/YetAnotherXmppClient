@@ -9,6 +9,7 @@ using Serilog;
 using Serilog.Core;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Protocol;
+using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient
 {

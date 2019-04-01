@@ -2,17 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
-using static YetAnotherXmppClient.Expectation;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Handler
 {
     public class Presence
     {
@@ -23,10 +20,8 @@ namespace YetAnotherXmppClient.Protocol
         public IEnumerable<string> Stati { get; set; }
     }
 
-    public class PresenceProtocolHandler : IPresenceReceivedCallback
+    public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback
     {
-        private readonly AsyncXmppStream xmppStream;
-
         public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
 
         // <full-jid, presence>
@@ -34,10 +29,9 @@ namespace YetAnotherXmppClient.Protocol
 
 
         public PresenceProtocolHandler(AsyncXmppStream xmppStream)
+            : base(xmppStream, null)
         {
-            this.xmppStream = xmppStream;
-
-            this.xmppStream.RegisterPresenceCallback(this);
+            this.XmppStream.RegisterPresenceCallback(this);
         }
 
         public async Task<bool> RequestSubscriptionAsync(string contactJid)
@@ -47,7 +41,7 @@ namespace YetAnotherXmppClient.Protocol
                 To = contactJid.ToBareJid()
             };
 
-            await this.xmppStream.WriteAsync(presence);
+            await this.XmppStream.WriteAsync(presence);
             //UNDONE no response
             //if (presenceResp.IsErrorType())
             //{
@@ -65,7 +59,7 @@ namespace YetAnotherXmppClient.Protocol
                 To = contactJid.ToBareJid()
             };
 
-            await this.xmppStream.WriteAsync(presence);
+            await this.XmppStream.WriteAsync(presence);
         }
 
         public async Task UnsubscribeAsync(string contactJid)
@@ -75,13 +69,13 @@ namespace YetAnotherXmppClient.Protocol
                 To = contactJid.ToBareJid()
             };
 
-            await this.xmppStream.WriteAsync(presence);
+            await this.XmppStream.WriteAsync(presence);
         }
 
         //UNDONE async
         async void IPresenceReceivedCallback.PresenceReceived(XElement presenceElem)
         {
-            Expect(XNames.presence, presenceElem.Name, presenceElem);
+            Expectation.Expect(XNames.presence, presenceElem.Name, presenceElem);
 
             if (presenceElem.Attribute("type")?.Value == PresenceType.subscribe.ToString())
             {
@@ -96,11 +90,11 @@ namespace YetAnotherXmppClient.Protocol
                     To = fromValue
                 };
 
-                await this.xmppStream.WriteAsync(response);
+                await this.XmppStream.WriteAsync(response);
             }
             else if(!presenceElem.HasAttribute("type"))
             {
-                Expect(() => presenceElem.HasAttribute("from"), presenceElem);
+                Expectation.Expect(() => presenceElem.HasAttribute("from"), presenceElem);
 
                 var fromVal = presenceElem.Attribute("from").Value;
 
@@ -133,12 +127,12 @@ namespace YetAnotherXmppClient.Protocol
         {
             var presence = new Core.Stanza.Presence(show, status);
 
-            return this.xmppStream.WriteAsync(presence);
+            return this.XmppStream.WriteAsync(presence);
         }
 
         public Task SendUnavailableAsync()
         {
-            return this.xmppStream.WriteAsync(new Core.Stanza.Presence(PresenceType.unavailable));
+            return this.XmppStream.WriteAsync(new Core.Stanza.Presence(PresenceType.unavailable));
         }
     }
 }

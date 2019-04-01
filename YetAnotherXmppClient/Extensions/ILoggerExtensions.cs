@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using Serilog;
 using YetAnotherXmppClient.Protocol;
+using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient
 {
