@@ -10,8 +10,6 @@ namespace YetAnotherXmppClient.UI
     {
         static void Main(string[] args)
         {
-            //var vm = new MainViewModel();
-
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .Filter.ByIncludingOnly(Matching.WithProperty<bool>("IsXmppStreamContent", b => b))

@@ -20,7 +20,7 @@ namespace YetAnotherXmppClient.Core
 
         public Iq CreateSetIq(object content, string from = null)
         {
-            var iq = this.CreateInternal(IqType.set, content);
+            var iq = this.InternalCreate(IqType.set, content);
             if (from != null)
                 iq.From = from;
             return iq;
@@ -28,10 +28,10 @@ namespace YetAnotherXmppClient.Core
 
         public Iq CreateGetIq(object content)
         {
-            return this.CreateInternal(IqType.get, content);
+            return this.InternalCreate(IqType.get, content);
         }
 
-        private Iq CreateInternal(IqType iqType, object content)
+        private Iq InternalCreate(IqType iqType, object content)
         {
             var iq = new Iq(iqType, content);
             if (this.fromFunc != null)

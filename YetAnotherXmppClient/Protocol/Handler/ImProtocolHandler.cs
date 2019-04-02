@@ -20,7 +20,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         //<threadid, chatdata>
         private ConcurrentDictionary<string, ChatSession> chatSessions = new ConcurrentDictionary<string, ChatSession>();
 
-        public ImProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+        public ImProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, runtimeParameters)
         {
             this.XmppStream.RegisterMessageCallback(this);
@@ -49,7 +49,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 Type = "chat"
             };
 
-            await this.XmppStream.WriteAsync(messageElem.ToString());
+            await this.XmppStream.WriteElementAsync(messageElem);
         }
 
 

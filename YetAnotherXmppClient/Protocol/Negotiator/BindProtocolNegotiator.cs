@@ -10,7 +10,7 @@ namespace YetAnotherXmppClient.Protocol
 {
     public class BindProtocolNegotiator : IFeatureProtocolNegotiator
     {
-        private readonly AsyncXmppStream xmppServerStream;
+        private readonly XmppStream xmppServerStream;
         private readonly Dictionary<string, string> runtimeParameters;
 
         public Jid JidForConnectedResource { get; set; }
@@ -18,7 +18,7 @@ namespace YetAnotherXmppClient.Protocol
         public XName FeatureName { get; } = XNames.bind_bind;
 
 
-        public BindProtocolNegotiator(AsyncXmppStream xmppServerStream, Dictionary<string, string> runtimeParameters)
+        public BindProtocolNegotiator(XmppStream xmppServerStream, Dictionary<string, string> runtimeParameters)
         {
             this.xmppServerStream = xmppServerStream;
             this.runtimeParameters = runtimeParameters;

@@ -9,7 +9,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
     //XEP-0184: Message Receipts
     public class MessageReceiptsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
     {
-        public MessageReceiptsProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+        public MessageReceiptsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, runtimeParameters)
         {
             this.XmppStream.RegisterMessageContentCallback(XNames.receipts_request, this);
@@ -31,7 +31,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     From = this.RuntimeParameters["jid"], //alt. copy from to-attribute
                     To = message.From
                 };
-                await this.XmppStream.WriteAsync(messageResp);
+                await this.XmppStream.WriteElementAsync(messageResp);
             }
         }
     }

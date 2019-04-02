@@ -10,7 +10,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
     {
         private readonly PepProtocolHandler pepHandler;
 
-        public OmemoProtocolHandler(PepProtocolHandler pepHandler, AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters) 
+        public OmemoProtocolHandler(PepProtocolHandler pepHandler, XmppStream xmppStream, Dictionary<string, string> runtimeParameters) 
             : base(xmppStream, runtimeParameters)
         {
             this.pepHandler = pepHandler;

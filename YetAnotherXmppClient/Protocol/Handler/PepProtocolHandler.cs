@@ -12,7 +12,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 {
     class PepProtocolHandler : ProtocolHandlerBase
     {
-        public PepProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+        public PepProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, runtimeParameters)
         {
         }

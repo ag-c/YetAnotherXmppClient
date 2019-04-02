@@ -13,7 +13,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
     {
         private bool isNotSupportedByServer;
 
-        public PingProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters) : base(xmppStream, runtimeParameters)
+        public PingProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters) : base(xmppStream, runtimeParameters)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.ping, this);
         }
@@ -43,7 +43,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             if (content.Name == XNames.ping_ping)
             {   
-                this.XmppStream.WriteAsync(new Iq(IqType.result)
+                this.XmppStream.WriteElementAsync(new Iq(IqType.result)
                 {
                     Id = iq.Id,
                     From = this.RuntimeParameters["jid"],

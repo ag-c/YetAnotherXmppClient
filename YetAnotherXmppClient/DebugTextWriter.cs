@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,11 +10,14 @@ namespace YetAnotherXmppClient
     {
         private StringWriter debugWriter;
         private readonly TextWriter decoratee;
+        private readonly Action<string> onFlushedAction;
+
         public override Encoding Encoding { get; }
 
-        public DebugTextWriter(TextWriter decoratee)
+        public DebugTextWriter(TextWriter decoratee, Action<string> onFlushedAction)
         {
             this.decoratee = decoratee;
+            this.onFlushedAction = onFlushedAction;
             this.debugWriter = new StringWriter();
         }
 
@@ -61,14 +65,14 @@ namespace YetAnotherXmppClient
         public override void Flush()
         {
             this.decoratee.Flush();
-            this.PrintAndReset();
+            this.RaiseOnFlushed();
         }
 
         public override async Task FlushAsync()
         {
             await this.decoratee.FlushAsync();
             //await this.debugWriter.FlushAsync();
-            this.PrintAndReset();
+            this.RaiseOnFlushed();
         }
 
         public override async Task WriteLineAsync(string value)
@@ -80,14 +84,16 @@ namespace YetAnotherXmppClient
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            this.PrintAndReset();
+            this.RaiseOnFlushed();
         }
 
-        private void PrintAndReset()
+        private void RaiseOnFlushed()
         {
-            if(!string.IsNullOrEmpty(debugWriter.ToString()))
-                Log.Logger.XmppStreamContent($"Written: {this.debugWriter}");
-            debugWriter = new StringWriter();
+            if (!string.IsNullOrEmpty(debugWriter.ToString()))
+            {
+                this.onFlushedAction?.Invoke(this.debugWriter.ToString());
+                debugWriter = new StringWriter();
+            }
 
         }
     }

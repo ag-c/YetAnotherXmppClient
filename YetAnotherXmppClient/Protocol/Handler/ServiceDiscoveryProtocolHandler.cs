@@ -9,7 +9,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 {
     class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
-        public ServiceDiscoveryProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters) 
+        public ServiceDiscoveryProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters) 
             : base(xmppStream, runtimeParameters)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.discoinfo, this);
@@ -31,7 +31,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = iq.From
             };
 
-            await this.XmppStream.WriteAsync(iqResp);
+            await this.XmppStream.WriteElementAsync(iqResp);
         }
     }
 }

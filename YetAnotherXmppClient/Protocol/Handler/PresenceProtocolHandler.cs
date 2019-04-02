@@ -28,7 +28,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
 
 
-        public PresenceProtocolHandler(AsyncXmppStream xmppStream)
+        public PresenceProtocolHandler(XmppStream xmppStream)
             : base(xmppStream, null)
         {
             this.XmppStream.RegisterPresenceCallback(this);
@@ -41,7 +41,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = contactJid.ToBareJid()
             };
 
-            await this.XmppStream.WriteAsync(presence);
+            await this.XmppStream.WriteElementAsync(presence);
             //UNDONE no response
             //if (presenceResp.IsErrorType())
             //{
@@ -59,7 +59,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = contactJid.ToBareJid()
             };
 
-            await this.XmppStream.WriteAsync(presence);
+            await this.XmppStream.WriteElementAsync(presence);
         }
 
         public async Task UnsubscribeAsync(string contactJid)
@@ -69,7 +69,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = contactJid.ToBareJid()
             };
 
-            await this.XmppStream.WriteAsync(presence);
+            await this.XmppStream.WriteElementAsync(presence);
         }
 
         //UNDONE async
@@ -90,7 +90,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     To = fromValue
                 };
 
-                await this.XmppStream.WriteAsync(response);
+                await this.XmppStream.WriteElementAsync(response);
             }
             else if(!presenceElem.HasAttribute("type"))
             {
@@ -127,12 +127,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var presence = new Core.Stanza.Presence(show, status);
 
-            return this.XmppStream.WriteAsync(presence);
+            return this.XmppStream.WriteElementAsync(presence);
         }
 
         public Task SendUnavailableAsync()
         {
-            return this.XmppStream.WriteAsync(new Core.Stanza.Presence(PresenceType.unavailable));
+            return this.XmppStream.WriteElementAsync(new Core.Stanza.Presence(PresenceType.unavailable));
         }
     }
 }

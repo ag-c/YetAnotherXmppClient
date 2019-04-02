@@ -8,6 +8,7 @@ using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.XPath;
 using Serilog.Core;
 using YetAnotherXmppClient.Core;
 
@@ -30,24 +31,6 @@ namespace YetAnotherXmppClient.Console
                 .CreateLogger();
 
 
-            //var strWriter = new StringWriter();
-            //using (var writer = XmlWriter.Create(strWriter, new XmlWriterSettings { Async = true, WriteEndDocumentOnClose = false}))
-            //{
-            //    await writer.WriteStartDocumentAsync();
-            //    await writer.WriteStartElementAsync("stream", "stream", "http://etherx.jabber.org/streams");
-            //    await writer.WriteAttributeStringAsync("", "from", null, jid);
-            //    await writer.WriteAttributeStringAsync("", "to", null, jid.Server);
-            //    await writer.WriteAttributeStringAsync("", "version", null, "1.0");
-            //    await writer.WriteAttributeStringAsync("xml", "lang", null, "en");
-            //    await writer.WriteAttributeStringAsync("xmlns", "", null, "jabber:client");
-
-            //    //                await writer.WriteEndDocumentAsync();
-            //                    await writer.FlushAsync();
-            //}
-
-            //var initialStreamHeader = await ProtocolHandler.GenerateInitialStreamHeaderAsync(jid);
-
-
             //yetanotherxmppuser@jabber.de
             //yetanotherxmppuser@wiuwiu.de
             var jid = new Jid("yetanotherxmppuser@jabber.de/DefaultResource");
@@ -62,7 +45,7 @@ namespace YetAnotherXmppClient.Console
                 };
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
                 xmppClient.OnMessageReceived += (senderJid, text) => Debugger.Break();
-                await xmppClient.StartAsync(jid, "gehe1m");
+                await xmppClient.StartAsync(jid, "***");
 
                 Console.ReadLine();
             }

@@ -47,7 +47,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
 
 
-        public RosterProtocolHandler(AsyncXmppStream xmppStream, Dictionary<string, string> runtimeParameters)
+        public RosterProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, runtimeParameters)
         {
             this.iqFactory = new DefaultClientIqFactory(() => runtimeParameters["jid"]);

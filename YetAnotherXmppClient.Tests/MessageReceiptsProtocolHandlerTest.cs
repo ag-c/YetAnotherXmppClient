@@ -22,7 +22,7 @@ namespace YetAnotherXmppClient.Tests
         {
             var runtimeParameters = new Dictionary<string, string> {["jid"] = "kingrichard@royalty.england.lit/throne" };
             var ms = new NetStreamMock();
-            var xmppStream = new AsyncXmppStream(ms);
+            var xmppStream = new XmppStream(ms);
             var handler = new MessageReceiptsProtocolHandler(xmppStream, runtimeParameters);
 
             // simulate receiving a message

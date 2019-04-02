@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.Linq;
+using System.Xml.Linq;
 
 namespace YetAnotherXmppClient.Extensions
 {
@@ -24,6 +25,21 @@ namespace YetAnotherXmppClient.Extensions
             return xElem.Name.LocalName == "iq" ||
                    xElem.Name.LocalName == "presence" ||
                    xElem.Name.LocalName == "message";
+        }
+
+        public static bool IsIq(this XElement xElem)
+        {
+            return xElem.Name.LocalName == "iq";
+        }
+
+        public static XElement FirstElement(this XElement xElem)
+        {
+            return xElem.Elements().First();
+        }
+
+        public static bool NamespaceEquals(this XElement xElem, XNamespace ns)
+        {
+            return xElem.Name.Namespace == ns;
         }
     }
 }

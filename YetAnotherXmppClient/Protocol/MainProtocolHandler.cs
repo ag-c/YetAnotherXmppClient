@@ -35,7 +35,7 @@ namespace YetAnotherXmppClient.Protocol
         private static readonly string Version = "1.0";
         private static readonly IEnumerable<string> Mechanisms = new[] {"PLAIN"};
 
-        private readonly AsyncXmppStream xmppStream;
+        private readonly XmppStream xmppStream;
 
         private readonly IEnumerable<IFeatureProtocolNegotiator> featureNegotiators;
         private readonly IFeatureOptionsProvider featureOptionsProvider;
@@ -55,7 +55,7 @@ namespace YetAnotherXmppClient.Protocol
         public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider)
         {
             this.featureOptionsProvider = featureOptionsProvider;
-            this.xmppStream = new AsyncXmppStream(serverStream);
+            this.xmppStream = new XmppStream(serverStream);
 
             this.RosterHandler = new RosterProtocolHandler(this.xmppStream, this.runtimeParameters);
             this.PresenceHandler = new PresenceProtocolHandler(this.xmppStream);
@@ -77,140 +77,17 @@ namespace YetAnotherXmppClient.Protocol
             {
                 await this.RestartStreamAsync(jid);
 
-                var features = await this.ReadStreamFeaturesAsync();
+                var features = await this.xmppStream.ReadStreamFeaturesAsync();
 
                 Log.Logger.StreamNegotiationStatus(features);
 
-                Feature feature;
-                do
-                {
-                    feature = this.ChooseFeatureToNegotiateNext(features);
-
-                    await this.NegotiateFeatureAsync(feature);
-
-                    if (feature.IsStreamRestartRequired())
-                    {   // stream needs to be restarted after these features have been negotiated
-                        await this.RunAsync(jid, token);
-                        return;
-                    }
-                    features = features.Where(f => !f.Equals(feature));
-                }
-                while (feature != null);
+                await this.NegotiateFeaturesAsync(features, jid, token);
 
                 Log.Debug("Stream negotiation is complete");
 
-                // initial roster get & presence set
-                var rosterItems = await this.RosterHandler.RequestRosterAsync();
-                await this.PresenceHandler.BroadcastPresenceAsync();
-
-                this.NegotiationFinished?.Invoke(this, EventArgs.Empty);
-
-                // create remaining protocol handlers
-                var discoHandler = new ServiceDiscoveryProtocolHandler(this.xmppStream, this.runtimeParameters);
-                var timeHandler = new EntityTimeProtocolHandler(this.xmppStream, runtimeParameters);
-                var pingHandler = new PingProtocolHandler(this.xmppStream, this.runtimeParameters);
-                var b = pingHandler.PingAsync();
-
-                var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
-                var y = await pepHandler.DetermineSupportAsync();
-
-                var omemoHandler = new OmemoProtocolHandler(pepHandler, this.xmppStream, this.runtimeParameters);
-                await omemoHandler.InitializeAsync();
+                await this.OnStreamNegotiationCompletedAsync();
 
                 await this.xmppStream.RunReadLoopAsync(new CancellationTokenSource().Token);
-
-
-                //var mandatoryFeatures = features.Where(f => f.IsRequired);
-                //if (mandatoryFeatures.Any())
-                //{
-                //    if (features.Any(f => f.Name.LocalName == "starttls"))
-                //    {
-                //        var starttlsHandler = new StartTlsProtocolHandler(this.xmppStream);
-                //        await starttlsHandler.NegotiateAsync(new Feature()/*UNDONE*/, this.featureOptionsProvider.GetOptions(XNames.starttls));
-
-                //        await this.RunAsync(jid, token);
-                //        return;
-                //    }
-
-                //    var feature = mandatoryFeatures.First();
-                //    if (features.Any(f => f is MechanismsFeature))
-                //    {
-                //        var saslHandler = new SaslFeatureProtocolHandler(this.xmppStream, Mechanisms);
-
-                //        var mechanismsFeature = features.OfType<MechanismsFeature>().First();
-
-                //        await saslHandler.NegotiateAsync(mechanismsFeature, this.featureOptionsProvider.GetOptions(XNames.sasl_mechanisms));
-
-                //        await this.RunAsync(jid, token);
-                //        return;
-                //    }
-                //    if (feature.Name == XNames.bind_bind)
-                //    {
-                //        var bindHandler = new BindProtocolHandler(this.xmppStream/*this.serverStream*/, runtimeParameters);
-
-                //        await bindHandler.NegotiateAsync(feature, this.featureOptionsProvider.GetOptions(XNames.bind_bind));
-
-                //        //var x = await ReadElementFromStreamAsync();
-
-                //        if (features.Any(f => f.Name == XNames.session_session))
-                //        {
-                //            var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
-                //            var y = await pepHandler.DetermineSupportAsync();
-
-
-                //            var rosterItems = await this.RosterHandler.RequestRosterAsync();
-
-                //            //                            await RosterHandler.AddRosterItemAsync("agg1n@jabber.ccc.de", "agg1nccc", new[]{"Ichgruppe2"});
-
-                //            //                            rosterItems = await RosterHandler.RequestRosterAsync();
-
-                //            ////                            rosterHandler.UpdateRosterItemAsync()
-
-                //            //                            await RosterHandler.DeleteRosterItemAsync("jf@draugr.de");
-
-                //            //                            rosterItems = await RosterHandler.RequestRosterAsync();
-
-
-                //            //var x = await ReadElementFromStreamAsync();
-
-
-                //            await PresenceHandler.BroadcastPresenceAsync();
-                //            await PresenceHandler.RequestSubscriptionAsync("jf@draugr.de");
-
-
-
-                //            //this.xmppServerStream.StartAsyncReadLoop();
-                //            await this.xmppStream.RunLoopAsync(new CancellationTokenSource().Token);
-
-                //            //var imHandler = new ImProtocolHandler(this.xmppServerStream/*this.serverStream*/, runtimeParameters);
-                //            //await imHandler.EstablishSessionAsync();
-
-                //            //await imHandler.SendMessage("agg1n@jabber.ccc.de", "test2");
-                //        }
-
-                //        if (features.Any(f => f.Name == XNames.rosterver_ver))
-                //        {
-
-                //        }
-                //    }
-                //    //                    if(feature)
-                //}
-                //else
-                //{
-                //    //MAY negotiate voluntary features
-
-                //    //if (features.Any(f => f is MechanismsFeature))
-                //    //{
-                //    //    var saslHandler = new SaslFeatureProtocolHandler(this.serverStream, Mechanisms);
-
-                //    //    var mechanismsFeature = features.OfType<MechanismsFeature>().First();
-
-                //    //    await saslHandler.NegotiateAsync(mechanismsFeature, this.featureOptionsProvider.GetOptions(XNames.sasl_mechanisms));
-
-                //    //    await this.RunAsync(jid, token);
-                //    //    return;
-                //    //}
-                //}
             }
             catch (Exception e)
             {
@@ -218,29 +95,32 @@ namespace YetAnotherXmppClient.Protocol
             }
         }
 
-        private Feature ChooseFeatureToNegotiateNext(IEnumerable<Feature> features)
+        private async Task NegotiateFeaturesAsync(IEnumerable<Feature> features, Jid jid, CancellationToken token)
         {
-            //var startTlsFeature = features.FirstOrDefault(f => f.Name == XNames.starttls);
-            //if (startTlsFeature != null)
-            //{
-            //    return startTlsFeature;
-            //}
+            Feature feature;
+            do
+            {
+                feature = this.SelectFeatureToNegotiateNext(features);
 
+                await this.NegotiateFeatureAsync(feature);
+
+                if (feature.IsStreamRestartRequired())
+                {   // stream needs to be restarted after these features have been negotiated
+                    await this.RunAsync(jid, token);
+                    return;
+                }
+                features = features.Where(f => !f.Equals(feature));
+            }
+            while (feature != null);
+        }
+
+        private Feature SelectFeatureToNegotiateNext(IEnumerable<Feature> features)
+        {
             var mandatoryFeatures = features.Where(f => f.IsRequired);
             if (mandatoryFeatures.Any())
             {
                 return mandatoryFeatures.First();
             }
-
-            if (features.Any(f => f is MechanismsFeature))
-            {
-                //UNDONE 6.4.1.
-                return features.OfType<MechanismsFeature>().First();
-            }
-
-            //                var notNegotiatedFeatureNames = this.featureHandlers.Where(fh => !fh.IsSuccessfullyNegotiated).Select(fh => fh.FeatureName);
-            //                var featureNameToNegotiate = features.Select(f => f.Name).Intersect(notNegotiatedFeatureNames).FirstOrDefault();
-            //                return features.First(f => f.Name == featureNameToNegotiate);
 
             // Choose the first feature for which we have a handler
             return features.FirstOrDefault(f => this.featureNegotiators.Any(fh => fh.FeatureName == f.Name));
@@ -254,7 +134,7 @@ namespace YetAnotherXmppClient.Protocol
             var handler = this.featureNegotiators.FirstOrDefault(fh => fh.FeatureName == feature.Name);
             if (handler == null)
             {
-                Log.Logger.Error($"Cannot negotiate feature '{feature.Name.LocalName}' - missing protocol handler");
+                Log.Error($"Cannot negotiate feature '{feature.Name.LocalName}' - missing protocol handler");
                 if (feature.IsRequired)
                 {
                     throw new XmppException($"Unable to negotiate required feature '{feature.Name}' - no handler");
@@ -262,83 +142,59 @@ namespace YetAnotherXmppClient.Protocol
                 return;
             }
 
+            Log.Debug($"Negotiating feature '{feature.Name}'..");
+
             var options = this.featureOptionsProvider.GetOptions(feature.Name);
             var success = await handler.NegotiateAsync(feature, options);
         }
 
-        //private async Task NegotiateFeature(XName name)
-        //{
-        //    var handler = this.featureHandlers.FirstOrDefault(fh => fh.Name == name);
-        //    if (handler == null)
-        //    {
-        //        //TOLOG
-        //        return;
-        //    }
+        private async Task OnStreamNegotiationCompletedAsync()
+        {
+            // initial roster get & presence set
+            var rosterItems = await this.RosterHandler.RequestRosterAsync();
+            await this.PresenceHandler.BroadcastPresenceAsync();
 
-        //    var options = this.featureOptionsProvider.GetOptions(name);
+            // create remaining protocol handlers
+            var discoHandler = new ServiceDiscoveryProtocolHandler(this.xmppStream, this.runtimeParameters);
+            var timeHandler = new EntityTimeProtocolHandler(this.xmppStream, runtimeParameters);
+            var pingHandler = new PingProtocolHandler(this.xmppStream, this.runtimeParameters);
+            var b = pingHandler.PingAsync();
 
-        //    var success = await featureProtocolHandler.NegotiateAsync(options);
-        //}
+            var messageReceiptsHandler = new MessageReceiptsProtocolHandler(this.xmppStream, this.runtimeParameters);
 
+            var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
+            var y = await pepHandler.DetermineSupportAsync();
 
-        Dictionary<string, string> namespaces = new Dictionary<string, string>();
+            var omemoHandler = new OmemoProtocolHandler(pepHandler, this.xmppStream, this.runtimeParameters);
+            await omemoHandler.InitializeAsync();
+
+            this.NegotiationFinished?.Invoke(this, EventArgs.Empty);
+        }
+
         //4.2.Opening a Stream
         private async Task RestartStreamAsync(Jid jid)
         {
             Log.Verbose("Restarting stream..");
+
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
-            this.xmppStream.Reinitialize(this.xmppStream.BaseStream);
+            this.xmppStream.Reset();
 
             await this.xmppStream.WriteInitialStreamHeaderAsync(jid, Version);
 
-            var attributes = await this.ReadResponseStreamHeaderAsync();
-            //foreach(var attr in attributes.Where(kvp => kvp.Key.StartsWith("xmlns:")))
-            //    namespaces.Add(attr.Key, attr);
+            var attributes = await this.xmppStream.ReadResponseStreamHeaderAsync();
+
 //            ValidateInitialStreamHeaderAttributes(attributes)
-            Expectation.Expect(() => attributes.ContainsKey("id"));
+            Expect(() => attributes.ContainsKey("id"));
             //this.streamId = attributes["id"];
 
             //4.7.2. to //MUST verify the identity of the other entity
         }
 
-        private async Task<Dictionary<string, string>> ReadResponseStreamHeaderAsync()
-        {
-            Log.Debug("Reading response stream header..");
-
-            var (name, attributes) = await this.xmppStream.ReadOpeningTagAsync();
-
-            if (name == "stream:error")
-            {
-                var error = await this.xmppStream.ReadElementAsync();
-                throw new XmppException(error.ToString());
-            }
-            Expect("stream:stream", actual: name);
-
-            return attributes;
-        }
-
-        //4.3.2. Stream Features Format
-        private async Task<IEnumerable<Feature>> ReadStreamFeaturesAsync()
-        {
-            Log.Debug("Reading stream features..");
-
-            //var xElem = await this.ReadElementFromStreamAsync();
-
-            //Expect("stream:features", actual: xElem.Name.ToString(), context: xElem);
-
-
-            //Expect("stream:features", actual: this.xmlReader.Name);
-            var xElem = await this.xmppStream.ReadElementAsync();
-            Expectation.Expect("features", actual: xElem.Name.LocalName);
-            return Features.FromXElement(xElem);
-        }
-
-
         public async Task TerminateSessionAsync()
         {
             await this.PresenceHandler.SendUnavailableAsync();
 
-            await this.xmppStream.WriteAsync("</stream:stream");
+            await this.xmppStream.WriteClosingTagAsync("stream:stream");
         }
     }
 }

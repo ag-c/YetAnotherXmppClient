@@ -15,12 +15,12 @@ namespace YetAnotherXmppClient
 {
     public class SaslFeatureProtocolNegotiator : IFeatureProtocolNegotiator
     {
-        private readonly AsyncXmppStream xmppStream;
+        private readonly XmppStream xmppStream;
         private readonly IEnumerable<string> clientMechanisms;
 
         public XName FeatureName { get; } = XNames.sasl_mechanisms;
 
-        public SaslFeatureProtocolNegotiator(AsyncXmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
+        public SaslFeatureProtocolNegotiator(XmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
         {
             this.xmppStream = xmppStream;
             this.clientMechanisms = clientMechanisms;
@@ -58,7 +58,7 @@ namespace YetAnotherXmppClient
                 xElem = await this.xmppStream.ReadElementAsync();
                 if (xElem.Name == XNames.sasl_challenge)
                 {
-                    await this.xmppStream.WriteAsync(new XElement(XNames.sasl_response).ToString());
+                    await this.xmppStream.WriteElementAsync(new XElement(XNames.sasl_response));
                 }
                 else
                 {
@@ -75,18 +75,11 @@ namespace YetAnotherXmppClient
 
         private async Task WriteInitiationAsync(string mechanism, string username, string password)
         {
-            //UNDONE xelement
-            var stringWriter = new StringWriter();
-            using (var xmlWriter = XmlWriter.Create(stringWriter, new XmlWriterSettings {Async = true, OmitXmlDeclaration = true}))
-            {
-                await xmlWriter.WriteStartElementAsync("", XNames.sasl_auth.LocalName, XNames.sasl_auth.NamespaceName);
-                await xmlWriter.WriteAttributeStringAsync("", XNames.sasl_mechanism.LocalName, null, mechanism);
-                await xmlWriter.WriteStringAsync(
-                    Convert.ToBase64String(Encoding.UTF8.GetBytes($"{(char) 0}{username}{(char) 0}{password}")));
-                await xmlWriter.WriteEndElementAsync();
-            }
+            var xElem = new XElement(XNames.sasl_auth, new XAttribute(XNames.sasl_mechanism.LocalName, mechanism),
+                Convert.ToBase64String(Encoding.UTF8.GetBytes($"{(char) 0}{username}{(char) 0}{password}"))
+            );
 
-            await this.xmppStream.WriteAsync(stringWriter.ToString());
+            await this.xmppStream.WriteElementAsync(xElem);
         }
     }
 }

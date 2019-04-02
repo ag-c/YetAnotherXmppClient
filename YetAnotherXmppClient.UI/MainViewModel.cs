@@ -91,7 +91,7 @@ namespace YetAnotherXmppClient.UI
         {
             try
             {
-                await xmppClient.StartAsync(new Jid("yetanotherxmppuser@jabber.de/uiuiui"), "gehe1m");
+                await xmppClient.StartAsync(new Jid("yetanotherxmppuser@jabber.de/uiuiui"), "***");
             }
             catch (Exception e)
             {
