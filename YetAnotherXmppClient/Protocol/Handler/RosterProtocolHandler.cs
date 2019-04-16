@@ -23,7 +23,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         public override string ToString()
         {
-            return this.Jid + "\t\t\t" + this.Name + "\t\t\t" + this.Subscription.ToUpper();
+            return this.Jid + "\t\t\t" + this.Name + "\t\t\t" + this.Subscription?.ToUpper();
         }
 
         public static RosterItem FromXElement(XElement elem)
@@ -89,15 +89,20 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var requestIq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, name, groups));
 
-            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
+            await this.XmppStream.WriteElementAsync(requestIq);
+            //var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
 
-            if (responseIq.IsErrorType())
-            {
-                Log.Error($"Failed to add roster item: {responseIq}");
-                return false;
-            }
+            //if (responseIq.IsErrorType())
+            //{
+            //    Log.Error($"Failed to add roster item: {responseIq}");
+            //    return false;
+            //}
 
-            Expectation.Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+            //Expectation.Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+
+            this.currentRosterItems.TryAdd(bareJid, new RosterItem { Jid = bareJid, Name = name});
+            Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
+            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
 
             return true;
         }
@@ -106,15 +111,20 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var requestIq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, remove: true), from: this.RuntimeParameters["jid"]);
             
-            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
+            //var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
+            await this.XmppStream.WriteElementAsync(requestIq);
 
-            if (responseIq.IsErrorType())
-            {
-                Log.Error($"Failed to delete roster item: {responseIq}");
-                return false;
-            }
+            //if (responseIq.IsErrorType())
+            //{
+            //    Log.Error($"Failed to delete roster item: {responseIq}");
+            //    return false;
+            //}
 
-            Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+            //Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+
+            this.currentRosterItems.TryRemove(bareJid, out _);
+            Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
+            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
 
             return true;
         }

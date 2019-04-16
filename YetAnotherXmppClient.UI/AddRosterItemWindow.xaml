@@ -3,7 +3,8 @@
         Title="AddRosterItemWindow"
         WindowState="Normal" WindowStartupLocation="CenterScreen"
         BorderThickness="0"
-        Width="400" Height="300">
+        Width="400" Height="300"
+        DataContext="{Binding RelativeSource={RelativeSource Self}}">
   <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,*">
     <TextBlock Text="JID:" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="3"/>
     <!--<Grid Background="White" HorizontalAlignment="Right" VerticalAlignment="Top" Grid.Column="1" >-->
@@ -11,14 +12,14 @@
     <!--<TextBlock Margin="5,2" MinWidth="50" Text="Suche..."
                  Foreground="LightSteelBlue" Visibility="{Binding ElementName=txtSearchBox, Path=Text.IsEmpty, Converter={StaticResource MyBoolToVisibilityConverter}}" />-->
     <!-- enter term here -->
-    <TextBox MinWidth="50" Name="txtSearchBox" Text="{Binding Jid}" Background="Transparent" Watermark="local@domain" Grid.Column="1"/>
+    <TextBox MinWidth="50" Name="txtSearchBox" Text="{Binding Jid}" Margin="3" Background="Transparent" Watermark="local@domain" Grid.Column="1"/>
     <!--</Grid>-->
     <TextBlock Text="Name:" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="3"/>
-    <TextBox MinWidth="50" Name="txtSearchBox2" Text="{Binding Name}" Background="Transparent" Grid.Row="1" Grid.Column="1" />
+    <TextBox MinWidth="50" Name="txtSearchBox2" Text="{Binding ItemName}" Margin="3" Background="Transparent" Grid.Row="1" Grid.Column="1" />
 
-    <StackPanel Orientation="Horizontal" Grid.Row="2">
-      <Button Content="Add" Command="{Binding AddCommand}"/>
-      <Button Content="Cancel" Command="{Binding CancelCommand}" />
+    <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
+      <Button Content="Add" Command="{Binding AddCommand}" Margin="1"/>
+      <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="1"/>
     </StackPanel>
   </Grid>
 </Window>

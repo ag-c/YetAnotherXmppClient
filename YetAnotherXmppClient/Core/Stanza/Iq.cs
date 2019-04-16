@@ -36,13 +36,13 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
-        public Iq(IqType type, object content=null) : base("{jabber:client}iq", content)
+        public Iq(IqType type, object content=null) : base("{jabber:client}iq", content) //{jabber:client}
         {
             this.Id = Guid.NewGuid().ToString();
             this.Type = type;
         }
 
-        private Iq(params object[] content) : base("{jabber:client}iq", content)
+        private Iq(params object[] content) : base("{jabber:client}iq", content) //{jabber:client}
         {
         }
 

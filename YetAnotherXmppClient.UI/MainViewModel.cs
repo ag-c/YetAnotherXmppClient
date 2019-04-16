@@ -3,10 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Reactive;
+using System.Reactive.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ReactiveUI;
 using StarDebris.Avalonia.MessageBox;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Protocol;
@@ -14,38 +18,59 @@ using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.UI
 {
-    public class MainViewModel : INotifyPropertyChanged
+    public class RosterItemInfo
+    {
+        public string Jid { get; set; }
+        public string Name { get; set; }
+    }
+    public class MainViewModel : ReactiveObject
     {
         private XmppClient xmppClient = new XmppClient();
 
-        public static StringWriter stringWriter = new StringWriter();
+        private static MainViewModel instance;
+        public static DebugTextWriterDecorator stringWriter = new DebugTextWriterDecorator(new StringWriter(), _ => instance?.RaisePropertyChanged(nameof(LogText)));
         private bool showAddRosterItemPopup;
         private DispatcherTimer timer;
         private IEnumerable<RosterItem> rosterItems;
+        private bool isProtocolNegotiationComplete;
 
-        public string LogText
-        {
-            get => stringWriter.ToString();
-        }
+        public Interaction<Unit, RosterItemInfo> AddRosterItemInteraction { get; } = new Interaction<Unit, RosterItemInfo>();
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public string LogText => stringWriter.Decoratee.ToString();
 
-        public ICommand LoginCommand { get; }
+        public ReactiveCommand LoginCommand { get; }
         public ICommand AddRosterItemCommand { get; }
         public ICommand DeleteRosterItemCommand { get; }
+
+        public bool IsProtocolNegotiationComplete
+        {
+            get => isProtocolNegotiationComplete;
+            set => this.RaiseAndSetIfChanged(ref this.isProtocolNegotiationComplete, value);
+        }
 
 
         public MainViewModel()
         {
-            this.LoginCommand = new ActionCommand(this.OnLoginCommandExecutedAsync);
+            instance = this;
+
+            this.LoginCommand = ReactiveCommand.CreateFromTask(this.LoginAsync);//new ActionCommand(this.OnLoginCommandExecutedAsync);
+            this.LoginCommand.ThrownExceptions.Subscribe(async exception =>
+            {
+                await stringWriter.WriteLineAsync();
+                await stringWriter.WriteLineAsync("OnLoginCommandExecutedAsync: " + exception);
+            });
             this.AddRosterItemCommand = new ActionCommand(this.OnAddRosterItemCommandExecuted);
             this.DeleteRosterItemCommand = new ActionCommand(this.OnDeleteRosterItemCommandExecuted);
 
+            this.xmppClient.ProtocolNegotiationFinished += (sender, args) => this.IsProtocolNegotiationComplete = true;
             this.xmppClient.RosterUpdated += this.HandleRosterUpdated;
-            this.xmppClient.OnSubscriptionRequestReceived += this.HandleSubscriptionRequestReceivedAsync;
+            this.xmppClient.SubscriptionRequestReceived += this.HandleSubscriptionRequestReceivedAsync;
+            this.xmppClient.MessageReceived = OnMessageReceived;
+        }
 
-            this.timer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Normal, OnTimer);
-            this.timer.Start();
+        private void OnMessageReceived(ChatSession chatSession, Jid arg1, string arg2)
+        {
+            throw new NotImplementedException();
         }
 
         private async Task<bool> HandleSubscriptionRequestReceivedAsync(string bareJid)
@@ -54,8 +79,8 @@ namespace YetAnotherXmppClient.UI
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                new AskSubscriptionPermissionWindow().ShowDialog<bool>();
-                //new MessageBox($"Allow {bareJid} to see your status?",
+                //new AskSubscriptionPermissionWindow().ShowDialog<bool>();
+                ////new MessageBox($"Allow {bareJid} to see your status?",
                 //    (dialogResult, e) => { tcs.SetResult(dialogResult.result == MessageBoxButtons.Yes); },
                 //    MessageBoxStyle.Info, MessageBoxButtons.Yes | MessageBoxButtons.No).Show();
             });
@@ -73,8 +98,9 @@ namespace YetAnotherXmppClient.UI
             get => rosterItems;
             set
             {
-                rosterItems = value;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RosterItems)));
+                this.RaiseAndSetIfChanged(ref this.rosterItems, value);
+                //rosterItems = value;
+                //this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RosterItems)));
             }
         }
 
@@ -84,28 +110,36 @@ namespace YetAnotherXmppClient.UI
 
         private void OnTimer(object sender, EventArgs e)
         {
-            this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LogText)));
+            //this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LogText)));
+            this.RaisePropertyChanged(nameof(LogText));
         }
 
-        private async void OnLoginCommandExecutedAsync(object sender)
+        private async Task LoginAsync(CancellationToken ct)//object sender)
         {
-            try
-            {
-                await xmppClient.StartAsync(new Jid("yetanotherxmppuser@jabber.de/uiuiui"), "***");
-            }
-            catch (Exception e)
-            {
-                await stringWriter.WriteLineAsync();
-                await stringWriter.WriteLineAsync("OnLoginCommandExecutedAsync: " + e);
-            }
+            //try
+            //{
+                await xmppClient.StartAsync(new Jid("yetanotherxmppuser@wiuwiu.de/uiuiui"), "gehe1m");
+            //}
+            //catch (Exception e)
+            //{
+            //    await stringWriter.WriteLineAsync();
+            //    await stringWriter.WriteLineAsync("OnLoginCommandExecutedAsync: " + e);
+            //}
         }
 
         private async void OnAddRosterItemCommandExecuted(object sender)
         {
-            var window = new AddRosterItemWindow();
-            if(await window.ShowDialog<bool>())
-                await this.xmppClient.ProtocolHandler.RosterHandler.AddRosterItemAsync(window.Jid, window.Name, new string[0]);
+            //var window = new AddRosterItemWindow();
+            //if(await window.ShowDialog<bool>())
+            //await this.xmppClient.ProtocolHandler.RosterHandler.AddRosterItemAsync(window.Jid, window.Name, new string[0]);
             //this.ShowAddRosterItemPopup = true;
+
+            var rosterItemInfo = await AddRosterItemInteraction.Handle(Unit.Default);
+
+            if (rosterItemInfo != null)
+            {
+                var b = await this.xmppClient.ProtocolHandler.RosterHandler.AddRosterItemAsync(rosterItemInfo.Jid, rosterItemInfo.Name, null);
+            }
         }
 
         private async void OnDeleteRosterItemCommandExecuted(object sender)
@@ -121,8 +155,8 @@ namespace YetAnotherXmppClient.UI
             get => showAddRosterItemPopup;
             set
             {
-                showAddRosterItemPopup = value;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowAddRosterItemPopup)));
+                //showAddRosterItemPopup = value;
+                //this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShowAddRosterItemPopup)));
             }
         }
     }

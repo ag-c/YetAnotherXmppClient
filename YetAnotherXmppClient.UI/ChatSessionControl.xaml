@@ -1,0 +1,25 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Border BorderThickness="1" BorderBrush="Black">
+    <Grid RowDefinitions="*,Auto">
+      <ScrollViewer>
+        <ItemsControl ItemsSource="{Binding Messages}" x:Name="tStack" Grid.Column="0">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" IsItemsHost="True"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}"/>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+      <StackPanel Orientation="Horizontal">
+        <TextBox HorizontalAlignment="Stretch"></TextBox>
+        <Button Content="Send"/>
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>

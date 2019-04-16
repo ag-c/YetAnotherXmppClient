@@ -6,10 +6,11 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
-    class ChatSession
+    public class ChatSession
     {
         public string Thread { get; set; }
         public List<string> Messages { get; } = new List<string>(); //UNDONE
@@ -26,7 +27,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterMessageCallback(this);
         }
 
-        public Action<Jid, string> OnMessageReceived { get; set; }
+        public Action<ChatSession, Jid, string> MessageReceived { get; set; }
 
         //rfc3921
         //[Obsolete]
@@ -55,12 +56,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         void IMessageReceivedCallback.MessageReceived(Message message)
         {
-            Expectation.Expect("message", message.Name, message);
+            Expect("message", message.Name, message);
 
             var sender = message.From;
             var text = message.Element("body").Value;
 
-            this.OnMessageReceived?.Invoke(new Jid(sender), text);
+            var chatSession = message.Thread != null ? this.chatSessions[message.Thread] : null;
+
+            this.MessageReceived?.Invoke(chatSession, new Jid(sender), text);
         }
     }
 }

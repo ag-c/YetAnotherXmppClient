@@ -15,10 +15,12 @@
     <None Remove="AddRosterItemControl.xaml" />
     <None Remove="AddRosterItemWindow.xaml" />
     <None Remove="AskSubscriptionPermissionWindow.xaml" />
+    <None Remove="ChatSessionControl.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.7.0" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.7.0" />
+    <PackageReference Include="Avalonia" Version="0.8.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.8.0" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.0" />
     <PackageReference Include="Serilog.Sinks.TextWriter" Version="2.1.0" />
     <PackageReference Include="StarDebris.Avalonia.MessageBox" Version="0.1.0" />
   </ItemGroup>
@@ -33,6 +35,9 @@
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="AskSubscriptionPermissionWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ChatSessionControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
   </ItemGroup>

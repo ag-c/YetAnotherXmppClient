@@ -35,6 +35,8 @@ namespace YetAnotherXmppClient
         public static readonly XName receipts_received = "{urn:xmpp:receipts}received";
 
         public static readonly XName register_register = "{http://jabber.org/features/iq-register}register";
+        public static readonly XName register_query = "{jabber:iq:register}query";
+        public static readonly XName register_registered = "{jabber:iq:register}registered";
 
         public static readonly XName discoinfo_query = "{http://jabber.org/protocol/disco#info}query";
         public static readonly XName discoinfo_identity = "{http://jabber.org/protocol/disco#info}identity";
@@ -48,6 +50,8 @@ namespace YetAnotherXmppClient
         public static readonly XName pubsub_event = "{http://jabber.org/protocol/pubsub#event}event";
 
         public static readonly XName ping_ping = "{http://jabber.org/protocol/pubsub#event}event";
+
+        public static readonly XName data_x = "{jabber:x:data}x";
     }
 
     public class XNamespaces

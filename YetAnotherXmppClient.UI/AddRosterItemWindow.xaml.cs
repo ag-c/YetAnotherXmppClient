@@ -8,7 +8,7 @@ namespace YetAnotherXmppClient.UI
     public class AddRosterItemWindow : Window
     {
         public string Jid { get; set; }
-        public new string Name { get; set; }
+        public string ItemName { get; set; }
 
         public ICommand AddCommand { get; }
         public ICommand CancelCommand { get; }
@@ -16,9 +16,9 @@ namespace YetAnotherXmppClient.UI
 
         public AddRosterItemWindow()
         {
-            this.InitializeComponent();
-            this.AddCommand = new ActionCommand(OnAddCommandExecuted);
+            this.AddCommand = new ActionCommand(this.OnAddCommandExecuted);
             this.CancelCommand = new ActionCommand(this.OnCancelCommandExecuted);
+            this.InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif
@@ -26,12 +26,12 @@ namespace YetAnotherXmppClient.UI
 
         private void OnAddCommandExecuted(object obj)
         {
-            this.Close(true);
+            this.Close(new RosterItemInfo {Jid = this.Jid, Name = this.ItemName});
         }
 
         private void OnCancelCommandExecuted(object obj)
         {
-            this.Close(false);
+            this.Close(null);
         }
 
         private void InitializeComponent()

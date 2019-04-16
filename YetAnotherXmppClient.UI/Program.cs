@@ -8,7 +8,7 @@ namespace YetAnotherXmppClient.UI
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
@@ -24,6 +24,7 @@ namespace YetAnotherXmppClient.UI
                 .UsePlatformDetect()
                 //.UseWin32()
                 //.UseAvaloniaModules()
+                .UseReactiveUI()
                 .LogToDebug();
     }
 }

@@ -27,9 +27,10 @@ namespace YetAnotherXmppClient
 
         public MainProtocolHandler ProtocolHandler { get; private set; }
 
-        public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
+        public event EventHandler ProtocolNegotiationFinished;
+        public Func<string, Task<bool>> SubscriptionRequestReceived { get; set; }
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
-        public Action<Jid, string> OnMessageReceived { get; set; }
+        public Action<ChatSession, Jid, string> MessageReceived { get; set; }
 
         public async Task StartAsync(Jid jid, string password)
         {
@@ -45,11 +46,28 @@ namespace YetAnotherXmppClient
 
             this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
             this.ProtocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
+            this.ProtocolHandler.NegotiationFinished += (s, e) => this.ProtocolNegotiationFinished?.Invoke(this, e);
             this.ProtocolHandler.RosterHandler.RosterUpdated += (s, e) => this.RosterUpdated?.Invoke(this, e);
-            this.ProtocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.OnSubscriptionRequestReceived;
-            this.ProtocolHandler.ImProtocolHandler.OnMessageReceived = this.OnMessageReceived;
+            this.ProtocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.SubscriptionRequestReceived;
+            this.ProtocolHandler.ImProtocolHandler.MessageReceived = this.MessageReceived;
 
-            Task.Run(() => this.ProtocolHandler.RunAsync(jid, this.cancelTokenSource.Token).ContinueWith(_ => HandleProtocolHandlingEnded()));
+            Task.Run(() => this.ProtocolHandler.RunAsync(jid, this.cancelTokenSource.Token).ContinueWith(_ => this.HandleProtocolHandlingEnded()));
+        }
+
+        public async Task RegisterAsync(string server)
+        {
+            this.jid = new Jid($"unknown@{server}/resource");
+            this.tcpClient = new TcpClient();
+
+            Log.Information($"Connecting to {server}:{DefaultPort}..");
+
+            await this.tcpClient.ConnectAsync(server, DefaultPort);
+
+            Log.Information($"Connection established");
+
+            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
+
+            await this.ProtocolHandler.RegisterAsync(new CancellationTokenSource().Token);
         }
 
         public async Task ShutdownAsync()

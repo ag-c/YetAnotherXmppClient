@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol.Handler;
 using static YetAnotherXmppClient.Expectation;
@@ -81,7 +83,12 @@ namespace YetAnotherXmppClient.Protocol
 
                 Log.Logger.StreamNegotiationStatus(features);
 
-                await this.NegotiateFeaturesAsync(features, jid, token);
+                if (await this.NegotiateFeaturesAsync(features, jid))
+                {
+                    // stream needs to be restarted after these features have been negotiated
+                    await this.RunAsync(jid, token);
+                    return;
+                }
 
                 Log.Debug("Stream negotiation is complete");
 
@@ -95,7 +102,8 @@ namespace YetAnotherXmppClient.Protocol
             }
         }
 
-        private async Task NegotiateFeaturesAsync(IEnumerable<Feature> features, Jid jid, CancellationToken token)
+        // returns true if restart of the stream is required
+        private async Task<bool> NegotiateFeaturesAsync(IEnumerable<Feature> features, Jid jid)
         {
             Feature feature;
             do
@@ -106,12 +114,13 @@ namespace YetAnotherXmppClient.Protocol
 
                 if (feature.IsStreamRestartRequired())
                 {   // stream needs to be restarted after these features have been negotiated
-                    await this.RunAsync(jid, token);
-                    return;
+                    return true;
                 }
                 features = features.Where(f => !f.Equals(feature));
             }
             while (feature != null);
+
+            return false;
         }
 
         private Feature SelectFeatureToNegotiateNext(IEnumerable<Feature> features)
@@ -158,7 +167,7 @@ namespace YetAnotherXmppClient.Protocol
             var discoHandler = new ServiceDiscoveryProtocolHandler(this.xmppStream, this.runtimeParameters);
             var timeHandler = new EntityTimeProtocolHandler(this.xmppStream, runtimeParameters);
             var pingHandler = new PingProtocolHandler(this.xmppStream, this.runtimeParameters);
-            var b = pingHandler.PingAsync();
+            var b = await pingHandler.PingAsync();
 
             var messageReceiptsHandler = new MessageReceiptsProtocolHandler(this.xmppStream, this.runtimeParameters);
 
@@ -172,14 +181,14 @@ namespace YetAnotherXmppClient.Protocol
         }
 
         //4.2.Opening a Stream
-        private async Task RestartStreamAsync(Jid jid)
+        private async Task RestartStreamAsync(Jid fullJid)
         {
             Log.Verbose("Restarting stream..");
 
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
             this.xmppStream.Reset();
 
-            await this.xmppStream.WriteInitialStreamHeaderAsync(jid, Version);
+            await this.xmppStream.WriteInitialStreamHeaderAsync(fullJid, Version);
 
             var attributes = await this.xmppStream.ReadResponseStreamHeaderAsync();
 
@@ -188,6 +197,45 @@ namespace YetAnotherXmppClient.Protocol
             //this.streamId = attributes["id"];
 
             //4.7.2. to //MUST verify the identity of the other entity
+        }
+
+        public async Task RegisterAsync(CancellationToken ct)
+        {
+            var jid = new Jid(Guid.NewGuid() + "@draugr.de/resource");
+
+            await this.RestartStreamAsync(jid).ConfigureAwait(false);
+
+            var features = await this.xmppStream.ReadStreamFeaturesAsync().ConfigureAwait(false);
+
+            if (features.Any(f => f.Name == XNames.starttls))
+            {
+                bool b = await this.NegotiateFeaturesAsync(features, jid);
+                await this.RestartStreamAsync(jid).ConfigureAwait(false);
+
+                features = await this.xmppStream.ReadStreamFeaturesAsync().ConfigureAwait(false);
+            }
+
+            if (!features.Any(f => f.Name == XNames.register_register))
+            {
+                throw new NotExpectedProtocolException("no register feature", "register feature");
+            }
+
+            var resp = await this.xmppStream.WriteIqAndReadReponseAsync(new Iq(IqType.get, new XElement(XNames.register_query))
+            {
+                To = jid.Server
+            }).ConfigureAwait(false);
+
+            //UNDONE should never be true
+            if (resp.Element(XNames.register_query)?.Element(XNames.register_registered) != null)
+            {
+                Log.Error("The entity is already registered.");
+            }
+
+            var x = resp.Element(XNames.register_query).Element(XNames.data_x);
+            if (x != null)
+            {
+
+            }
         }
 
         public async Task TerminateSessionAsync()

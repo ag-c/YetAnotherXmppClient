@@ -28,6 +28,11 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("type", value);
         }
 
+        public string Thread
+        {
+            get => this.Element("thread")?.Value;
+        }
+
         public Message(object content) : base("message", content)
         {
         }

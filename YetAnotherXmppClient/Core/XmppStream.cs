@@ -58,7 +58,7 @@ namespace YetAnotherXmppClient.Core
 
         protected override TextWriter CreateWriter(Stream stream)
         {
-            return new DebugTextWriter(new StreamWriter(stream), OnWriterFlushed);
+            return new DebugTextWriterDecorator(new StreamWriter(stream), OnWriterFlushed);
         }
 
         private static void OnWriterFlushed(string str)
@@ -144,10 +144,12 @@ namespace YetAnotherXmppClient.Core
 
         public async Task<XElement> WriteIqAndReadReponseAsync(Iq iq)
         {
+            var readUntilMatchTask = this.ReadUntilElementMatchesAsync(xe => xe.IsIq() && xe.Attribute("id")?.Value == iq.Id);
+
             //UNDONE register callback before writing
             await this.WriteElementAsync(iq);
 
-            return await this.ReadUntilElementMatchesAsync(xe => xe.IsIq() && xe.Attribute("id")?.Value == iq.Id);
+            return await readUntilMatchTask;
         }
     }
 }

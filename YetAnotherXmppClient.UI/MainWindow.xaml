@@ -1,26 +1,27 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YetAnotherXmppClient.UI" Height="150" Width="150" Name="myWindow">
+        Title="YetAnotherXmppClient.UI" Height="400" Width="400" Name="myWindow">
  
      
-  <Grid RowDefinitions="Auto,Auto,*" ColumnDefinitions="100,*">
+  <Grid RowDefinitions="Auto,Auto,5,*" ColumnDefinitions="100,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
           <Popup.Child>
           <AddRosterItemControl />
         </Popup.Child>
       </Popup>-->
      
-    <Button Content="Login" Command="{Binding LoginCommand}"/>
-    <Grid RowDefinitions="*,Auto" Grid.Row="1">
-      <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" SelectedItem="{Binding SelectedRosterItem}" MinHeight="100"  />
+    <Button Content="Login" Name="loginButton" Margin="3"/>  <!--Command="{Binding LoginCommand}"-->
+    <Grid RowDefinitions="*,Auto" Grid.Row="1" IsEnabled="{Binding IsProtocolNegotiationComplete}">
+      <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" SelectedItem="{Binding SelectedRosterItem}" MinHeight="100" Margin="3" />
       <StackPanel Orientation="Horizontal" Grid.Row="1">
-        <Button Content="+" Command="{Binding AddRosterItemCommand}" />
-        <Button Content="-" Command="{Binding DeleteRosterItemCommand}" />
+        <Button Content="Add" Command="{Binding AddRosterItemCommand}" Margin="3" />
+        <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
       </StackPanel>
     </Grid>
 
-    <StackPanel Orientation="Vertical" Grid.Column="1">
-      <CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
+    <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
+      <!--<ChatSessionControl Margin="10"/>-->
+      <!--<CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
       <Popup IsOpen = "{Binding ElementName = PCheckBox,Path = IsChecked}"
          PlacementTarget = "{Binding ElementName = PCheckBox}">
 
@@ -31,10 +32,13 @@
           <TextBlock TextWrapping = "Wrap" Foreground = "Blue"
              Text = "Hi, this is Popup" />
         </Canvas>
-      </Popup>
+      </Popup>-->
     </StackPanel>
 
-    <!--<TextBlock Text="test" Grid.Row="1" />-->
-    <TextBox Text="{Binding LogText}" Grid.Row="2" Grid.ColumnSpan="2" IsReadOnly="True" />
+    <GridSplitter Grid.Row="2" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
+    <!--<TextBox Text="{Binding LogText}" Grid.Row="3" Grid.ColumnSpan="2" IsReadOnly="True" />-->
+    <ScrollViewer Grid.Row="3" Name="logScrollViewer" Grid.ColumnSpan="2">
+      <TextBox Text="{Binding LogText}" Name="logTextBox" IsReadOnly="True" />
+    </ScrollViewer>
   </Grid>
 </Window>

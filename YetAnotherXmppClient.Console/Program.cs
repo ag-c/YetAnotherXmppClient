@@ -38,14 +38,15 @@ namespace YetAnotherXmppClient.Console
             try
             {
                 var xmppClient = new XmppClient();
-                xmppClient.OnSubscriptionRequestReceived = requestingJid =>
+                //await xmppClient.RegisterAsync("draugr.de");
+                xmppClient.SubscriptionRequestReceived = requestingJid =>
                 {
                     Debugger.Break();
                     return Task.FromResult(true);
                 };
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
-                xmppClient.OnMessageReceived += (senderJid, text) => Debugger.Break();
-                await xmppClient.StartAsync(jid, "***");
+                xmppClient.MessageReceived += (chatSession, senderJid, text) => Debugger.Break();
+                await xmppClient.StartAsync(jid, "gehe1m");
 
                 Console.ReadLine();
             }

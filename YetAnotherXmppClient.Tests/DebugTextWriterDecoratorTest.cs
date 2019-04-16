@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Xunit;
 
 namespace YetAnotherXmppClient.Tests
 {
-    public class DebugTextWriterTest
+    public class DebugTextWriterDecoratorTest
     {
         [Fact]
         public void WriteEmptyString()
         {
             string onFlushedArg = null;
-            var debugTextWriter = new DebugTextWriter(new StringWriter(), str => onFlushedArg = str);
+            var debugTextWriter = new DebugTextWriterDecorator(new StringWriter(), str => onFlushedArg = str);
 
             debugTextWriter.Write("");
 
@@ -25,7 +22,7 @@ namespace YetAnotherXmppClient.Tests
         public void WriteWithoutFlush()
         {
             string onFlushedArg = null;
-            var debugTextWriter = new DebugTextWriter(new StringWriter(), str => onFlushedArg = str);
+            var debugTextWriter = new DebugTextWriterDecorator(new StringWriter(), str => onFlushedArg = str);
 
             debugTextWriter.Write("123");
 
@@ -36,7 +33,7 @@ namespace YetAnotherXmppClient.Tests
         public void WriteAndFlush_MultipleTimes()
         {
             string onFlushedArg = null;
-            var debugTextWriter = new DebugTextWriter(new StringWriter(), str => onFlushedArg = str);
+            var debugTextWriter = new DebugTextWriterDecorator(new StringWriter(), str => onFlushedArg = str);
 
             debugTextWriter.Write("123");
             debugTextWriter.Flush();
@@ -53,7 +50,7 @@ namespace YetAnotherXmppClient.Tests
         public async Task WriteAndFlushAsync()
         {
             string onFlushedArg = null;
-            var debugTextWriter = new DebugTextWriter(new StringWriter(), str => onFlushedArg = str);
+            var debugTextWriter = new DebugTextWriterDecorator(new StringWriter(), str => onFlushedArg = str);
 
             await debugTextWriter.WriteAsync("123");
             await debugTextWriter.FlushAsync();
@@ -65,7 +62,7 @@ namespace YetAnotherXmppClient.Tests
         public void DisposeShouldFlush()
         {
             string onFlushedArg = null;
-            var debugTextWriter = new DebugTextWriter(new StringWriter(), str => onFlushedArg = str);
+            var debugTextWriter = new DebugTextWriterDecorator(new StringWriter(), str => onFlushedArg = str);
 
             debugTextWriter.Write("123");
             debugTextWriter.Dispose();
