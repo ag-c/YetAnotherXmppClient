@@ -1,7 +1,8 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YetAnotherXmppClient.UI" Height="400" Width="400" Name="myWindow">
- 
+        Title="YetAnotherXmppClient.UI" Height="400" Width="400" Name="myWindow"
+        xmlns:view="clr-namespace:YetAnotherXmppClient.UI.View"
+        xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel">
      
   <Grid RowDefinitions="Auto,Auto,5,*" ColumnDefinitions="100,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
@@ -10,17 +11,44 @@
         </Popup.Child>
       </Popup>-->
      
-    <Button Content="Login" Name="loginButton" Margin="3"/>  <!--Command="{Binding LoginCommand}"-->
+    <Button Content="Login.." Name="loginButton" Margin="3"/> 
+    
     <Grid RowDefinitions="*,Auto" Grid.Row="1" IsEnabled="{Binding IsProtocolNegotiationComplete}">
       <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" SelectedItem="{Binding SelectedRosterItem}" MinHeight="100" Margin="3" />
       <StackPanel Orientation="Horizontal" Grid.Row="1">
-        <Button Content="Add" Command="{Binding AddRosterItemCommand}" Margin="3" />
+        <Button Content="Add.." Command="{Binding AddRosterItemCommand}" Margin="3" />
         <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
       </StackPanel>
     </Grid>
 
+    <StackPanel Orientation="Horizontal" Grid.Column="1">
+      <TextBlock Text="Connected JID:" VerticalAlignment="Center"/>
+      <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3"/>
+    </StackPanel>
+    
     <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
-      <!--<ChatSessionControl Margin="10"/>-->
+      <Button Content="&lt;- Start  chat session" Name="startChatButton" HorizontalAlignment="Left" Margin="3"/>
+      <TabControl Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
+        <!--<TabControl.DataTemplates>
+          <DataTemplate DataType="vm:ChatSessionViewModel">
+            <StackPanel Orientation="Vertical">
+              <TextBlock Text="SampleViewModel.."/>
+              <view:ChatSessionControl />
+            </StackPanel>
+          </DataTemplate>
+        </TabControl.DataTemplates>-->
+        <TabControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Path=OtherJid}" ToolTip.Tip="{Binding OtherJid}" MaxWidth="100"/>
+          </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+          <DataTemplate>
+            <view:ChatSessionControl />
+          </DataTemplate>
+        </TabControl.ContentTemplate>
+      </TabControl>
+
       <!--<CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
       <Popup IsOpen = "{Binding ElementName = PCheckBox,Path = IsChecked}"
          PlacementTarget = "{Binding ElementName = PCheckBox}">
@@ -33,6 +61,7 @@
              Text = "Hi, this is Popup" />
         </Canvas>
       </Popup>-->
+    
     </StackPanel>
 
     <GridSplitter Grid.Row="2" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />

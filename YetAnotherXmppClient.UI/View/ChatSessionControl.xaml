@@ -2,8 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Border BorderThickness="1" BorderBrush="Black">
     <Grid RowDefinitions="*,Auto">
-      <ScrollViewer>
-        <ItemsControl ItemsSource="{Binding Messages}" x:Name="tStack" Grid.Column="0">
+      <ListBox Items="{Binding Messages}" Name="msgListBox"  MinHeight="100" Margin="3" />
+      <!--<ScrollViewer>
+        <ItemsControl  ItemsSource="{Binding Messages}" x:Name="tStack" Grid.Column="0">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <StackPanel Orientation="Horizontal" IsItemsHost="True"/>
@@ -15,11 +16,11 @@
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
-      </ScrollViewer>
-      <StackPanel Orientation="Horizontal">
-        <TextBox HorizontalAlignment="Stretch"></TextBox>
-        <Button Content="Send"/>
-      </StackPanel>
+      </ScrollViewer>-->
+      <Grid ColumnDefinitions="*,Auto" Grid.Row="1">
+        <TextBox Text="{Binding TextToSend}"  HorizontalAlignment="Stretch" Grid.Column="0" />
+        <Button Content="Send" Name="sendButton" IsDefault="True" Grid.Column="1" />
+      </Grid>
     </Grid>
   </Border>
 </UserControl>

@@ -46,7 +46,7 @@ namespace YetAnotherXmppClient.Protocol
         readonly Dictionary<string, string> runtimeParameters = new Dictionary<string, string>();
 
         public event EventHandler<Exception> FatalErrorOccurred;
-        public event EventHandler NegotiationFinished;
+        public event EventHandler<string> NegotiationFinished;
 
         public RosterProtocolHandler RosterHandler { get; }
         public PresenceProtocolHandler PresenceHandler { get; }
@@ -177,7 +177,7 @@ namespace YetAnotherXmppClient.Protocol
             var omemoHandler = new OmemoProtocolHandler(pepHandler, this.xmppStream, this.runtimeParameters);
             await omemoHandler.InitializeAsync();
 
-            this.NegotiationFinished?.Invoke(this, EventArgs.Empty);
+            this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
         }
 
         //4.2.Opening a Stream

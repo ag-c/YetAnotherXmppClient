@@ -34,11 +34,14 @@ namespace YetAnotherXmppClient.Extensions
 
         public static XElement FirstElement(this XElement xElem)
         {
-            return xElem.Elements().First();
+            return xElem.Elements().FirstOrDefault();
         }
 
         public static bool NamespaceEquals(this XElement xElem, XNamespace ns)
         {
+            if (xElem == null)
+                return false;
+
             return xElem.Name.Namespace == ns;
         }
     }

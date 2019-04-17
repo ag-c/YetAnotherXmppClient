@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
@@ -10,16 +11,37 @@ using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
-    public class ChatSession
+    public class ChatSession : IEquatable<ChatSession>
     {
-        public string Thread { get; set; }
+        private readonly Func<string, Task> sendMessageAction;
+
+        public string Thread { get; }
+        public string OtherJid { get; set; }
         public List<string> Messages { get; } = new List<string>(); //UNDONE
+
+        public ChatSession(string thread, string otherJid, /*Func<string, string, string, Task>*/Func<string, Task> sendMessageAction)
+        {
+            this.Thread = thread ?? throw new ArgumentNullException(nameof(thread));
+            this.OtherJid = otherJid ?? throw new ArgumentNullException(nameof(otherJid));
+            this.sendMessageAction = sendMessageAction;
+        }
+
+        public Task SendMessageAsync(string message)
+        {
+            this.Messages.Add("Me: " + message);
+            return this.sendMessageAction(message);
+        }
+
+        public bool Equals(ChatSession other)
+        {
+            return this.Thread == other?.Thread;
+        }
     }
 
     public class ImProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
     {
         //<threadid, chatdata>
-        private ConcurrentDictionary<string, ChatSession> chatSessions = new ConcurrentDictionary<string, ChatSession>();
+        private readonly ConcurrentDictionary<string, ChatSession> chatSessions = new ConcurrentDictionary<string, ChatSession>();
 
         public ImProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, runtimeParameters)
@@ -27,7 +49,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterMessageCallback(this);
         }
 
-        public Action<ChatSession, Jid, string> MessageReceived { get; set; }
+        public Action<ChatSession, string> MessageReceived { get; set; }
 
         //rfc3921
         //[Obsolete]
@@ -41,9 +63,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
         //    Expect(iq.Id, iqResp.Attribute("id").Value);
         //}
 
-        public async Task SendMessageAsync(string recipientJid, string message)
+        public async Task SendMessageAsync(string recipientJid, string message, string thread=null)
         {
-            var messageElem = new Message(new XElement("body", message))
+            var messageElem = new Message(message, thread)
             {
                 From = this.RuntimeParameters["jid"],
                 To = recipientJid.ToBareJid(),
@@ -56,14 +78,36 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         void IMessageReceivedCallback.MessageReceived(Message message)
         {
-            Expect("message", message.Name, message);
+            Expect("message", message.Name.LocalName, message);
 
+            var xml = message.ToString();
             var sender = message.From;
-            var text = message.Element("body").Value;
+            var text = message.Element("{jabber:client}body").Value;
 
-            var chatSession = message.Thread != null ? this.chatSessions[message.Thread] : null;
+            ChatSession chatSession = null;
+            if (message.Thread != null)
+            {
+                chatSession = this.chatSessions.GetOrAdd(message.Thread, 
+                    thread => new ChatSession(message.Thread, sender, 
+                        msg => this.SendMessageAsync(sender, msg, message.Thread)));
+                chatSession.OtherJid = sender; // take over full jid of sender
+                chatSession.Messages.Add(text);
+            }
+            else
+            {
+                Log.Debug("Received message without thread id");
+            }
 
-            this.MessageReceived?.Invoke(chatSession, new Jid(sender), text);
+            this.MessageReceived?.Invoke(chatSession, text);
+        }
+
+        public ChatSession StartChatSession(string fullJid)
+        {
+            //TODO check if session with same fullJid already exists?
+            var thread = Guid.NewGuid().ToString();
+            var session = new ChatSession(thread, fullJid, msg => this.SendMessageAsync(fullJid, msg, thread));
+            this.chatSessions.TryAdd(thread, session);
+            return session;
         }
     }
 }

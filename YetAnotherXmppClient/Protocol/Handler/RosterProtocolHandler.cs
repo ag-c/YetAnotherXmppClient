@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -60,7 +61,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
 
-            Expectation.Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+            Expect("result", responseIq.Attribute("type")?.Value, responseIq);
 
             if (responseIq.IsEmpty)
             {
@@ -133,7 +134,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Log.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iq);
 
-            if (iq.From != this.RuntimeParameters["jid"].ToBareJid())
+            if (iq.From != null && iq.From != this.RuntimeParameters["jid"].ToBareJid())
             {
                 // 2.1.6.: A receiving client MUST ignore the stanza unless it has no 'from'
                 // attribute(i.e., implicitly from the bare JID of the user's
@@ -143,7 +144,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             }
 
             // Roster push
-            if (iq.FirstNode is XElement queryElem && queryElem.Name == XNames.roster_query)
+            if (iq.Type == IqType.set && iq.FirstNode is XElement queryElem && queryElem.Name == XNames.roster_query)
             {
                 Expect(IqType.set.ToString(), iq.Attribute("type")?.Value, iq);
 
@@ -169,6 +170,10 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
 
                 //UNDONE reply to server (2.1.6.  Roster Push)
+            }
+            else if(iq.Type == IqType.result)
+            {
+                //Debugger.Break();
             }
         }
     }

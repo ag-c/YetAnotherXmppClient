@@ -72,7 +72,7 @@ namespace YetAnotherXmppClient.Core
                 XElement xElem;
                 do
                 {
-                    xElem = await this.InternalReadElementAsync();
+                    xElem = await this.InternalReadAndProcessElementAsync();
                 }
                 while (!matchFunc(xElem));
 
@@ -97,10 +97,10 @@ namespace YetAnotherXmppClient.Core
         {
             ThrowIfLoopRunning();
 
-            return this.InternalReadElementAsync();
+            return this.InternalReadAndProcessElementAsync();
         }
 
-        private async Task<XElement> InternalReadElementAsync()
+        private async Task<XElement> InternalReadAndProcessElementAsync()
         {
             using (await this.readerLock.LockAsync())
             {
@@ -157,8 +157,7 @@ namespace YetAnotherXmppClient.Core
             {
                 token.ThrowIfCancellationRequested();
 
-                var xElem = await this.InternalReadElementAsync();
-                this.ProcessInboundElement(xElem);
+                await this.InternalReadAndProcessElementAsync();
             }
         }
 

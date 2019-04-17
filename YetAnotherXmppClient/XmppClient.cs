@@ -27,10 +27,10 @@ namespace YetAnotherXmppClient
 
         public MainProtocolHandler ProtocolHandler { get; private set; }
 
-        public event EventHandler ProtocolNegotiationFinished;
+        public event EventHandler<string> ProtocolNegotiationFinished; // parameter is connected jid
         public Func<string, Task<bool>> SubscriptionRequestReceived { get; set; }
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
-        public Action<ChatSession, Jid, string> MessageReceived { get; set; }
+        public Action<ChatSession, string> MessageReceived { get; set; }
 
         public async Task StartAsync(Jid jid, string password)
         {

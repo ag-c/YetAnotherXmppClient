@@ -12,33 +12,40 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="AddRosterItemControl.xaml" />
     <None Remove="AddRosterItemWindow.xaml" />
-    <None Remove="AskSubscriptionPermissionWindow.xaml" />
     <None Remove="ChatSessionControl.xaml" />
+    <None Remove="LoginWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.8.0" />
     <PackageReference Include="Avalonia.Desktop" Version="0.8.0" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.0" />
     <PackageReference Include="Serilog.Sinks.TextWriter" Version="2.1.0" />
-    <PackageReference Include="StarDebris.Avalonia.MessageBox" Version="0.1.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Avalonia.MessageBox\StarDebris.Avalonia.MessageBox.csproj" />
     <ProjectReference Include="..\YetAnotherXmppClient\YetAnotherXmppClient.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="AddRosterItemControl.xaml">
+    <EmbeddedResource Update="View\AddRosterItemWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Update="AddRosterItemWindow.xaml">
+    <EmbeddedResource Update="View\ChatSessionControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Update="AskSubscriptionPermissionWindow.xaml">
+    <EmbeddedResource Update="View\LoginWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Update="ChatSessionControl.xaml">
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="View\AddRosterItemWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
+    </None>
+    <None Update="View\ChatSessionControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
+    <None Update="View\LoginWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
   </ItemGroup>
 </Project>

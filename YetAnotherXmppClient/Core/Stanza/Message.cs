@@ -28,16 +28,17 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("type", value);
         }
 
-        public string Thread
-        {
-            get => this.Element("thread")?.Value;
-        }
+        public string Thread => this.Element("{jabber:client}thread")?.Value;
 
-        public Message(object content) : base("message", content)
+        public Message(object content) : base("{jabber:client}message", content)
         {
         }
 
-        private Message(params object[] content) : base("message", content)
+        public Message(string body, string thread) : base("{jabber:client}message", new XElement("body", body), thread != null ? new XElement("thread", thread) : null)
+        {
+        }
+
+        private Message(params object[] content) : base("{jabber:client}message", content)
         {
         }
 

@@ -3,6 +3,8 @@ using Avalonia;
 using Avalonia.Logging.Serilog;
 using Serilog;
 using Serilog.Filters;
+using YetAnotherXmppClient.UI.View;
+using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI
 {
@@ -12,7 +14,7 @@ namespace YetAnotherXmppClient.UI
         {
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .Filter.ByIncludingOnly(Matching.WithProperty<bool>("IsXmppStreamContent", b => b))
+                //.Filter.ByIncludingOnly(Matching.WithProperty<bool>("IsXmppStreamContent", b => b))
                 .WriteTo.TextWriter(MainViewModel.stringWriter)
                 .CreateLogger();
 

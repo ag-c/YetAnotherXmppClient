@@ -45,8 +45,8 @@ namespace YetAnotherXmppClient.Console
                     return Task.FromResult(true);
                 };
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
-                xmppClient.MessageReceived += (chatSession, senderJid, text) => Debugger.Break();
-                await xmppClient.StartAsync(jid, "gehe1m");
+                xmppClient.MessageReceived += (chatSession, text) => Debugger.Break();
+                await xmppClient.StartAsync(jid, "***");
 
                 Console.ReadLine();
             }

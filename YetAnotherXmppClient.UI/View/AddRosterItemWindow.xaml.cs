@@ -2,8 +2,9 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using YetAnotherXmppClient.UI.ViewModel;
 
-namespace YetAnotherXmppClient.UI
+namespace YetAnotherXmppClient.UI.View
 {
     public class AddRosterItemWindow : Window
     {
