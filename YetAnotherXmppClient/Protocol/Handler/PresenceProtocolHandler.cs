@@ -13,7 +13,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 {
     public class Presence
     {
-        public string From { get; set; }
+        public Jid Jid { get; set; }
         //public string To { get; set; }
         public int? Priority { get; set; }
         public PresenceShow Show { get; set; }
@@ -32,6 +32,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
             : base(xmppStream, null)
         {
             this.XmppStream.RegisterPresenceCallback(this);
+        }
+
+        public IEnumerable<Presence> GetAllPresencesForBareJid(string bareJid)
+        {
+            var fullJids = this.PresenceByJid.Keys.Where(k => k.StartsWith(bareJid));
+            return fullJids.Select(fullJid => this.PresenceByJid[fullJid]);
         }
 
         public async Task<bool> RequestSubscriptionAsync(string contactJid)
@@ -112,7 +118,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 var showElem = newPresenceElem.Element("show");
                 var prioElem = newPresenceElem.Element("priority");
 
-                existing.From = fromVal;
+                existing.Jid = new Jid(fromVal);
                 existing.Show = showElem != null
                     ? (PresenceShow)Enum.Parse(typeof(PresenceShow), showElem.Value)
                     : PresenceShow.None;

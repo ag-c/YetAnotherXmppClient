@@ -12,7 +12,7 @@
     <!--<TextBlock Margin="5,2" MinWidth="50" Text="Suche..."
                  Foreground="LightSteelBlue" Visibility="{Binding ElementName=txtSearchBox, Path=Text.IsEmpty, Converter={StaticResource MyBoolToVisibilityConverter}}" />-->
     <!-- enter term here -->
-    <TextBox MinWidth="50" Name="txtSearchBox" Text="{Binding Jid}" Margin="3" Background="Transparent" Watermark="local@domain" Grid.Column="1"/>
+    <TextBox MinWidth="50" Name="jidTextBox" Text="{Binding Jid}" Margin="3" Background="Transparent" Watermark="local@domain" Grid.Column="1"/>
     <!--</Grid>-->
     <TextBlock Text="Password:" Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="3"/>
     <TextBox MinWidth="50" Name="txtSearchBox2" Text="{Binding Password}" PasswordChar="*" Margin="3" Background="Transparent" Grid.Row="1" Grid.Column="1" />

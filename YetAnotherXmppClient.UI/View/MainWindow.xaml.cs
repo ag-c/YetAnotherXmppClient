@@ -19,18 +19,16 @@ namespace YetAnotherXmppClient.UI.View
     {
         public Button LoginButton => this.FindControl<Button>("loginButton");
         public Button StartChatButton => this.FindControl<Button>("startChatButton");
+        public MenuItem RemoveMenuItem => this.FindControl<MenuItem>("removeMenuItem");
 
         public MainWindow()
         {
-            InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
             this.WhenActivated(
                 d =>
                 {
                     d(this.BindCommand(this.ViewModel, x => x.LoginCommand, x => x.LoginButton));
                     d(this.BindCommand(this.ViewModel, x => x.StartChatCommand, x => x.StartChatButton));
+                    //d(this.Bind(this.ViewModel, x => x.DeleteRosterItemCommand, x => x.RemoveMenuItem.Command));
                     d(this
                         .ViewModel
                         .LoginInteraction
@@ -53,7 +51,7 @@ namespace YetAnotherXmppClient.UI.View
                                     new MessageBox($"Allow {interaction.Input} to see your status?",
                                         (dialogResult, e) => { tcs.SetResult(dialogResult.result == MessageBoxButtons.Yes); },
                                         MessageBoxStyle.Info, MessageBoxButtons.Yes | MessageBoxButtons.No).Show()
-                                    );
+                                );
                                 interaction.SetOutput(await tcs.Task);
                             }));
                     d(this
@@ -72,6 +70,10 @@ namespace YetAnotherXmppClient.UI.View
                     cmd = new ActionCommand(async obj => await Dispatcher.UIThread.InvokeAsync(() => logScrollViewer.ScrollToEnd()));
                     this.ViewModel.WhenPropertyChanged(x => x.LogText).InvokeCommand(cmd);
                 });
+            InitializeComponent();
+#if DEBUG
+            this.AttachDevTools();
+#endif
         }
 
         private ICommand cmd;

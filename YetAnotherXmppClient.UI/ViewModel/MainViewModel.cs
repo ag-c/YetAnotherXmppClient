@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveUI;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.UI.ViewModel
@@ -44,6 +45,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public string LogText => stringWriter.Decoratee.ToString();
 
         public ReactiveCommand LoginCommand { get; }
+        public ReactiveCommand LogoutCommand { get; }
         public ReactiveCommand StartChatCommand { get; }
         public ReactiveCommand AddRosterItemCommand { get; }
         public ReactiveCommand DeleteRosterItemCommand { get; }
@@ -85,18 +87,14 @@ namespace YetAnotherXmppClient.UI.ViewModel
             instance = this;
 
             this.LoginCommand = ReactiveCommand.CreateFromTask(this.LoginAsync);//new ActionCommand(this.OnLoginCommandExecutedAsync);
-            this.LoginCommand.ThrownExceptions.Subscribe(async exception =>
-            {
-                await stringWriter.WriteLineAsync();
-                await stringWriter.WriteLineAsync("MainViewModel.LoginAsync: " + exception);
-            });
+            this.LoginCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.LoginAsync", ex));
+            this.LogoutCommand = ReactiveCommand.CreateFromTask(this.LogoutAsync);
+            this.LogoutCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.LogoutAsync", ex));
+
 
             //var canExecute = this.WhenAny(x => x.SelectedRosterItem, selection => selection != null); //UNDONE
             this.StartChatCommand = ReactiveCommand.Create(this.StartChatSession);
-            this.StartChatCommand.ThrownExceptions.Subscribe(async exception =>
-            {
-                await stringWriter.WriteLineAsync("MainViewModel.StartChatSession: " + exception);
-            });
+            this.StartChatCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.StartChatSession", ex));
             this.AddRosterItemCommand = ReactiveCommand.CreateFromTask(this.AddRosterItemAsync);
             this.DeleteRosterItemCommand = ReactiveCommand.CreateFromTask(this.DeleteRosterItemAsync);
 
@@ -108,6 +106,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.xmppClient.RosterUpdated += (sender, items) => this.RosterItems = items;
             this.xmppClient.SubscriptionRequestReceived += this.HandleSubscriptionRequestReceivedAsync;
             this.xmppClient.MessageReceived = this.OnMessageReceived;
+
+            async Task PrintException(string location, Exception exception)
+            {
+                await stringWriter.WriteAndFlushAsync(location + ": " + exception);
+            }
         }
 
         private void StartChatSession()
@@ -155,6 +158,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
             {
                 await xmppClient.StartAsync(new Jid(credentials.Jid), credentials.Password);
             }
+        }
+
+        private async Task LogoutAsync(CancellationToken ct)
+        {
+            await this.xmppClient.ShutdownAsync();
         }
 
         private async Task AddRosterItemAsync(CancellationToken ct)

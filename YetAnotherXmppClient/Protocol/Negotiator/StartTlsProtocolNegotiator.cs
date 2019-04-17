@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Negotiator
 {
     class StartTlsProtocolNegotiator : IFeatureProtocolNegotiator
     {
@@ -47,7 +43,8 @@ namespace YetAnotherXmppClient.Protocol
             else
             {
                 //UNDONE auf localname=="proceed" prüfen
-                throw new NotExpectedProtocolException(xElem.Name.ToString(), "proceed or failure");
+                Log.Error("Received instead of proceed or failure: " + xElem);
+                throw new NotExpectedProtocolException(xElem.Name.ToString(), "proceed or failure", xElem);
             }
 
             return true;

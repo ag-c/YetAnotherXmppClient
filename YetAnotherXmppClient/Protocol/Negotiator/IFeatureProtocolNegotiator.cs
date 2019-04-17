@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Negotiator
 {
     interface IFeatureProtocolNegotiator
     {

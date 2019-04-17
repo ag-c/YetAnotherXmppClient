@@ -11,6 +11,7 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol.Handler;
+using YetAnotherXmppClient.Protocol.Negotiator;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol
@@ -68,7 +69,7 @@ namespace YetAnotherXmppClient.Protocol
                 new StartTlsProtocolNegotiator(this.xmppStream), 
                 new SaslFeatureProtocolNegotiator(this.xmppStream, Mechanisms),
                 new BindProtocolNegotiator(this.xmppStream, this.runtimeParameters),
-                //new ImProtocolHandler(serverStream),
+                new Rfc3921SessionProtocolNegotiator(this.xmppStream, this.runtimeParameters)
             };
         }
 

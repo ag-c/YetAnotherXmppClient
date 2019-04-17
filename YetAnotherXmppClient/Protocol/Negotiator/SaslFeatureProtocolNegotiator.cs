@@ -1,17 +1,13 @@
-using Serilog;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Linq;
+using Serilog;
 using YetAnotherXmppClient.Core;
-using YetAnotherXmppClient.Protocol;
-using static YetAnotherXmppClient.Expectation;
 
-namespace YetAnotherXmppClient
+namespace YetAnotherXmppClient.Protocol.Negotiator
 {
     public class SaslFeatureProtocolNegotiator : IFeatureProtocolNegotiator
     {
@@ -68,7 +64,7 @@ namespace YetAnotherXmppClient
             
             //6.4.5. SASL Failure
             //6.4.6. SASL Success
-            Expect(XNames.sasl_success, actual: xElem.Name, context: xElem);
+            Expectation.Expect(XNames.sasl_success, actual: xElem.Name, context: xElem);
 
             return true;
         }

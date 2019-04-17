@@ -2,32 +2,89 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="YetAnotherXmppClient.UI" Height="400" Width="400" Name="myWindow"
         xmlns:view="clr-namespace:YetAnotherXmppClient.UI.View"
-        xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel">
+        xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
+        xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
+        x:Name="RootObject">
+  <Window.Resources>
+    <local:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
+  </Window.Resources>
      
-  <Grid RowDefinitions="Auto,Auto,5,*" ColumnDefinitions="100,*">
+  <Grid RowDefinitions="Auto,Auto,Auto,5,Auto,*" ColumnDefinitions="130,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
           <Popup.Child>
           <AddRosterItemControl />
         </Popup.Child>
       </Popup>-->
-     
-    <Button Content="Login.." Name="loginButton" Margin="3"/> 
+
+    <StackPanel Orientation="Vertical" >
+    <Button Content="Login.." Name="loginButton" Margin="3"/>
+      <Button Content="Logout" Name="logoutButton" Margin="3,0,3,3"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Grid.Column="1">
+      <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
+      <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+    </StackPanel>
+
+    <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
     
-    <Grid RowDefinitions="*,Auto" Grid.Row="1" IsEnabled="{Binding IsProtocolNegotiationComplete}">
-      <ListBox Items="{Binding RosterItems}" MemberSelector="Jid" SelectedItem="{Binding SelectedRosterItem}" MinHeight="100" Margin="3" />
-      <StackPanel Orientation="Horizontal" Grid.Row="1">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" Grid.Row="2" IsEnabled="{Binding IsProtocolNegotiationComplete}">
+      <TextBlock Text="Roster:" Margin="3,0,0,0"/>
+      <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem}" Name="rosterListBox" MinHeight="150" Margin="3" Grid.Row="1">
+        <ListBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Add Item.." Command="{Binding $parent[Window].DataContext.AddRosterItemCommand}"/>
+          </ContextMenu>
+        </ListBox.ContextMenu>
+        <ListBox.ItemTemplate >
+          <DataTemplate >
+              <StackPanel Orientation="Horizontal" Height="24">
+                <StackPanel.ContextMenu>
+                  <ContextMenu>
+                    <MenuItem Header="Start chat session" Command="{Binding $parent[Window].DataContext.StartChatCommand}" />
+                    <Separator/>
+                    <MenuItem Header="Add Item.." Command="{Binding $parent[Window].DataContext.AddRosterItemCommand}"/>
+                    <MenuItem Header="Remove Item" Command="{Binding $parent[Window].DataContext.DeleteRosterItemCommand}"/>
+                  </ContextMenu>
+                </StackPanel.ContextMenu>
+                <TextBlock VerticalAlignment="Center">
+                  <TextBlock.Text>
+                    <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
+                      <Binding Path="Name" />
+                      <Binding Path="Jid" />
+                    </MultiBinding>
+                  </TextBlock.Text>
+                  <ToolTip.Tip>
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
+                      <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3"/>
+                      <TextBlock Text="{Binding Path=Jid}" Grid.Column="1" Margin="3"/>
+                      <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Margin="3"/>
+                      <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="1" Margin="3"/>
+                      <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Margin="3"/>
+                      <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="1" Margin="3"/>
+                    </Grid>
+                  </ToolTip.Tip>
+                </TextBlock>
+              </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+        <!--<ListBox.ContextMenu>
+          <ContextMenu DataContext="{Binding DataContext, Source={x:Reference RootObject}}">
+            <MenuItem Header="Start chat session" Name="startChatMenuItem" />
+            <MenuItem Header="Remove" Name="removeMenuItem" Command="{Binding DeleteRosterItemCommand}"/>
+          </ContextMenu>
+        </ListBox.ContextMenu>-->
+      </ListBox>
+      <!--<StackPanel Orientation="Horizontal" Grid.Row="2">
         <Button Content="Add.." Command="{Binding AddRosterItemCommand}" Margin="3" />
         <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
       </StackPanel>
+      <Button Content="Start  chat session" Name="startChatButton" HorizontalAlignment="Stretch" Margin="3" Grid.Row="3"/>-->
     </Grid>
 
-    <StackPanel Orientation="Horizontal" Grid.Column="1">
-      <TextBlock Text="Connected JID:" VerticalAlignment="Center"/>
-      <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3"/>
-    </StackPanel>
     
-    <StackPanel Orientation="Vertical" Grid.Row="1" Grid.Column="1">
-      <Button Content="&lt;- Start  chat session" Name="startChatButton" HorizontalAlignment="Left" Margin="3"/>
+    <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
+      <TextBlock Text="Chat sessions:" />
       <TabControl Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
         <!--<TabControl.DataTemplates>
           <DataTemplate DataType="vm:ChatSessionViewModel">
@@ -64,9 +121,9 @@
     
     </StackPanel>
 
-    <GridSplitter Grid.Row="2" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
-    <!--<TextBox Text="{Binding LogText}" Grid.Row="3" Grid.ColumnSpan="2" IsReadOnly="True" />-->
-    <ScrollViewer Grid.Row="3" Name="logScrollViewer" Grid.ColumnSpan="2">
+    <GridSplitter Grid.Row="3" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
+    <TextBlock Text="Log:" Grid.Row="4"/>
+    <ScrollViewer Grid.Row="5" Name="logScrollViewer" Grid.ColumnSpan="2">
       <TextBox Text="{Binding LogText}" Name="logTextBox" IsReadOnly="True" />
     </ScrollViewer>
   </Grid>

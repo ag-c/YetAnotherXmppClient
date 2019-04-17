@@ -11,6 +11,7 @@ namespace YetAnotherXmppClient.UI.View
     {
         public Button LoginButton => this.FindControl<Button>("loginButton");
         public Button CancelButton => this.FindControl<Button>("cancelButton");
+        public TextBox JidTextBox => this.FindControl<TextBox>("jidTextBox");
 
         public LoginWindow()
         {
@@ -24,6 +25,7 @@ namespace YetAnotherXmppClient.UI.View
                 {
                     d(this.BindCommand(this.ViewModel, x => x.LoginCommand, x => x.LoginButton));
                     d(this.BindCommand(this.ViewModel, x => x.CancelCommand, x => x.CancelButton));
+                    d(this.Bind(this.ViewModel, vm => vm.Jid, v => v.JidTextBox.Text));
 
                     this.ViewModel.CloseAction = credentials => this.Close(credentials);
                 });

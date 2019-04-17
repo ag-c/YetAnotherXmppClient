@@ -4,9 +4,8 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
-using static YetAnotherXmppClient.Expectation;
 
-namespace YetAnotherXmppClient.Protocol
+namespace YetAnotherXmppClient.Protocol.Negotiator
 {
     public class BindProtocolNegotiator : IFeatureProtocolNegotiator
     {
@@ -32,7 +31,7 @@ namespace YetAnotherXmppClient.Protocol
 
             var responseIq = await this.xmppServerStream.WriteIqAndReadReponseAsync(requestIq);
 
-            Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+            Expectation.Expect("result", responseIq.Attribute("type")?.Value, responseIq);
 
             this.runtimeParameters["jid"] = responseIq.Element(XNames.bind_bind).Element(XNames.bind_jid).Value;
 

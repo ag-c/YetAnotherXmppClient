@@ -51,17 +51,6 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         public Action<ChatSession, string> MessageReceived { get; set; }
 
-        //rfc3921
-        //[Obsolete]
-        //public async Task EstablishSessionAsync()
-        //{
-        //    var iq = new Iq(IqType.set, new XElement(XNames.session_session));
-
-        //    var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
-
-        //    Expect("result", iqResp.Attribute("type").Value);
-        //    Expect(iq.Id, iqResp.Attribute("id").Value);
-        //}
 
         public async Task SendMessageAsync(string recipientJid, string message, string thread=null)
         {
