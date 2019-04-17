@@ -12,6 +12,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
     {
         private readonly XmppStream xmppServerStream;
         public XName FeatureName { get; } = XNames.starttls;
+        public bool IsNegotiated { get; private set; }
 
         public StartTlsProtocolNegotiator(XmppStream xmppServerStream)
         {
@@ -39,6 +40,8 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
                 //UNDONE 5.4.3.3. TLS Success
 
                 this.xmppServerStream.Reinitialize(sslStream);
+
+                this.IsNegotiated = true;
             }
             else
             {

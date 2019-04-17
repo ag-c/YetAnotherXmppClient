@@ -124,16 +124,17 @@ namespace YetAnotherXmppClient.Protocol
             return false;
         }
 
+        private List<XName> negotiatedFeatures = new List<XName>();
         private Feature SelectFeatureToNegotiateNext(IEnumerable<Feature> features)
         {
-            var mandatoryFeatures = features.Where(f => f.IsRequired);
+            var mandatoryFeatures = features.Where(f => f.IsRequired && !this.featureNegotiators.IsNegotiated(f));
             if (mandatoryFeatures.Any())
             {
                 return mandatoryFeatures.First();
             }
 
             // Choose the first feature for which we have a handler
-            return features.FirstOrDefault(f => this.featureNegotiators.Any(fh => fh.FeatureName == f.Name));
+            return features.FirstOrDefault(f => this.featureNegotiators.Any(fn => fn.FeatureName == f.Name && !fn.IsNegotiated));
         }
 
         private async Task NegotiateFeatureAsync(Feature feature)
@@ -244,6 +245,14 @@ namespace YetAnotherXmppClient.Protocol
             await this.PresenceHandler.SendUnavailableAsync();
 
             await this.xmppStream.WriteClosingTagAsync("stream:stream");
+        }
+    }
+
+    static class ProtocolNegotiatorsExtensions
+    {
+        public static bool IsNegotiated(this IEnumerable<IFeatureProtocolNegotiator> negotiators, Feature feature)
+        {
+            return negotiators.FirstOrDefault(n => n.FeatureName == feature.Name)?.IsNegotiated ?? false;
         }
     }
 }

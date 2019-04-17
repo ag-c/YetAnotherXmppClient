@@ -69,6 +69,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Expect("message", message.Name.LocalName, message);
 
+            if (message.Type == "headline")
+            {
+                Log.Debug("TODO: 'headline' message not handled");
+                return;
+            }
+
             var xml = message.ToString();
             var sender = message.From;
             var text = message.Element("{jabber:client}body").Value;
@@ -85,6 +91,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
             else
             {
                 Log.Debug("Received message without thread id");
+                // creating a session with a new thread id
+                //UNDONE search for session with same jid
+                var newThread = Guid.NewGuid().ToString();
+                chatSession = new ChatSession(newThread, sender, 
+                    msg => this.SendMessageAsync(sender, msg, message.Thread));
+                this.chatSessions.TryAdd(newThread, chatSession);
             }
 
             this.MessageReceived?.Invoke(chatSession, text);

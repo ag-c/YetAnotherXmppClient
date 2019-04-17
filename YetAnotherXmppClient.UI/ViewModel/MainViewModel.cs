@@ -171,6 +171,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (rosterItemInfo != null)
             {
                 var b = await this.xmppClient.ProtocolHandler.RosterHandler.AddRosterItemAsync(rosterItemInfo.Jid, rosterItemInfo.Name, null);
+                await this.xmppClient.ProtocolHandler.PresenceHandler.RequestSubscriptionAsync(rosterItemInfo.Jid);
             }
         }
 

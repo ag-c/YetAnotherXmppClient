@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -23,7 +24,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (message.HasElement(XNames.receipts_request)
                 && message.HasAttribute("id"))
             {
-                Expectation.Expect(this.RuntimeParameters["jid"], message.Attribute("to")?.Value, message);
+                Expect(this.RuntimeParameters["jid"], message.Attribute("to")?.Value, message);
 
                 var messageResp = new Message(new XElement(XNames.receipts_received))
                 {

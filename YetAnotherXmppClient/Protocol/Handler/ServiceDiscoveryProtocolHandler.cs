@@ -15,7 +15,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.discoinfo, this);
         }
 
-        public async void IqReceived(Iq iq)
+        async void IIqReceivedCallback.IqReceived(Iq iq)
         {
             Expect(() => iq.HasElement(XNames.discoinfo_query), iq);
 

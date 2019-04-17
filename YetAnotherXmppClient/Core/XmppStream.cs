@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Protocol.Handler;
 using static YetAnotherXmppClient.Expectation;
+using Presence = YetAnotherXmppClient.Core.Stanza.Presence;
 
 namespace YetAnotherXmppClient.Core
 {
@@ -22,7 +25,7 @@ namespace YetAnotherXmppClient.Core
 
     public interface IPresenceReceivedCallback
     {
-        void PresenceReceived(XElement presenceXElem);
+        void PresenceReceived(Presence presence);
     }
 
     public class XmppStream : XmlStream
@@ -78,7 +81,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "presence",
-                callback.PresenceReceived
+                xe => callback.PresenceReceived(Presence.FromXElement(xe))
             );
         }
 
@@ -93,8 +96,16 @@ namespace YetAnotherXmppClient.Core
         public void RegisterMessageContentCallback(XName contentName, IMessageReceivedCallback callback)
         {
             this.RegisterElementCallback(
-                xe => xe.Name.LocalName == "message" && xe.FirstElement().Name == contentName,
+                xe => xe.Name.LocalName == "message" && xe.Elements().Any(e => e.Name == contentName),
                 xe => callback.MessageReceived(Message.FromXElement(xe))
+            );
+        }
+
+        public void RegisterPresenceContentCallback(XName contentName, IPresenceReceivedCallback callback)
+        {
+            this.RegisterElementCallback(
+                xe => xe.Name.LocalName == "presence" && xe.Elements().Any(e => e.Name == contentName),
+                xe => callback.PresenceReceived(Presence.FromXElement(xe))
             );
         }
 

@@ -34,6 +34,7 @@ namespace YetAnotherXmppClient.Console
             //yetanotherxmppuser@jabber.de
             //yetanotherxmppuser@wiuwiu.de
             //yetanotherxmppuser@sum7.eu
+            //yetanotherxmppuser@xmpp.is
             var jid = new Jid("yetanotherxmppuser@jabber.de/DefaultResource");
 
             try

@@ -7,6 +7,9 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
     interface IFeatureProtocolNegotiator
     {
         XName FeatureName { get; }
+
+        bool IsNegotiated { get; }
+
         Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options);
     }
 }

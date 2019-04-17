@@ -8,6 +8,7 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -79,42 +80,40 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //UNDONE async
-        async void IPresenceReceivedCallback.PresenceReceived(XElement presenceElem)
+        async void IPresenceReceivedCallback.PresenceReceived(Core.Stanza.Presence presence)
         {
-            Expectation.Expect(XNames.presence, presenceElem.Name, presenceElem);
+            Expect(XNames.presence, presence.Name, presence);
 
-            if (presenceElem.Attribute("type")?.Value == PresenceType.subscribe.ToString())
+            if (presence.Type == PresenceType.subscribe)
             {
-                var fromValue = presenceElem.Attribute("from").Value;
-
-                var responseType = await (this.OnSubscriptionRequestReceived?.Invoke(fromValue) ?? Task.FromResult(false))
+                var responseType = await (this.OnSubscriptionRequestReceived?.Invoke(presence.From) ?? Task.FromResult(false))
                     ? PresenceType.subscribed
                     : PresenceType.unsubscribed;
 
                 var response = new Core.Stanza.Presence(responseType)
                 {
-                    To = fromValue
+                    To = presence.From
                 };
 
                 await this.XmppStream.WriteElementAsync(response);
             }
-            else if(!presenceElem.HasAttribute("type"))
+            else if(!presence.HasAttribute("type"))
             {
-                Expectation.Expect(() => presenceElem.HasAttribute("from"), presenceElem);
+                Expectation.Expect(() => presence.HasAttribute("from"), presence);
 
-                var fromVal = presenceElem.Attribute("from").Value;
+                var fromVal = presence.Attribute("from").Value;
 
                 this.PresenceByJid.AddOrUpdate(fromVal, _ =>
                 {
                     var instance = new Presence();
-                    UpdatePresence(instance, presenceElem);
+                    UpdatePresence(instance, presence);
                     return instance;
-                }, (_, existing) => UpdatePresence(existing, presenceElem));
+                }, (_, existing) => UpdatePresence(existing, presence));
             }
 
             Presence UpdatePresence(Presence existing, XElement newPresenceElem)
             {
-                var fromVal = presenceElem.Attribute("from").Value;
+                var fromVal = presence.Attribute("from").Value;
                 var showElem = newPresenceElem.Element("show");
                 var prioElem = newPresenceElem.Element("priority");
 

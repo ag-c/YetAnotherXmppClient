@@ -15,6 +15,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         private readonly Dictionary<string, string> runtimeParameters;
 
         public XName FeatureName { get; } = XNames.session_session;
+        public bool IsNegotiated { get; private set; }
 
         public Rfc3921SessionProtocolNegotiator(XmppStream xmppServerStream, Dictionary<string, string> runtimeParameters)
         {
@@ -25,6 +26,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         public async Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
         {
             await EstablishSessionAsync();
+            this.IsNegotiated = true;
             return true;
         }
 

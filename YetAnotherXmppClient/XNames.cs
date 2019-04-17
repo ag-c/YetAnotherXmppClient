@@ -52,6 +52,10 @@ namespace YetAnotherXmppClient
         public static readonly XName ping_ping = "{http://jabber.org/protocol/pubsub#event}event";
 
         public static readonly XName data_x = "{jabber:x:data}x";
+
+        public static readonly XName vcard_temp_update_x = "{vcard-temp:x:update}x";
+        public static readonly XName vcard_temp_update_photo = "{vcard-temp:x:update}photo";
+        public static readonly XName vcard_temp_vcard = "{vcard-temp}vCard";
     }
 
     public class XNamespaces

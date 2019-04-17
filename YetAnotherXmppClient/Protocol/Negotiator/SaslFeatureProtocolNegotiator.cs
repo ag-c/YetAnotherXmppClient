@@ -15,6 +15,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         private readonly IEnumerable<string> clientMechanisms;
 
         public XName FeatureName { get; } = XNames.sasl_mechanisms;
+        public bool IsNegotiated { get; private set; }
 
         public SaslFeatureProtocolNegotiator(XmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
         {
@@ -22,7 +23,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
             this.clientMechanisms = clientMechanisms;
         }
 
-        public Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
+        public async Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
         {
             //6.3.3. Mechanism Preferences
             var mechanismToTry = this.clientMechanisms.Intersect(((MechanismsFeature)feature).Mechanisms).FirstOrDefault();
@@ -34,7 +35,12 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
                 throw new InvalidOperationException("no supported sasl mechanism");
             }
 
-            return this.NegotiateInternalAsync(mechanismToTry, options);
+            var success = await this.NegotiateInternalAsync(mechanismToTry, options);
+            if (success)
+                this.IsNegotiated = true;
+
+            return success;
+
         }
 
         private async Task<bool> NegotiateInternalAsync(string mechanismToTry, Dictionary<string, string> options)

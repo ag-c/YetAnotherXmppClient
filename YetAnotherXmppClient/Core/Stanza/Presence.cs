@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core.StanzaParts;
+using YetAnotherXmppClient.Extensions;
 
 namespace YetAnotherXmppClient.Core.Stanza
 {
@@ -29,10 +30,16 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("id", value);
         }
 
-        public PresenceType Type
+        public PresenceType? Type
         {
-            get => (PresenceType)Enum.Parse(typeof(PresenceType), this.Attribute("type").Value);
+            get => this.HasAttribute("type") ? (PresenceType)Enum.Parse(typeof(PresenceType), this.Attribute("type").Value) : (PresenceType?)null;
             set => this.SetAttributeValue("type", value.ToString());
+        }
+
+        public string From
+        {
+            get => this.Attribute("from")?.Value;
+            set => this.SetAttributeValue("from", value);
         }
 
         public string To
@@ -58,6 +65,18 @@ namespace YetAnotherXmppClient.Core.Stanza
         {
             this.Id = Guid.NewGuid().ToString();
             this.Type = type;
+        }
+
+        private Presence(params object[] content) : base("{jabber:client}presence", content) //{jabber:client}
+        {
+        }
+
+        public static Presence FromXElement(XElement xElem)
+        {
+            var presence = new Presence(xElem.Elements());
+            foreach (var attr in xElem.Attributes())
+                presence.SetAttributeValue(attr.Name, attr.Value);
+            return presence;
         }
 
         public static implicit operator string(Presence presence)
