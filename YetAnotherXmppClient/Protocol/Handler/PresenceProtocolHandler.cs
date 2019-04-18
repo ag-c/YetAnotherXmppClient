@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml.Linq;
+using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
@@ -17,10 +17,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public Jid Jid { get; set; }
         //public string To { get; set; }
         public int? Priority { get; set; }
-        public PresenceShow Show { get; set; }
+        public PresenceShow? Show { get; set; }
         public IEnumerable<string> Stati { get; set; }
     }
 
+    //RFC 6121 
     public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback
     {
         public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
@@ -59,6 +60,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return true;
         }
 
+        //3.2.1.  Client Generation of Subscription Cancellation
         public async Task CancelSubscriptionAsync(string contactJid)
         {
             var presence = new Core.Stanza.Presence(PresenceType.unsubscribed)
@@ -86,9 +88,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             if (presence.Type == PresenceType.subscribe)
             {
-                var responseType = await (this.OnSubscriptionRequestReceived?.Invoke(presence.From) ?? Task.FromResult(false))
-                    ? PresenceType.subscribed
-                    : PresenceType.unsubscribed;
+                // reject subscription request if no handler is registered (TODO correct behavior?)
+                Log.Logger.LogIfMissingSubscriptionRequestHandler(this.OnSubscriptionRequestReceived == null);
+
+                var responseType = this.OnSubscriptionRequestReceived != null && await this.OnSubscriptionRequestReceived(presence.From) 
+                                       ? PresenceType.subscribed
+                                       : PresenceType.unsubscribed;
 
                 var response = new Core.Stanza.Presence(responseType)
                 {
@@ -99,11 +104,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
             }
             else if(!presence.HasAttribute("type"))
             {
-                Expectation.Expect(() => presence.HasAttribute("from"), presence);
+                Expect(() => presence.HasAttribute("from"), presence);
 
-                var fromVal = presence.Attribute("from").Value;
-
-                this.PresenceByJid.AddOrUpdate(fromVal, _ =>
+                this.PresenceByJid.AddOrUpdate(presence.From, _ =>
                 {
                     var instance = new Presence();
                     UpdatePresence(instance, presence);
@@ -111,19 +114,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 }, (_, existing) => UpdatePresence(existing, presence));
             }
 
-            Presence UpdatePresence(Presence existing, XElement newPresenceElem)
+            Presence UpdatePresence(Presence existing, Core.Stanza.Presence newPresenceElem)
             {
-                var fromVal = presence.Attribute("from").Value;
-                var showElem = newPresenceElem.Element("show");
-                var prioElem = newPresenceElem.Element("priority");
-
-                existing.Jid = new Jid(fromVal);
-                existing.Show = showElem != null
-                    ? (PresenceShow)Enum.Parse(typeof(PresenceShow), showElem.Value)
-                    : PresenceShow.None;
-                existing.Stati = newPresenceElem.Elements("status").Select(xe => xe.Value);
-                existing.Priority = prioElem != null ? int.Parse(prioElem.Value) : (int?)null;
-
+                existing.Jid = new Jid(presence.From);
+                existing.Show = newPresenceElem.Show;
+                existing.Stati = newPresenceElem.Stati;
+                existing.Priority = newPresenceElem.Priority;
                 return existing;
             }
     }

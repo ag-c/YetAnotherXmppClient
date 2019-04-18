@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Mail;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
-using Serilog.Core;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Protocol;
 using YetAnotherXmppClient.Protocol.Handler;
@@ -18,8 +16,8 @@ namespace YetAnotherXmppClient
     public class XmppClient : IFeatureOptionsProvider
     {
         public static readonly int DefaultPort = 5222;
-        
-        private CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
+
+        private CancellationTokenSource cancelTokenSource;
         private TcpClient tcpClient;
 
         private Jid jid;
@@ -28,6 +26,7 @@ namespace YetAnotherXmppClient
         public MainProtocolHandler ProtocolHandler { get; private set; }
 
         public event EventHandler<string> ProtocolNegotiationFinished; // parameter is connected jid
+        public event EventHandler Disconnected;
         public Func<string, Task<bool>> SubscriptionRequestReceived { get; set; }
         public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
         public Action<ChatSession, string> MessageReceived { get; set; }
@@ -37,7 +36,8 @@ namespace YetAnotherXmppClient
             this.jid = jid;
             this.password = password;
             this.tcpClient = new TcpClient();
-            
+            this.cancelTokenSource = new CancellationTokenSource();
+
             Log.Information($"Connecting to {jid.Server}:{DefaultPort}..");
             
             await this.tcpClient.ConnectAsync(jid.Server, DefaultPort);
@@ -74,6 +74,8 @@ namespace YetAnotherXmppClient
         {
             await this.ProtocolHandler.TerminateSessionAsync();
             this.cancelTokenSource.Cancel(false);
+            this.ProtocolHandler.Dispose();
+            this.ProtocolHandler = null;
         }
 
         private void HandleFatalProtocolErrorOccurred(object sender, Exception e)
@@ -91,6 +93,8 @@ namespace YetAnotherXmppClient
         private void HandleProtocolHandlingEnded()
         {
             Log.Information($"The protocol handler stopped working for unknown reason");
+
+            this.Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
         public Dictionary<string, string> GetOptions(XName featureName)

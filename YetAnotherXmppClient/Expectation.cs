@@ -23,6 +23,14 @@ namespace YetAnotherXmppClient
             }
         }
 
+        public static void Expect(Enum expectation, Enum actual, object context, [CallerMemberName] string callerMemberName = "")
+        {
+            if (!expectation.Equals(actual))
+            {
+                throw new NotExpectedProtocolException(actual.ToString(), expectation.ToString(), context, callerMemberName);
+            }
+        }
+
         public static void Expect(XName expectation, XName actual, object context, [CallerMemberName] string callerMemberName = "")
         {
             if (expectation != actual)

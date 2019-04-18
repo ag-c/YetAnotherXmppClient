@@ -1,7 +1,18 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
+using YetAnotherXmppClient.Extensions;
 
 namespace YetAnotherXmppClient.Core.Stanza
 {
+    public enum MessageType
+    {
+        chat,
+        error,
+        groupchat,
+        headline,
+        normal
+    }
+
     public class Message : XElement
     {
         public string Id
@@ -22,23 +33,28 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
-        public string Type
+        public MessageType Type
         {
-            get => this.Attribute("type")?.Value;
-            set => this.SetAttributeValue("type", value);
+            get => (MessageType)Enum.Parse(typeof(MessageType), this.Attribute("type")?.Value);
+            set => this.SetAttributeValue("type", value.ToString());
         }
 
-        public string Thread => this.Element("{jabber:client}thread")?.Value;
+        public string Thread => this.Element("thread")?.Value;
+
+        public string Body => this.Element("body")?.Value;
+
+
+        //copy ctor
+        private Message(XElement messageXElem)
+            : base("{jabber:client}message", messageXElem.ElementsAndAttributes())
+        {
+        }
 
         public Message(object content) : base("{jabber:client}message", content)
         {
         }
 
         public Message(string body, string thread) : base("{jabber:client}message", new XElement("body", body), thread != null ? new XElement("thread", thread) : null)
-        {
-        }
-
-        private Message(params object[] content) : base("{jabber:client}message", content)
         {
         }
 
@@ -49,10 +65,8 @@ namespace YetAnotherXmppClient.Core.Stanza
 
         public static Message FromXElement(XElement xElem)
         {
-            var message = new Message(xElem.Elements());
-            foreach (var attr in xElem.Attributes())
-                message.SetAttributeValue(attr.Name, attr.Value);
-            return message;
+            Expectation.Expect("message", xElem.Name.LocalName, xElem);
+            return new Message(xElem);
         }
     }
 }

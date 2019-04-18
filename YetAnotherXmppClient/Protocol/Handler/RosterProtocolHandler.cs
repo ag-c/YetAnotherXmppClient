@@ -19,12 +19,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public string Jid { get; set; }
         public string Name { get; set; }
         public IEnumerable<string> Groups { get; set; }
-        public string Subscription { get; set; }
+        public SubscriptionState Subscription { get; set; }
         public bool IsSubscriptionPending { get; set; }
 
         public override string ToString()
         {
-            return this.Jid + "\t\t\t" + this.Name + "\t\t\t" + this.Subscription?.ToUpper();
+            return this.Jid + "\t\t\t" + this.Name + "\t\t\t" + this.Subscription;
         }
 
         public static RosterItem FromXElement(XElement elem)
@@ -34,8 +34,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 Jid = elem.Attribute("jid").Value,
                 Name = elem.Attribute("name")?.Value,
                 Groups = elem.Elements(XNames.roster_group)?.Select(xe => xe.Value),
-                Subscription = elem.Attribute("subscription")?.Value ?? "<not set>"
-            };
+                Subscription = elem.HasAttribute("subscription") ? (SubscriptionState)Enum.Parse(typeof(SubscriptionState), elem.Attribute("subscription").Value) : SubscriptionState.none
+        };
         }
     }
 
@@ -61,7 +61,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
 
-            Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+            Expect(IqType.result, responseIq.Type, responseIq);
 
             if (responseIq.IsEmpty)
             {
@@ -69,15 +69,15 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 throw new NotImplementedException("6121/2.6.3.: ...an empty IQ-result (thus indicating that any roster modifications will be sent via roster pushes..");
             }
 
-            var queryElem = responseIq.Element(XNames.roster_query);
+            var rosterQuery = responseIq.GetContent<RosterQuery>();
 
-            var ver = queryElem?.Attribute("ver")?.Value; //UNDONE
+            var ver = rosterQuery.Ver; //UNDONE
 
             this.currentRosterItems.Clear();
 
-            foreach (var item in queryElem.Elements(XNames.roster_item))
+            foreach (var item in rosterQuery.Items)
             {
-                this.currentRosterItems.TryAdd(item.Attribute("jid").Value, RosterItem.FromXElement(item));
+                this.currentRosterItems.TryAdd(item.Jid, RosterItem.FromXElement(item));
             }
 
             Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
@@ -144,25 +144,23 @@ namespace YetAnotherXmppClient.Protocol.Handler
             }
 
             // Roster push
-            if (iq.Type == IqType.set && iq.FirstNode is XElement queryElem && queryElem.Name == XNames.roster_query)
+            if (iq.Type == IqType.set && iq.HasElement(XNames.roster_query))
             {
-                Expect(IqType.set.ToString(), iq.Attribute("type")?.Value, iq);
-
-                var itemElem = queryElem.Element(XNames.roster_item);
-                if (itemElem.Attribute("subscription")?.Value == "remove")
+                var rosterQuery = iq.GetContent<RosterQuery>();
+                var rosterItem = rosterQuery.Items.First();
+                if (rosterItem.Subscription == SubscriptionState.remove)
                 {
-                    this.currentRosterItems.TryRemove(itemElem.Attribute("jid").Value, out _);
+                    this.currentRosterItems.TryRemove(rosterItem.Jid, out _);
                 }
                 else
                 {
-                    var jid = itemElem.Attribute("jid")?.Value;
-                    this.currentRosterItems.AddAndUpdate(jid, item =>
+                    this.currentRosterItems.AddAndUpdate(rosterItem.Jid, item =>
                     {
-                        item.Jid = jid;
-                        item.Name = itemElem.Attribute("name")?.Value;
-                        item.Groups = itemElem.Elements(XNames.roster_group)?.Select(xe => xe.Value);
-                        item.Subscription = itemElem.Attribute("subscription")?.Value ?? "<not set>";
-                        item.IsSubscriptionPending = itemElem.Attribute("ask")?.Value == "subscribe";
+                        item.Jid = rosterItem.Jid;
+                        item.Name = rosterItem.ItemName;
+                        item.Groups = rosterItem.Groups;
+                        item.Subscription = rosterItem.Subscription;
+                        item.IsSubscriptionPending = rosterItem.Attribute("ask")?.Value == "subscribe";
                     });
                 }
 

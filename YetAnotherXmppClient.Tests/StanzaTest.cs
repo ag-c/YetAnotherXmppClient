@@ -1,11 +1,10 @@
 ﻿using System.Linq;
 using System.Xml.Linq;
 using System.Xml.XmlDiff;
+using FluentAssertions;
 using Xunit;
-using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
-using YetAnotherXmppClient.Protocol;
 using YetAnotherXmppClient.Tests.XmlDiff;
 
 namespace YetAnotherXmppClient.Tests
@@ -18,8 +17,8 @@ namespace YetAnotherXmppClient.Tests
             var iq = new Iq(IqType.set, new Bind());
             var xml = iq.ToString();
 
-            Assert.NotNull(iq.Element("bind"));
-            Assert.True(iq.Element("bind").IsEmpty);
+            Assert.NotNull(iq.Element(XNames.bind_bind));
+            Assert.True(iq.Element(XNames.bind_bind)?.IsEmpty);
         }
 
         [Fact]
@@ -28,8 +27,8 @@ namespace YetAnotherXmppClient.Tests
             var iq = new Iq(IqType.set, new Bind("resource1"));
             var xml = iq.ToString();
 
-            Assert.False(iq.Element("bind").IsEmpty);
-            Assert.Equal("resource1", iq.Element("bind").Element("resource").Value);
+            Assert.False(iq.Element(XNames.bind_bind).IsEmpty);
+            Assert.Equal("resource1", iq.Element(XNames.bind_bind)?.Element(XNames.bind_resource)?.Value);
         }
 
         [Fact]
@@ -67,14 +66,17 @@ namespace YetAnotherXmppClient.Tests
                                   <pubsub xmlns='http://jabber.org/protocol/pubsub'>
                                     <publish node='http://jabber.org/protocol/tune'>
                                       <item>
-                                        <test/>
+                                        test
                                       </item>
                                     </publish>
                                   </pubsub>
                                 </iq>";
 
-            var iq = new Iq(IqType.set,
-                new PubSubPublish("http://jabber.org/protocol/tune", null, new XElement("test")));
+            var iq = new Iq(IqType.set, new PubSubPublish("http://jabber.org/protocol/tune", null, "test"))
+                         {
+                             Id = "pub1",
+                             From = "juliet@capulet.lit/balcony"
+                         };
 
             var xmlDiff = new System.Xml.XmlDiff.XmlDiff();
             xmlDiff.Option = (XmlDiffOption)((int)XmlDiffOption.NormalizeNewline - 1);
@@ -98,6 +100,48 @@ namespace YetAnotherXmppClient.Tests
             Assert.Equal("sub1", iq.Id);
             Assert.Equal(IqType.set, iq.Type);
             Assert.Equal("<test />", iq.Elements().Single().ToString());
+        }
+
+        [Fact]
+        public void Message_FromXElement()
+        {
+            var xml = @"<message
+                           from='juliet@example.com/balcony'
+                           to='romeo@example.net'
+                           type='chat'
+                           xml:lang='en'>
+                         <body>My ears have not yet drunk a hundred words</body>
+                         <thread>e0ffe42b28561960c6b12b944a092794b9683a38</thread>
+                       </message>";
+
+            var message = Message.FromXElement(XElement.Parse(xml));
+            message.From.Should().Be("juliet@example.com/balcony");
+            message.To.Should().Be("romeo@example.net");
+            message.Type.Should().Be(MessageType.chat);
+            message.Body.Should().Be("My ears have not yet drunk a hundred words");
+            message.Thread.Should().Be("e0ffe42b28561960c6b12b944a092794b9683a38");
+        }
+
+        [Fact]
+        public void Presence_FromXElement()
+        {
+            var xml = @"<presence
+                           from='juliet@example.com/balcony'
+                           to='romeo@example.net'
+                           xml:lang='en'>
+                         <show>away</show>
+                         <status>be right back</status>
+                         <priority>5</priority>
+                       </presence>";
+
+            var presence = Presence.FromXElement(XElement.Parse(xml));
+            presence.From.Should().Be("juliet@example.com/balcony");
+            presence.To.Should().Be("romeo@example.net");
+            presence.Type.Should().BeNull();
+            presence.Show.Should().Be(PresenceShow.away);
+            presence.Stati.Single().Should().Be("be right back");
+            presence.Priority.Should().Be(5);
+
         }
     }
 }

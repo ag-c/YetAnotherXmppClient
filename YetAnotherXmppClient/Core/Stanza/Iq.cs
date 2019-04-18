@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Xml.Linq;
+using YetAnotherXmppClient.Extensions;
 
 namespace YetAnotherXmppClient.Core.Stanza
 {
@@ -8,6 +9,7 @@ namespace YetAnotherXmppClient.Core.Stanza
         get,
         set,
         result,
+        error
     }
 
     public class Iq : XElement
@@ -20,7 +22,7 @@ namespace YetAnotherXmppClient.Core.Stanza
 
         public IqType Type
         {
-            get => (IqType)Enum.Parse(typeof(IqType), this.Attribute("type")?.Value);
+            get => (IqType)Enum.Parse(typeof(IqType), this.Attribute("type").Value);
             set => this.SetAttributeValue("type", value.ToString());
         }
 
@@ -36,15 +38,18 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
+        //copy ctor for element from server
+        private Iq(XElement messageXElem)
+            : base("{jabber:client}iq", messageXElem.ElementsAndAttributes())
+        {
+        }
+
         public Iq(IqType type, object content=null, string name= "iq") : base(name, content) //{jabber:client}
         {
             this.Id = Guid.NewGuid().ToString();
             this.Type = type;
         }
 
-        private Iq(params object[] content) : base("{jabber:client}iq", content) //{jabber:client}
-        {
-        }
 
         public static implicit operator string(Iq iq)
         {
@@ -53,15 +58,8 @@ namespace YetAnotherXmppClient.Core.Stanza
 
         public static Iq FromXElement(XElement xElem)
         {
-            var iq = new Iq(xElem.Elements());
-            foreach(var attr in xElem.Attributes())
-                iq.SetAttributeValue(attr.Name, attr.Value);
-            return iq;
-        }
-
-        public override string ToString()
-        {
-            return base.ToString();
+            Expectation.Expect("iq", xElem.Name.LocalName, xElem);
+            return new Iq(xElem);
         }
     }
 }

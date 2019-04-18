@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace YetAnotherXmppClient.Extensions
@@ -43,6 +44,11 @@ namespace YetAnotherXmppClient.Extensions
                 return false;
 
             return xElem.Name.Namespace == ns;
+        }
+
+        public static IEnumerable<object> ElementsAndAttributes(this XElement xElem)
+        {
+            return xElem.Elements().Concat<object>(xElem.Attributes());
         }
     }
 }

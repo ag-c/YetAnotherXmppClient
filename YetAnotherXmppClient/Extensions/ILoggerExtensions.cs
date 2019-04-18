@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Serilog;
 using YetAnotherXmppClient.Protocol;
 using YetAnotherXmppClient.Protocol.Handler;
@@ -34,6 +36,12 @@ namespace YetAnotherXmppClient
             foreach(var (ri, index) in rosterItems.Indexed())
                 sw.WriteLine(index + " - " + ri.ToString());
             Log.Verbose(sw.ToString());
+        }
+
+        public static void LogIfMissingSubscriptionRequestHandler(this ILogger logger, bool isHandlerMissing)
+        {
+            if(isHandlerMissing)
+                Log.Verbose("Warning: No handler is registered to accept/reject subscription requests");
         }
     }
 

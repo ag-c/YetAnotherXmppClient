@@ -33,7 +33,7 @@ namespace YetAnotherXmppClient.Protocol
     //{
     //    public static FeatureOptionsDictionary Build(Dictionary<string, string> configuration);
     //}
-    public class MainProtocolHandler
+    public class MainProtocolHandler : IDisposable
     {
         private static readonly string Version = "1.0";
         private static readonly IEnumerable<string> Mechanisms = new[] {"PLAIN"};
@@ -74,7 +74,7 @@ namespace YetAnotherXmppClient.Protocol
         }
 
 
-        public async Task RunAsync(Jid jid, CancellationToken token)
+        public async Task RunAsync(Jid jid, CancellationToken ct)
         {
             try
             {
@@ -87,7 +87,7 @@ namespace YetAnotherXmppClient.Protocol
                 if (await this.NegotiateFeaturesAsync(features, jid))
                 {
                     // stream needs to be restarted after these features have been negotiated
-                    await this.RunAsync(jid, token);
+                    await this.RunAsync(jid, ct);
                     return;
                 }
 
@@ -95,7 +95,7 @@ namespace YetAnotherXmppClient.Protocol
 
                 await this.OnStreamNegotiationCompletedAsync();
 
-                await this.xmppStream.RunReadLoopAsync(new CancellationTokenSource().Token);
+                await this.xmppStream.RunReadLoopAsync(ct);
             }
             catch (Exception e)
             {
@@ -245,6 +245,11 @@ namespace YetAnotherXmppClient.Protocol
             await this.PresenceHandler.SendUnavailableAsync();
 
             await this.xmppStream.WriteClosingTagAsync("stream:stream");
+        }
+
+        public void Dispose()
+        {
+            this.xmppStream.Dispose();
         }
     }
 

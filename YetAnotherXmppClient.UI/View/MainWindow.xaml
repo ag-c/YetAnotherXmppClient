@@ -9,17 +9,17 @@
     <local:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
   </Window.Resources>
      
-  <Grid RowDefinitions="Auto,Auto,Auto,5,Auto,*" ColumnDefinitions="130,*">
+  <Grid RowDefinitions="Auto,Auto,Auto,5,*" ColumnDefinitions="130,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
           <Popup.Child>
           <AddRosterItemControl />
         </Popup.Child>
       </Popup>-->
 
-    <StackPanel Orientation="Vertical" >
-    <Button Content="Login.." Name="loginButton" Margin="3"/>
-      <Button Content="Logout" Name="logoutButton" Margin="3,0,3,3"/>
-    </StackPanel>
+    <Grid >
+      <Button Content="Login.." Name="loginButton" Margin="3" IsVisible="{Binding !IsConnected}"/>
+      <Button Content="Logout" Name="logoutButton" Margin="3" IsVisible="{Binding IsConnected}"/>
+    </Grid>
 
     <StackPanel Orientation="Horizontal" Grid.Column="1">
       <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
@@ -29,8 +29,8 @@
     <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
     
     <Grid RowDefinitions="Auto,*,Auto,Auto" Grid.Row="2" IsEnabled="{Binding IsProtocolNegotiationComplete}">
-      <TextBlock Text="Roster:" Margin="3,0,0,0"/>
-      <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem}" Name="rosterListBox" MinHeight="150" Margin="3" Grid.Row="1">
+        <TextBlock Text="Roster" Margin="3,0,0,0"/>
+      <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem}" Name="rosterListBox" MinHeight="150" Margin="3,0,3,3" Grid.Row="1">
         <ListBox.ContextMenu>
           <ContextMenu>
             <MenuItem Header="Add Item.." Command="{Binding $parent[Window].DataContext.AddRosterItemCommand}"/>
@@ -82,7 +82,6 @@
       <Button Content="Start  chat session" Name="startChatButton" HorizontalAlignment="Stretch" Margin="3" Grid.Row="3"/>-->
     </Grid>
 
-    
     <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
       <TextBlock Text="Chat sessions:" />
       <TabControl Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
@@ -122,9 +121,15 @@
     </StackPanel>
 
     <GridSplitter Grid.Row="3" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
-    <TextBlock Text="Log:" Grid.Row="4"/>
-    <ScrollViewer Grid.Row="5" Name="logScrollViewer" Grid.ColumnSpan="2">
-      <TextBox Text="{Binding LogText}" Name="logTextBox" IsReadOnly="True" />
-    </ScrollViewer>
+    
+    <Grid  Grid.Row="4" Grid.ColumnSpan="2">
+      <!--LastChildFill="true"-->
+      <Border Background="White" BorderBrush="Gray" BorderThickness="1" Margin="0" Padding="2" ZIndex="100" HorizontalAlignment="Left" VerticalAlignment="Top">
+        <TextBlock DockPanel.Dock="Top" Text="Log" HorizontalAlignment="Left" ZIndex="100"/>
+      </Border>
+      <ScrollViewer Grid.Row="5" Name="logScrollViewer" Grid.ColumnSpan="2" HorizontalAlignment="Stretch">
+        <TextBox Text="{Binding LogText}" Name="logTextBox" IsReadOnly="True" />
+      </ScrollViewer>
+    </Grid>
   </Grid>
 </Window>

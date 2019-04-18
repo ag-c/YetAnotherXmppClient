@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
@@ -7,6 +9,9 @@ namespace YetAnotherXmppClient.Core.Stanza
 {
     public enum PresenceType
     {
+        //A request for an entity's current presence; SHOULD be generated only by a server on behalf of a user.
+        probe,
+
         //The sender wishes to subscribe to the recipient's presence.
         subscribe,
 
@@ -19,7 +24,10 @@ namespace YetAnotherXmppClient.Core.Stanza
         //The subscription request has been denied or a previously granted subscription has been canceled.
         unsubscribed,
 
-        unavailable
+        //The sender is no longer available for communication.
+        unavailable,
+
+        error
     }
 
     public class Presence : XElement
@@ -48,6 +56,29 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
+        public PresenceShow? Show => this.HasElement("show") ? (PresenceShow)Enum.Parse(typeof(PresenceShow), this.Element("show").Value) : (PresenceShow?)null;
+
+        public IEnumerable<string> Stati => this.Elements("status")?.Select(xe => xe.Value);
+
+        
+        public int? Priority
+        {
+            get
+            {
+                if (int.TryParse(this.Element("priority")?.Value, out var prio))
+                {
+                    return prio;
+                }
+                return null;
+            }
+        }
+
+        //copy ctor
+        private Presence(XElement presenceXElem)
+            : base("{jabber:client}presence", presenceXElem.ElementsAndAttributes())
+        {
+        }
+
         public Presence() : base("presence")
         {
             this.Id = Guid.NewGuid().ToString();
@@ -67,21 +98,16 @@ namespace YetAnotherXmppClient.Core.Stanza
             this.Type = type;
         }
 
-        private Presence(params object[] content) : base("{jabber:client}presence", content) //{jabber:client}
-        {
-        }
-
-        public static Presence FromXElement(XElement xElem)
-        {
-            var presence = new Presence(xElem.Elements());
-            foreach (var attr in xElem.Attributes())
-                presence.SetAttributeValue(attr.Name, attr.Value);
-            return presence;
-        }
 
         public static implicit operator string(Presence presence)
         {
             return presence.ToString();
+        }
+
+        public static Presence FromXElement(XElement xElem)
+        {
+            Expectation.Expect("presence", xElem.Name.LocalName, xElem);
+            return new Presence(xElem);
         }
     }
 }

@@ -33,10 +33,6 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private static MainViewModel instance;
         public static DebugTextWriterDecorator stringWriter = new DebugTextWriterDecorator(new StringWriter(), _ => instance?.RaisePropertyChanged(nameof(LogText)));
-        private bool showAddRosterItemPopup;
-        private DispatcherTimer timer;
-        private IEnumerable<RosterItem> rosterItems;
-        private bool isProtocolNegotiationComplete;
 
         public Interaction<Unit, LoginCredentials> LoginInteraction { get; } = new Interaction<Unit, LoginCredentials>();
         public Interaction<string, bool> SubscriptionRequestInteraction { get; } = new Interaction<string, bool>();
@@ -50,9 +46,17 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ReactiveCommand AddRosterItemCommand { get; }
         public ReactiveCommand DeleteRosterItemCommand { get; }
 
+        private bool isConnected;
+        public bool IsConnected
+        {
+            get => this.isConnected;
+            set => this.RaiseAndSetIfChanged(ref this.isConnected, value);
+        }
+
+        private bool isProtocolNegotiationComplete;
         public bool IsProtocolNegotiationComplete
         {
-            get => isProtocolNegotiationComplete;
+            get => this.isProtocolNegotiationComplete;
             set => this.RaiseAndSetIfChanged(ref this.isProtocolNegotiationComplete, value);
         }
 
@@ -60,13 +64,14 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public string ConnectedJid
         {
-            get => connectedJid;
+            get => this.connectedJid;
             set => this.RaiseAndSetIfChanged(ref this.connectedJid, value);
         }
 
+        private IEnumerable<RosterItem> rosterItems;
         public IEnumerable<RosterItem> RosterItems
         {
-            get => rosterItems;
+            get => this.rosterItems;
             set => this.RaiseAndSetIfChanged(ref this.rosterItems, value);
         }
 
@@ -98,6 +103,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.AddRosterItemCommand = ReactiveCommand.CreateFromTask(this.AddRosterItemAsync);
             this.DeleteRosterItemCommand = ReactiveCommand.CreateFromTask(this.DeleteRosterItemAsync);
 
+            this.xmppClient.Disconnected += this.HandleDisconnected;
             this.xmppClient.ProtocolNegotiationFinished += (sender, connectedJid) =>
             {
                 this.ConnectedJid = connectedJid;
@@ -111,6 +117,18 @@ namespace YetAnotherXmppClient.UI.ViewModel
             {
                 await stringWriter.WriteAndFlushAsync(location + ": " + exception);
             }
+        }
+
+        private void HandleDisconnected(object sender, EventArgs e)
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    this.IsConnected = false;
+                    this.IsProtocolNegotiationComplete = false;
+                    this.ConnectedJid = null;
+                    this.RosterItems = null;
+                    this.ChatSessions.Clear();
+                });
         }
 
         private void StartChatSession()
@@ -157,6 +175,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (credentials != null)
             {
                 await xmppClient.StartAsync(new Jid(credentials.Jid), credentials.Password);
+                this.IsConnected = true;
             }
         }
 

@@ -24,7 +24,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (message.HasElement(XNames.receipts_request)
                 && message.HasAttribute("id"))
             {
-                Expect(this.RuntimeParameters["jid"], message.Attribute("to")?.Value, message);
+                Expect(this.RuntimeParameters["jid"], message.To, message);
 
                 var messageResp = new Message(new XElement(XNames.receipts_received))
                 {

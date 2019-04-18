@@ -153,14 +153,15 @@ namespace YetAnotherXmppClient.Core
             return Features.FromXElement(xElem);
         }
 
-        public async Task<XElement> WriteIqAndReadReponseAsync(Iq iq)
+        public async Task<Iq> WriteIqAndReadReponseAsync(Iq iq)
         {
             var readUntilMatchTask = this.ReadUntilElementMatchesAsync(xe => xe.IsIq() && xe.Attribute("id")?.Value == iq.Id);
 
             //UNDONE register callback before writing
             await this.WriteElementAsync(iq);
 
-            return await readUntilMatchTask;
+            var iqResponse = await readUntilMatchTask;
+            return Iq.FromXElement(iqResponse);
         }
     }
 }

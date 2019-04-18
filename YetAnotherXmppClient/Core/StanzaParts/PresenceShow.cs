@@ -3,7 +3,7 @@
     //4.7.2.1.  Show Element
     public enum PresenceShow
     {
-        None,
+        Other,
 
         //The entity or resource is temporarily away.
         away,

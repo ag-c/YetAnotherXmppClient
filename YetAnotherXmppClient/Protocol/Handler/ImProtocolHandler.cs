@@ -58,7 +58,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             {
                 From = this.RuntimeParameters["jid"],
                 To = recipientJid.ToBareJid(),
-                Type = "chat"
+                Type = MessageType.chat
             };
 
             await this.XmppStream.WriteElementAsync(messageElem);
@@ -69,15 +69,15 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Expect("message", message.Name.LocalName, message);
 
-            if (message.Type == "headline")
+            if (message.Type != MessageType.chat)
             {
-                Log.Debug("TODO: 'headline' message not handled");
+                Log.Debug($"TODO: handle message type '{message.Type}'");
                 return;
             }
 
             var xml = message.ToString();
             var sender = message.From;
-            var text = message.Element("{jabber:client}body").Value;
+            var text = message.Body;
 
             ChatSession chatSession = null;
             if (message.Thread != null)

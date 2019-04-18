@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -22,20 +23,20 @@ namespace YetAnotherXmppClient.Extensions
         }
 
         private static bool wasLastEmpty = false;
-        public static async Task<XElement> ReadNextElementAsync(this XmlReader xmlReader, TimeSpan timeout=default)
+        public static async Task<XElement> ReadNextElementAsync(this XmlReader xmlReader, CancellationToken ct=default)
         {
             if (wasLastEmpty && xmlReader.NodeType == XmlNodeType.Element)
-                await xmlReader.ReadAsync();
+                await xmlReader.ReadAsync().WithCancellation(ct);
             while (xmlReader.NodeType == XmlNodeType.EndElement || xmlReader.NodeType == XmlNodeType.Attribute)
-                await xmlReader.ReadAsync();
+                await xmlReader.ReadAsync().WithCancellation(ct);
 
-            await xmlReader.MoveToContentAsync();
+            await xmlReader.MoveToContentAsync().WithCancellation(ct);
             if(xmlReader.NodeType == XmlNodeType.EndElement && xmlReader.Name == "stream:stream")
                 throw new Exception("end of xmpp stream");
             //await xmlReader.ReadAsync();
             Expectation.Expect(() => xmlReader.NodeType == XmlNodeType.Element);
             var subXmlReader = xmlReader.ReadSubtree();
-            await subXmlReader.MoveToContentAsync();
+            await subXmlReader.MoveToContentAsync().WithCancellation(ct);
             var xElem = XNode.ReadFrom(subXmlReader) as XElement;
 
             wasLastEmpty = xElem.IsEmpty;

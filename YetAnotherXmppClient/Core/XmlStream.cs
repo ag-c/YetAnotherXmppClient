@@ -13,7 +13,7 @@ using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Core
 {
-    public class XmlStream
+    public class XmlStream : IDisposable
     {
         private XmlReader xmlReader;
         protected TextWriter textWriter;
@@ -100,11 +100,11 @@ namespace YetAnotherXmppClient.Core
             return this.InternalReadAndProcessElementAsync();
         }
 
-        private async Task<XElement> InternalReadAndProcessElementAsync()
+        private async Task<XElement> InternalReadAndProcessElementAsync(CancellationToken ct = default)
         {
             using (await this.readerLock.LockAsync())
             {
-                var xElem = await this.xmlReader.ReadNextElementAsync();
+                var xElem = await this.xmlReader.ReadNextElementAsync(ct);
 
                 Log.Logger.XmppStreamContent($"Read from stream: {xElem}");
 
@@ -150,14 +150,14 @@ namespace YetAnotherXmppClient.Core
 
         private bool isLoopRunning;
 
-        public async Task RunReadLoopAsync(CancellationToken token)
+        public async Task RunReadLoopAsync(CancellationToken ct)
         {
             this.isLoopRunning = true;
             while (true)
             {
-                token.ThrowIfCancellationRequested();
+                ct.ThrowIfCancellationRequested();
 
-                await this.InternalReadAndProcessElementAsync();
+                await this.InternalReadAndProcessElementAsync(ct);
             }
         }
 
@@ -165,6 +165,13 @@ namespace YetAnotherXmppClient.Core
         {
             if (this.isLoopRunning)
                 throw new InvalidOperationException("Cannot read explicitly, stream is in read loop");
+        }
+
+        public void Dispose()
+        {
+            this.UnderlyingStream.Dispose();
+            this.xmlReader.Dispose();
+            this.textWriter.Dispose();
         }
     }
 }

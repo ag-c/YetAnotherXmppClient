@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
+using YetAnotherXmppClient.Extensions;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Negotiator
@@ -28,13 +29,15 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         {
             var resource = options["resource"];
 
-            var requestIq = new Iq(IqType.set, new Bind(resource), name: "iq");
+            var requestIq = new Iq(IqType.set, new Bind(resource));
 
             var responseIq = await this.xmppServerStream.WriteIqAndReadReponseAsync(requestIq);
 
-            Expect("result", responseIq.Attribute("type")?.Value, responseIq);
+            Expect(IqType.result, responseIq.Type, responseIq);
 
-            this.runtimeParameters["jid"] = responseIq.Element(XNames.bind_bind).Element(XNames.bind_jid).Value;
+            var bind = responseIq.GetContent<Bind>();
+
+            this.runtimeParameters["jid"] = bind.Jid;
 
             this.IsNegotiated = true;
             return true;

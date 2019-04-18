@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using DynamicData.Binding;
 using ReactiveUI;
 using StarDebris.Avalonia.MessageBox;
 using YetAnotherXmppClient.UI.ViewModel;
@@ -18,8 +14,8 @@ namespace YetAnotherXmppClient.UI.View
     public class MainWindow : ReactiveWindow<MainViewModel>
     {
         public Button LoginButton => this.FindControl<Button>("loginButton");
-        public Button StartChatButton => this.FindControl<Button>("startChatButton");
-        public MenuItem RemoveMenuItem => this.FindControl<MenuItem>("removeMenuItem");
+        public Button LogoutButton => this.FindControl<Button>("logoutButton");
+        public ScrollViewer LogScrollViewer => this.FindControl<ScrollViewer>("logScrollViewer");
 
         public MainWindow()
         {
@@ -27,8 +23,7 @@ namespace YetAnotherXmppClient.UI.View
                 d =>
                 {
                     d(this.BindCommand(this.ViewModel, x => x.LoginCommand, x => x.LoginButton));
-                    d(this.BindCommand(this.ViewModel, x => x.StartChatCommand, x => x.StartChatButton));
-                    //d(this.Bind(this.ViewModel, x => x.DeleteRosterItemCommand, x => x.RemoveMenuItem.Command));
+                    d(this.BindCommand(this.ViewModel, x => x.LogoutCommand, x => x.LogoutButton));
                     d(this
                         .ViewModel
                         .LoginInteraction
@@ -66,9 +61,11 @@ namespace YetAnotherXmppClient.UI.View
                                 interaction.SetOutput(rosterItemInfo);
                             }));
 
-                    var logScrollViewer = this.FindControl<ScrollViewer>("logScrollViewer");
-                    cmd = new ActionCommand(async obj => await Dispatcher.UIThread.InvokeAsync(() => logScrollViewer.ScrollToEnd()));
-                    this.ViewModel.WhenPropertyChanged(x => x.LogText).InvokeCommand(cmd);
+                    
+                    //cmd = new ActionCommand(async obj => await Dispatcher.UIThread.InvokeAsync(() => this.LogScrollViewer.ScrollToEnd()));
+                    //this.ViewModel.WhenPropertyChanged(x => x.LogText)
+                    this.ViewModel.WhenAnyValue(vm => vm.LogText)
+                        .Subscribe(async _ => await Dispatcher.UIThread.InvokeAsync(() => this.LogScrollViewer.ScrollToEnd()));
                 });
             InitializeComponent();
 #if DEBUG
