@@ -1,0 +1,64 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converter="clr-namespace:YetAnotherXmppClient.UI.Converter"
+             xmlns:reactiveui="http://reactiveui.net"
+             xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="YetAnotherXmppClient.UI.View.RosterView">
+  <UserControl.Resources>
+    <converter:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
+  </UserControl.Resources>
+  
+  <Grid RowDefinitions="Auto,*" >
+    <TextBlock Text="Roster" Margin="3,0,0,0"/>
+    <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem, Mode=OneWayToSource}" MinHeight="150" Margin="3,0,3,3" Grid.Row="1">
+      <ListBox.ContextMenu>
+        <ContextMenu>
+          <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
+        </ContextMenu>
+      </ListBox.ContextMenu>
+      <ListBox.ItemTemplate >
+        <DataTemplate >
+          <StackPanel Orientation="Horizontal" Height="24">
+            <StackPanel.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="Start chat session" Command="{Binding $parent[UserControl].DataContext.StartChatCommand}" />
+                <Separator/>
+                <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
+                <MenuItem Header="Remove Item" Command="{Binding $parent[UserControl].DataContext.DeleteRosterItemCommand}"/>
+              </ContextMenu>
+            </StackPanel.ContextMenu>
+            <TextBlock VerticalAlignment="Center">
+              <TextBlock.Text>
+                <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
+                  <Binding Path="Name" />
+                  <Binding Path="Jid" />
+                </MultiBinding>
+              </TextBlock.Text>
+              <ToolTip.Tip>
+                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
+                  <Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Center" Grid.RowSpan="3">
+                    <Image Source="{Binding Avatar}" Name="image" Width="100" Height="100" />
+                  </Border>
+                  <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3" Grid.Column="1"/>
+                  <TextBlock Text="{Binding Path=Jid}" Grid.Column="2" Margin="3"/>
+                  <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="1" Margin="3"/>
+                  <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="2" Margin="3"/>
+                  <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Margin="3"/>
+                  <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="2" Margin="3"/>
+                </Grid>
+              </ToolTip.Tip>
+            </TextBlock>
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+    <!--<StackPanel Orientation="Horizontal" Grid.Row="2">
+        <Button Content="Add.." Command="{Binding AddRosterItemCommand}" Margin="3" />
+        <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
+      </StackPanel>
+      <Button Content="Start  chat session" Name="startChatButton" HorizontalAlignment="Stretch" Margin="3" Grid.Row="3"/>-->
+  </Grid>
+</UserControl>

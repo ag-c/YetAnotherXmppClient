@@ -49,10 +49,23 @@ namespace YetAnotherXmppClient.Protocol
         public event EventHandler<Exception> FatalErrorOccurred;
         public event EventHandler<string> NegotiationFinished;
 
-        public RosterProtocolHandler RosterHandler { get; }
-        public PresenceProtocolHandler PresenceHandler { get; }
-        public ImProtocolHandler ImProtocolHandler { get; }
-        private MessageReceiptsProtocolHandler messageReceiptsHandler;
+        private static IEnumerable<Type> ProtocolHandlerTypes = new[]
+                                                                    {
+                                                                        typeof(RosterProtocolHandler),
+                                                                        typeof(PresenceProtocolHandler),
+                                                                        typeof(ImProtocolHandler),
+                                                                        typeof(ServiceDiscoveryProtocolHandler),
+                                                                        typeof(EntityTimeProtocolHandler),
+                                                                        typeof(PingProtocolHandler),
+                                                                        typeof(MessageReceiptsProtocolHandler),
+                                                                        typeof(PepProtocolHandler),
+                                                                        typeof(VCardProtocolHandler),
+                                                                    };
+        private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
+
+        public RosterProtocolHandler RosterHandler => this.Get<RosterProtocolHandler>();
+        public PresenceProtocolHandler PresenceHandler => this.Get<PresenceProtocolHandler>();
+        public ImProtocolHandler ImProtocolHandler => this.Get<ImProtocolHandler>();
 
 
         public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider)
@@ -60,9 +73,12 @@ namespace YetAnotherXmppClient.Protocol
             this.featureOptionsProvider = featureOptionsProvider;
             this.xmppStream = new XmppStream(serverStream);
 
-            this.RosterHandler = new RosterProtocolHandler(this.xmppStream, this.runtimeParameters);
-            this.PresenceHandler = new PresenceProtocolHandler(this.xmppStream);
-            this.ImProtocolHandler = new ImProtocolHandler(this.xmppStream, this.runtimeParameters);
+            // create protocol handlers
+            foreach (var type in ProtocolHandlerTypes)
+            {
+                var instance = (ProtocolHandlerBase)Activator.CreateInstance(type, this.xmppStream, this.runtimeParameters);
+                this.protocolHandlers.Add(type, instance);
+            }
 
             this.featureNegotiators = new IFeatureProtocolNegotiator[]
             {
@@ -73,6 +89,10 @@ namespace YetAnotherXmppClient.Protocol
             };
         }
 
+        public T Get<T>() where T : ProtocolHandlerBase
+        {
+            return (T)this.protocolHandlers[typeof(T)];
+        }
 
         public async Task RunAsync(Jid jid, CancellationToken ct)
         {
@@ -165,18 +185,10 @@ namespace YetAnotherXmppClient.Protocol
             var rosterItems = await this.RosterHandler.RequestRosterAsync();
             await this.PresenceHandler.BroadcastPresenceAsync();
 
-            // create remaining protocol handlers
-            var discoHandler = new ServiceDiscoveryProtocolHandler(this.xmppStream, this.runtimeParameters);
-            var timeHandler = new EntityTimeProtocolHandler(this.xmppStream, runtimeParameters);
-            var pingHandler = new PingProtocolHandler(this.xmppStream, this.runtimeParameters);
-            var b = await pingHandler.PingAsync();
 
-            var messageReceiptsHandler = new MessageReceiptsProtocolHandler(this.xmppStream, this.runtimeParameters);
+            var b = this.protocolHandlers.Get<PingProtocolHandler>().PingAsync();
 
-            var pepHandler = new PepProtocolHandler(this.xmppStream, this.runtimeParameters);
-            var y = await pepHandler.DetermineSupportAsync();
-
-            var omemoHandler = new OmemoProtocolHandler(pepHandler, this.xmppStream, this.runtimeParameters);
+            var omemoHandler = new OmemoProtocolHandler(this.protocolHandlers.Get<PepProtocolHandler>(), this.xmppStream, this.runtimeParameters);
             await omemoHandler.InitializeAsync();
 
             this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
@@ -258,6 +270,14 @@ namespace YetAnotherXmppClient.Protocol
         public static bool IsNegotiated(this IEnumerable<IFeatureProtocolNegotiator> negotiators, Feature feature)
         {
             return negotiators.FirstOrDefault(n => n.FeatureName == feature.Name)?.IsNegotiated ?? false;
+        }
+    }
+
+    static class DictionaryExtensions
+    {
+        public static T Get<T>(this Dictionary<Type, ProtocolHandlerBase> dictionary) where T : ProtocolHandlerBase
+        {
+            return (T)dictionary[typeof(T)];
         }
     }
 }

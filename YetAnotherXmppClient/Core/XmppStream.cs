@@ -161,6 +161,7 @@ namespace YetAnotherXmppClient.Core
             await this.WriteElementAsync(iq);
 
             var iqResponse = await readUntilMatchTask;
+
             return Iq.FromXElement(iqResponse);
         }
     }

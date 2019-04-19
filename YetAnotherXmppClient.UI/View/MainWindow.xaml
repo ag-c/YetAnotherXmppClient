@@ -5,9 +5,6 @@
         xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
         xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
         x:Name="RootObject">
-  <Window.Resources>
-    <local:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
-  </Window.Resources>
      
   <Grid RowDefinitions="Auto,Auto,Auto,5,*" ColumnDefinitions="130,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
@@ -27,60 +24,9 @@
     </StackPanel>
 
     <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
-    
-    <Grid RowDefinitions="Auto,*,Auto,Auto" Grid.Row="2" IsEnabled="{Binding IsProtocolNegotiationComplete}">
-        <TextBlock Text="Roster" Margin="3,0,0,0"/>
-      <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem}" Name="rosterListBox" MinHeight="150" Margin="3,0,3,3" Grid.Row="1">
-        <ListBox.ContextMenu>
-          <ContextMenu>
-            <MenuItem Header="Add Item.." Command="{Binding $parent[Window].DataContext.AddRosterItemCommand}"/>
-          </ContextMenu>
-        </ListBox.ContextMenu>
-        <ListBox.ItemTemplate >
-          <DataTemplate >
-              <StackPanel Orientation="Horizontal" Height="24">
-                <StackPanel.ContextMenu>
-                  <ContextMenu>
-                    <MenuItem Header="Start chat session" Command="{Binding $parent[Window].DataContext.StartChatCommand}" />
-                    <Separator/>
-                    <MenuItem Header="Add Item.." Command="{Binding $parent[Window].DataContext.AddRosterItemCommand}"/>
-                    <MenuItem Header="Remove Item" Command="{Binding $parent[Window].DataContext.DeleteRosterItemCommand}"/>
-                  </ContextMenu>
-                </StackPanel.ContextMenu>
-                <TextBlock VerticalAlignment="Center">
-                  <TextBlock.Text>
-                    <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
-                      <Binding Path="Name" />
-                      <Binding Path="Jid" />
-                    </MultiBinding>
-                  </TextBlock.Text>
-                  <ToolTip.Tip>
-                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto">
-                      <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3"/>
-                      <TextBlock Text="{Binding Path=Jid}" Grid.Column="1" Margin="3"/>
-                      <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Margin="3"/>
-                      <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="1" Margin="3"/>
-                      <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Margin="3"/>
-                      <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="1" Margin="3"/>
-                    </Grid>
-                  </ToolTip.Tip>
-                </TextBlock>
-              </StackPanel>
-          </DataTemplate>
-        </ListBox.ItemTemplate>
-        <!--<ListBox.ContextMenu>
-          <ContextMenu DataContext="{Binding DataContext, Source={x:Reference RootObject}}">
-            <MenuItem Header="Start chat session" Name="startChatMenuItem" />
-            <MenuItem Header="Remove" Name="removeMenuItem" Command="{Binding DeleteRosterItemCommand}"/>
-          </ContextMenu>
-        </ListBox.ContextMenu>-->
-      </ListBox>
-      <!--<StackPanel Orientation="Horizontal" Grid.Row="2">
-        <Button Content="Add.." Command="{Binding AddRosterItemCommand}" Margin="3" />
-        <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
-      </StackPanel>
-      <Button Content="Start  chat session" Name="startChatButton" HorizontalAlignment="Stretch" Margin="3" Grid.Row="3"/>-->
-    </Grid>
+
+    <view:RosterView DataContext="{Binding Roster}" Grid.Row="2"/>    <!--  -->
+    <!--IsEnabled="{Binding $parent[Window].DataContext.IsProtocolNegotiationComplete}"-->
 
     <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
       <TextBlock Text="Chat sessions:" />

@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -17,6 +18,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         //<bareJid, vcard-xelement>
         private readonly ConcurrentDictionary<string, XElement> vCardElements = new ConcurrentDictionary<string, XElement>();
+
+        public event EventHandler<(string BareJid, byte[] Bytes)> AvatarReceived;
+
 
         public VCardProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, runtimeParameters)
@@ -37,12 +41,17 @@ namespace YetAnotherXmppClient.Protocol.Handler
                                                                               {
                                                                                   From = this.RuntimeParameters["jid"],
                                                                                   To = bareJid.ToBareJid()
-            });
+                                                                              });
 
-            Expect("result", iqResp.Attribute("type").Value, iqResp);
+            Expect(IqType.result, iqResp.Type, iqResp);
 
             var vCardElem = iqResp.Element(XNames.vcard_temp_vcard);
             this.vCardElements.AddOrUpdate(bareJid.ToBareJid(), vCardElem, (_, __) => vCardElem);
+
+            var base64Str = vCardElem.Element("{vcard-temp}PHOTO").Element("{vcard-temp}BINVAL").Value;
+            var bytes = Convert.FromBase64String(base64Str);
+
+            this.AvatarReceived?.Invoke(this, (iqResp.From, bytes));
 
             return vCardElem;
         }
@@ -53,7 +62,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(new Iq(IqType.set, vCardElem));
 
-            if (iqResp.Attribute("type")?.Value == IqType.result.ToString())
+            if (iqResp.Type == IqType.result)
             {
                 return true;
             }
@@ -67,7 +76,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var xElem = presence.Element(XNames.vcard_temp_update_x);
             var sha1Hash = xElem.Element(XNames.vcard_temp_update_photo)?.Value;
 
-            Expect(() => sha1Hash != null, xElem);
+            if (sha1Hash == null)
+                return;
+
             //UNDONE 3.2: Check per sha1 hash if image is cached
 
             await this.RequestVCardAsync(presence.From.ToBareJid());

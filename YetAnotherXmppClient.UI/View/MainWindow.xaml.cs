@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using ReactiveUI;
 using StarDebris.Avalonia.MessageBox;
@@ -24,9 +25,8 @@ namespace YetAnotherXmppClient.UI.View
                 {
                     d(this.BindCommand(this.ViewModel, x => x.LoginCommand, x => x.LoginButton));
                     d(this.BindCommand(this.ViewModel, x => x.LogoutCommand, x => x.LogoutButton));
-                    d(this
-                        .ViewModel
-                        .LoginInteraction
+                    d(Interactions
+                        .Login
                         .RegisterHandler(
                             async interaction =>
                             {
@@ -35,9 +35,8 @@ namespace YetAnotherXmppClient.UI.View
 
                                 interaction.SetOutput(credentials);
                             }));
-                    d(this
-                        .ViewModel
-                        .SubscriptionRequestInteraction
+                    d(Interactions
+                        .SubscriptionRequest
                         .RegisterHandler(
                             async interaction =>
                             {
@@ -49,9 +48,8 @@ namespace YetAnotherXmppClient.UI.View
                                 );
                                 interaction.SetOutput(await tcs.Task);
                             }));
-                    d(this
-                        .ViewModel
-                        .AddRosterItemInteraction
+                    d(Interactions
+                        .AddRosterItem
                         .RegisterHandler(
                             async interaction =>
                             {
@@ -62,10 +60,9 @@ namespace YetAnotherXmppClient.UI.View
                             }));
 
                     
-                    //cmd = new ActionCommand(async obj => await Dispatcher.UIThread.InvokeAsync(() => this.LogScrollViewer.ScrollToEnd()));
-                    //this.ViewModel.WhenPropertyChanged(x => x.LogText)
                     this.ViewModel.WhenAnyValue(vm => vm.LogText)
                         .Subscribe(async _ => await Dispatcher.UIThread.InvokeAsync(() => this.LogScrollViewer.ScrollToEnd()));
+                    //this.ViewModel.WhenAnyValue(vm => vm.LogText).Subscribe(_ => this.Image.InvalidateVisual());
                 });
             InitializeComponent();
 #if DEBUG
@@ -73,7 +70,6 @@ namespace YetAnotherXmppClient.UI.View
 #endif
         }
 
-        private ICommand cmd;
 
         private void InitializeComponent()
         {

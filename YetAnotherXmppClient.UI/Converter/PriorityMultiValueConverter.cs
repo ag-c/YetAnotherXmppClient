@@ -5,7 +5,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Data.Converters;
 
-namespace YetAnotherXmppClient.UI
+namespace YetAnotherXmppClient.UI.Converter
 {
     public class PriorityMultiValueConverter : IMultiValueConverter
     {

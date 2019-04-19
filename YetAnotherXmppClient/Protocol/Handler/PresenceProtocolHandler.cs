@@ -30,7 +30,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
 
 
-        public PresenceProtocolHandler(XmppStream xmppStream)
+        public PresenceProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
             : base(xmppStream, null)
         {
             this.XmppStream.RegisterPresenceCallback(this);
@@ -86,7 +86,18 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Expect(XNames.presence, presence.Name, presence);
 
-            if (presence.Type == PresenceType.subscribe)
+            if (!presence.Type.HasValue)
+            {
+                Expect(() => presence.HasAttribute("from"), presence);
+
+                this.PresenceByJid.AddOrUpdate(presence.From, _ =>
+                    {
+                        var instance = new Presence();
+                        UpdatePresence(instance, presence);
+                        return instance;
+                    }, (_, existing) => UpdatePresence(existing, presence));
+            }
+            else if (presence.Type == PresenceType.subscribe)
             {
                 // reject subscription request if no handler is registered (TODO correct behavior?)
                 Log.Logger.LogIfMissingSubscriptionRequestHandler(this.OnSubscriptionRequestReceived == null);
@@ -101,17 +112,6 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 };
 
                 await this.XmppStream.WriteElementAsync(response);
-            }
-            else if(!presence.HasAttribute("type"))
-            {
-                Expect(() => presence.HasAttribute("from"), presence);
-
-                this.PresenceByJid.AddOrUpdate(presence.From, _ =>
-                {
-                    var instance = new Presence();
-                    UpdatePresence(instance, presence);
-                    return instance;
-                }, (_, existing) => UpdatePresence(existing, presence));
             }
 
             Presence UpdatePresence(Presence existing, Core.Stanza.Presence newPresenceElem)

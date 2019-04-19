@@ -2,11 +2,13 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
+using ReactiveUI;
 using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI.View
 {
-    public class AddRosterItemWindow : Window
+    public class AddRosterItemWindow : ReactiveWindow<AddRosterItemWindow>
     {
         public string Jid { get; set; }
         public string ItemName { get; set; }
@@ -17,22 +19,12 @@ namespace YetAnotherXmppClient.UI.View
 
         public AddRosterItemWindow()
         {
-            this.AddCommand = new ActionCommand(this.OnAddCommandExecuted);
-            this.CancelCommand = new ActionCommand(this.OnCancelCommandExecuted);
+            this.AddCommand = ReactiveCommand.Create(() => this.Close(new RosterItemInfo { Jid = this.Jid, Name = this.ItemName }));
+            this.CancelCommand = ReactiveCommand.Create(() => this.Close(null));
             this.InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif
-        }
-
-        private void OnAddCommandExecuted(object obj)
-        {
-            this.Close(new RosterItemInfo {Jid = this.Jid, Name = this.ItemName});
-        }
-
-        private void OnCancelCommandExecuted(object obj)
-        {
-            this.Close(null);
         }
 
         private void InitializeComponent()

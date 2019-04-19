@@ -54,7 +54,7 @@ namespace YetAnotherXmppClient.Core.Stanza
         {
         }
 
-        public Message(string body, string thread) : base("{jabber:client}message", new XElement("body", body), thread != null ? new XElement("thread", thread) : null)
+        public Message(string body, string thread) : base("message", new XElement("body", body), thread != null ? new XElement("thread", thread) : null)
         {
         }
 

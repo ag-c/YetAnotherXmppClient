@@ -2,12 +2,13 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using ReactiveUI;
 using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI.View
 {
-    public class LoginWindow : ReactiveWindow<LoginViewModel>, IViewFor<LoginViewModel>
+    public class LoginWindow : ReactiveWindow<LoginViewModel>
     {
         public Button LoginButton => this.FindControl<Button>("loginButton");
         public Button CancelButton => this.FindControl<Button>("cancelButton");
