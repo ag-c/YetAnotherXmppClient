@@ -157,7 +157,6 @@ namespace YetAnotherXmppClient.Core
         {
             var readUntilMatchTask = this.ReadUntilElementMatchesAsync(xe => xe.IsIq() && xe.Attribute("id")?.Value == iq.Id);
 
-            //UNDONE register callback before writing
             await this.WriteElementAsync(iq);
 
             var iqResponse = await readUntilMatchTask;

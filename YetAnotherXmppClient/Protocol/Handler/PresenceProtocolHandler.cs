@@ -90,12 +90,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             {
                 Expect(() => presence.HasAttribute("from"), presence);
 
-                this.PresenceByJid.AddOrUpdate(presence.From, _ =>
-                    {
-                        var instance = new Presence();
-                        UpdatePresence(instance, presence);
-                        return instance;
-                    }, (_, existing) => UpdatePresence(existing, presence));
+                this.PresenceByJid.AddAndUpdate(presence.From, existing => UpdatePresence(existing, presence));
             }
             else if (presence.Type == PresenceType.subscribe)
             {

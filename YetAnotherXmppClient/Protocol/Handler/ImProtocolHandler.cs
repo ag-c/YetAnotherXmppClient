@@ -16,7 +16,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         private readonly Func<string, Task> sendMessageAction;
 
         public string Thread { get; }
-        public string OtherJid { get; set; }
+        public string OtherJid { get; internal set; }
         public List<string> Messages { get; } = new List<string>(); //UNDONE
 
         public ChatSession(string thread, string otherJid, /*Func<string, string, string, Task>*/Func<string, Task> sendMessageAction)

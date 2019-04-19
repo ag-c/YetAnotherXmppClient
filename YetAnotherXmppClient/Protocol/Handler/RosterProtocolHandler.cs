@@ -147,7 +147,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (iq.Type == IqType.set && iq.HasElement(XNames.roster_query))
             {
                 var rosterQuery = iq.GetContent<RosterQuery>();
-                var rosterItem = rosterQuery.Items.First();
+                var rosterItem = rosterQuery.Items.Single();
                 if (rosterItem.Subscription == SubscriptionState.remove)
                 {
                     this.currentRosterItems.TryRemove(rosterItem.Jid, out _);

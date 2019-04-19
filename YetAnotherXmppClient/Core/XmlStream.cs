@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -100,23 +99,45 @@ namespace YetAnotherXmppClient.Core
             return this.InternalReadAndProcessElementAsync();
         }
 
+        private volatile bool ongoingOp = false;
+        private TaskCompletionSource<XElement> readResult;
+        AsyncLock ongoingReadLock = new AsyncLock();
         private async Task<XElement> InternalReadAndProcessElementAsync(CancellationToken ct = default)
         {
-            using (await this.readerLock.LockAsync())
+            var disp = await this.ongoingReadLock.LockAsync();
+            if (ongoingOp)
             {
-                var xElem = await this.xmlReader.ReadNextElementAsync(ct);
+                var task = this.readResult.Task;
+                disp.Dispose();
+                return await task;
+            }
+            else
+            {
+                this.ongoingOp = true;
+                this.readResult = new TaskCompletionSource<XElement>();
+                disp.Dispose();
 
-                Log.Logger.XmppStreamContent($"Read from stream: {xElem}");
+                using (await this.readerLock.LockAsync())
+                {
+                    var xElem = await this.xmlReader.ReadNextElementAsync(ct);
 
-                this.ProcessInboundElement(xElem);
+                    Log.Logger.XmppStreamContent($"Read from stream: {xElem}");
 
-                return xElem;
+                    this.ProcessInboundElement(xElem);
+
+                    this.ongoingOp = false;
+                    this.readResult.SetResult(xElem);
+                    return xElem;
+                }
             }
         }
 
-        public Task WriteElementAsync(XElement elem)
+        public async Task WriteElementAsync(XElement elem)
         {
-            return this.textWriter.WriteAndFlushAsync(elem.ToString());
+            using (await this.writerLock.LockAsync())
+            {
+                await this.textWriter.WriteAndFlushAsync(elem.ToString());
+            }
         }
 
         public async Task WriteClosingTagAsync(string name)
@@ -142,7 +163,7 @@ namespace YetAnotherXmppClient.Core
                 }
             }
 
-            if (!hasMatch && this.isLoopRunning) //UNDONE loop egal?
+            if (!hasMatch && this.isLoopRunning)
             {
                 Log.Information($"Processed element WITHOUT a handler (id={xElem.Attribute("id")?.Value})");
             }

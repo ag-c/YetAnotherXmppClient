@@ -21,18 +21,6 @@ namespace YetAnotherXmppClient.Protocol
         Dictionary<string, string> GetOptions(XName featureName);
     }
 
-    //public class FeatureOptionsProvider : IFeatureOptionsProvider
-    //{
-    //    public Dictionary<string, object> GetOptions(XName featureName)
-    //    {
-    //        throw new NotImplementedException();
-    //    }
-    //}
-
-    //static class FeatureOptionsBuilder
-    //{
-    //    public static FeatureOptionsDictionary Build(Dictionary<string, string> configuration);
-    //}
     public class MainProtocolHandler : IDisposable
     {
         private static readonly string Version = "1.0";
@@ -111,8 +99,6 @@ namespace YetAnotherXmppClient.Protocol
                     return;
                 }
 
-                Log.Debug("Stream negotiation is complete");
-
                 await this.OnStreamNegotiationCompletedAsync();
 
                 await this.xmppStream.RunReadLoopAsync(ct);
@@ -129,7 +115,7 @@ namespace YetAnotherXmppClient.Protocol
             Feature feature;
             do
             {
-                feature = this.SelectFeatureToNegotiateNext(features);
+                feature = this.SelectFeatureToNegotiate(features);
 
                 await this.NegotiateFeatureAsync(feature);
 
@@ -137,24 +123,20 @@ namespace YetAnotherXmppClient.Protocol
                 {   // stream needs to be restarted after these features have been negotiated
                     return true;
                 }
-                features = features.Where(f => !f.Equals(feature));
+                features = features.Without(feature);
             }
             while (feature != null);
 
             return false;
         }
 
-        private List<XName> negotiatedFeatures = new List<XName>();
-        private Feature SelectFeatureToNegotiateNext(IEnumerable<Feature> features)
+        private Feature SelectFeatureToNegotiate(IEnumerable<Feature> features)
         {
-            var mandatoryFeatures = features.Where(f => f.IsRequired && !this.featureNegotiators.IsNegotiated(f));
-            if (mandatoryFeatures.Any())
-            {
-                return mandatoryFeatures.First();
-            }
+            // any mandatory feature?
+            var mandatoryFeature = features.FirstOrDefault(f => f.IsRequired && !this.featureNegotiators.IsNegotiated(f));
 
             // Choose the first feature for which we have a handler
-            return features.FirstOrDefault(f => this.featureNegotiators.Any(fn => fn.FeatureName == f.Name && !fn.IsNegotiated));
+            return mandatoryFeature ?? features.FirstOrDefault(this.featureNegotiators.IsNegotiable);
         }
 
         private async Task NegotiateFeatureAsync(Feature feature)
@@ -181,14 +163,16 @@ namespace YetAnotherXmppClient.Protocol
 
         private async Task OnStreamNegotiationCompletedAsync()
         {
+            Log.Debug("Stream negotiation is complete");
+
             // initial roster get & presence set
             var rosterItems = await this.RosterHandler.RequestRosterAsync();
             await this.PresenceHandler.BroadcastPresenceAsync();
 
 
-            var b = this.protocolHandlers.Get<PingProtocolHandler>().PingAsync();
+            var b = this.Get<PingProtocolHandler>().PingAsync();
 
-            var omemoHandler = new OmemoProtocolHandler(this.protocolHandlers.Get<PepProtocolHandler>(), this.xmppStream, this.runtimeParameters);
+            var omemoHandler = new OmemoProtocolHandler(this.Get<PepProtocolHandler>(), this.xmppStream, this.runtimeParameters);
             await omemoHandler.InitializeAsync();
 
             this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
@@ -271,13 +255,10 @@ namespace YetAnotherXmppClient.Protocol
         {
             return negotiators.FirstOrDefault(n => n.FeatureName == feature.Name)?.IsNegotiated ?? false;
         }
-    }
 
-    static class DictionaryExtensions
-    {
-        public static T Get<T>(this Dictionary<Type, ProtocolHandlerBase> dictionary) where T : ProtocolHandlerBase
+        public static bool IsNegotiable(this IEnumerable<IFeatureProtocolNegotiator> negotiators, Feature feature)
         {
-            return (T)dictionary[typeof(T)];
+            return negotiators.Any(fn => fn.FeatureName == feature.Name && !fn.IsNegotiated);
         }
     }
 }

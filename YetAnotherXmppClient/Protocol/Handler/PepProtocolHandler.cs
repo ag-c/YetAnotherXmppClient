@@ -35,11 +35,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return pepSupported;
         }
 
-        public async Task PublishEventAsync(XElement content)
+        public async Task PublishEventAsync(string node, string itemId, XElement content)
         {
-            var nodeId = Guid.NewGuid().ToString();
-            var itemId = (string)null;
-            var iq = new Iq(IqType.set, new PubSubPublish(nodeId, itemId, content));
+            //var nodeId = Guid.NewGuid().ToString();
+            //var itemId = (string)null;
+            var iq = new Iq(IqType.set, new PubSubPublish(node, itemId, content));
         }
 
         public async Task SubscribeToNodeAsync(string nodeId)
