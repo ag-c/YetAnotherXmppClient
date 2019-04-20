@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
         x:Name="RootObject">
      
-  <Grid RowDefinitions="Auto,Auto,Auto,5,*" ColumnDefinitions="130,*">
+  <Grid RowDefinitions="Auto,Auto,Auto,Auto,5,*" ColumnDefinitions="130,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
           <Popup.Child>
           <AddRosterItemControl />
@@ -27,6 +27,8 @@
 
     <view:RosterView DataContext="{Binding Roster}" Grid.Row="2"/>    <!--  -->
     <!--IsEnabled="{Binding $parent[Window].DataContext.IsProtocolNegotiationComplete}"-->
+
+    <ComboBox Items="{Binding PresenceShowValues}" Grid.Row="3" />
 
     <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
       <TextBlock Text="Chat sessions:" />
@@ -66,9 +68,9 @@
     
     </StackPanel>
 
-    <GridSplitter Grid.Row="3" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
+    <GridSplitter Grid.Row="4" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
     
-    <Grid  Grid.Row="4" Grid.ColumnSpan="2">
+    <Grid  Grid.Row="5" Grid.ColumnSpan="2">
       <!--LastChildFill="true"-->
       <Border Background="White" BorderBrush="Gray" BorderThickness="1" Margin="0" Padding="2" ZIndex="100" HorizontalAlignment="Left" VerticalAlignment="Top">
         <TextBlock DockPanel.Dock="Top" Text="Log" HorizontalAlignment="Left" ZIndex="100"/>

@@ -69,7 +69,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Expect("message", message.Name.LocalName, message);
 
-            if (message.Type != MessageType.chat)
+            if (!message.Type.HasValue || message.Type != MessageType.chat)
             {
                 Log.Debug($"TODO: handle message type '{message.Type}'");
                 return;

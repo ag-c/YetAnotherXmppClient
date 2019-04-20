@@ -30,7 +30,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = new Jid(this.RuntimeParameters["jid"]).Server
             });
 
-            if(iqResp.Elements("error").Any())
+            if(iqResp.Elements("{jabber:client}error").Any())
                 this.isNotSupportedByServer = true;
 
             return !this.isNotSupportedByServer;

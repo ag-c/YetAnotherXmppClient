@@ -1,5 +1,6 @@
 ﻿using Avalonia.Threading;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ReactiveUI;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Protocol.Handler;
 
@@ -70,6 +72,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
         }
 
         public RosterViewModel Roster { get; }
+
+        public IEnumerable<string> PresenceShowValues => Enum.GetNames(typeof(PresenceShow));
 
         public MainViewModel()
         {

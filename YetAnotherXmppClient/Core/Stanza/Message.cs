@@ -33,9 +33,9 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
-        public MessageType Type
+        public MessageType? Type
         {
-            get => (MessageType)Enum.Parse(typeof(MessageType), this.Attribute("type")?.Value);
+            get => this.HasAttribute("type") ? (MessageType)Enum.Parse(typeof(MessageType), this.Attribute("type")?.Value) : (MessageType?)null;
             set => this.SetAttributeValue("type", value.ToString());
         }
 

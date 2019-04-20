@@ -45,17 +45,32 @@ namespace YetAnotherXmppClient
         public static readonly XName pubsub_pubsub = "{http://jabber.org/protocol/pubsub}pubsub";
         public static readonly XName pubsub_publish = "{http://jabber.org/protocol/pubsub}publish";
         public static readonly XName pubsub_item = "{http://jabber.org/protocol/pubsub}item";
+        public static readonly XName pubsub_items = "{http://jabber.org/protocol/pubsub}items";
         public static readonly XName pubsub_subscribe = "{http://jabber.org/protocol/pubsub}subscribe";
 
-        public static readonly XName pubsub_event = "{http://jabber.org/protocol/pubsub#event}event";
+        public static readonly XName pubsubevent_event = "{http://jabber.org/protocol/pubsub#event}event";
+        public static readonly XName pubsubevent_items = "{http://jabber.org/protocol/pubsub#event}items";
+        public static readonly XName pubsubevent_item = "{http://jabber.org/protocol/pubsub#event}item";
 
-        public static readonly XName ping_ping = "{http://jabber.org/protocol/pubsub#event}event";
+        public static readonly XName ping_ping = "{urn:xmpp:ping}ping";
 
         public static readonly XName data_x = "{jabber:x:data}x";
 
         public static readonly XName vcard_temp_update_x = "{vcard-temp:x:update}x";
         public static readonly XName vcard_temp_update_photo = "{vcard-temp:x:update}photo";
         public static readonly XName vcard_temp_vcard = "{vcard-temp}vCard";
+
+        public static readonly XName axolotl_list = "{eu.siacs.conversations.axolotl}list";
+        public static readonly XName axolotl_device = "{eu.siacs.conversations.axolotl}device";
+        public static readonly XName axolotl_bundle = "{eu.siacs.conversations.axolotl}bundle";
+        public static readonly XName axolotl_signedPreKeyPublic = "{eu.siacs.conversations.axolotl}signedPreKeyPublic";
+        public static readonly XName axolotl_signedPreKeySignature = "{eu.siacs.conversations.axolotl}signedPreKeySignature";
+        public static readonly XName axolotl_identityKey = "{eu.siacs.conversations.axolotl}identityKey";
+        public static readonly XName axolotl_prekeys = "{eu.siacs.conversations.axolotl}prekeys";
+        public static readonly XName axolotl_preKeyPublic = "{eu.siacs.conversations.axolotl}preKeyPublic";
+        public static readonly XName axolotl_encrypted = "{eu.siacs.conversations.axolotl}encrypted";
+        public static readonly XName axolotl_header = "{eu.siacs.conversations.axolotl}header";
+        public static readonly XName axolotl_key = "{eu.siacs.conversations.axolotl}key";
     }
 
     public class XNamespaces
