@@ -17,7 +17,7 @@ namespace YetAnotherXmppClient.UI
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 //.Filter.ByIncludingOnly(Matching.WithProperty<bool>("IsXmppStreamContent", b => b))
-                .WriteTo.TextWriter(MainViewModel.LogWriter)
+                .WriteTo.TextWriter(MainWindowViewModel.LogWriter)
                 .WriteTo.File("logfile.log", rollingInterval: RollingInterval.Hour)
                 .CreateLogger();
 
@@ -26,7 +26,7 @@ namespace YetAnotherXmppClient.UI
                 context.Database.EnsureCreated();
             }
 
-            BuildAvaloniaApp().Start<MainWindow>(() => new MainViewModel());
+            BuildAvaloniaApp().Start<MainWindow>(() => new MainWindowViewModel());
         }
 
         public static AppBuilder BuildAvaloniaApp()

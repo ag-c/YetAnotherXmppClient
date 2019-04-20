@@ -27,17 +27,17 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public string Jid { get; set; }
         public string Password { get; set; }
     }
-    public class MainViewModel : ReactiveObject
+    public class MainViewModel : ReactiveObject, IRoutableViewModel
     {
-        private XmppClient xmppClient = new XmppClient();
+        private XmppClient xmppClient;
 
-        private static MainViewModel instance;
-        public static DebugTextWriterDecorator LogWriter = new DebugTextWriterDecorator(new StringWriter(), _ => instance?.RaisePropertyChanged(nameof(LogText)));
+        private TextWriter logWriter;
 
-        public string LogText => LogWriter.Decoratee.ToString();
+        string IRoutableViewModel.UrlPathSegment { get; } = "main";
+        IScreen IRoutableViewModel.HostScreen { get; }
 
-        public ReactiveCommand LoginCommand { get; }
-        public ReactiveCommand LogoutCommand { get; }
+        public ReactiveCommand<Unit,Unit> LogoutCommand { get; }
+        public Func<Task> OnLogoutRequested { get; set; }
 
 
         private bool isConnected;
@@ -75,18 +75,17 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public IEnumerable<string> PresenceShowValues => Enum.GetNames(typeof(PresenceShow));
 
-        public MainViewModel()
-        {
-            instance = this;
 
-            this.Roster = new RosterViewModel(this.xmppClient, LogWriter)
+        public MainViewModel(XmppClient xmppClient, TextWriter logWriter)
+        {
+            this.xmppClient = xmppClient;
+
+            this.Roster = new RosterViewModel(this.xmppClient, logWriter)
                               {
                                   OnInitiateChatSession = this.OnInitiateChatSession
                               };
 
-            this.LoginCommand = ReactiveCommand.CreateFromTask(this.LoginAsync);//new ActionCommand(this.OnLoginCommandExecutedAsync);
-            this.LoginCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.LoginAsync", ex));
-            this.LogoutCommand = ReactiveCommand.CreateFromTask(this.LogoutAsync);
+            this.LogoutCommand = ReactiveCommand.CreateFromTask(() => this.OnLogoutRequested?.Invoke());
             this.LogoutCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.LogoutAsync", ex));
 
 
@@ -103,7 +102,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
             async Task PrintException(string location, Exception exception)
             {
-                await LogWriter.WriteAndFlushAsync(location + ": " + exception);
+                await this.logWriter.WriteAndFlushAsync(location + ": " + exception);
             }
         }
 
@@ -153,19 +152,10 @@ namespace YetAnotherXmppClient.UI.ViewModel
             return await Interactions.SubscriptionRequest.Handle(bareJid);
         }
 
-        private async Task LoginAsync(CancellationToken ct)
-        {
-            var credentials = await Interactions.Login.Handle(Unit.Default);
-            if (credentials != null)
-            {
-                await xmppClient.StartAsync(new Jid(credentials.Jid), credentials.Password);
-                this.IsConnected = true;
-            }
-        }
 
-        private async Task LogoutAsync(CancellationToken ct)
-        {
-            await this.xmppClient.ShutdownAsync();
-        }
+        //private async Task LogoutAsync(CancellationToken ct)
+        //{
+        //    await this.xmppClient.ShutdownAsync();
+        //}
     }
 }

@@ -1,0 +1,60 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:view="clr-namespace:YetAnotherXmppClient.UI.View"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="YetAnotherXmppClient.UI.View.MainView">
+  <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="130,*">
+    <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
+          <Popup.Child>
+          <AddRosterItemControl />
+        </Popup.Child>
+      </Popup>-->
+    <Grid ColumnDefinitions="*,Auto" Grid.ColumnSpan="2">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
+        <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+      </StackPanel>
+      <Button Content="Logout" Grid.Column="1" Margin="3" Name="logoutButton"/>
+    </Grid>
+    <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
+
+    <view:RosterView DataContext="{Binding Roster}" Grid.Row="2" />
+    <!--  -->
+    <!--IsEnabled="{Binding $parent[Window].DataContext.IsProtocolNegotiationComplete}"-->
+
+    <ComboBox Items="{Binding PresenceShowValues}" Grid.Row="3" Margin="3,0,3,3"/>
+
+    <Grid RowDefinitions="Auto,*"  Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Stretch" Margin="0,0,3,3">
+      <TextBlock Text="Chat sessions:" />
+      <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Stretch">
+      <TabControl Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
+        <TabControl.ItemTemplate>
+          <DataTemplate>
+            <TextBlock Text="{Binding Path=OtherJid}" ToolTip.Tip="{Binding OtherJid}" MaxWidth="100"/>
+          </DataTemplate>
+        </TabControl.ItemTemplate>
+        <TabControl.ContentTemplate>
+          <DataTemplate>
+            <view:ChatSessionControl />
+          </DataTemplate>
+        </TabControl.ContentTemplate>
+      </TabControl>
+      </Border>
+      <!--<CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
+      <Popup IsOpen = "{Binding ElementName = PCheckBox,Path = IsChecked}"
+         PlacementTarget = "{Binding ElementName = PCheckBox}">
+
+        <Canvas Width = "125" Height = "100" Background = "LightGray">
+          <Canvas.RenderTransform>
+            <RotateTransform x:Name = "theTransform" />
+          </Canvas.RenderTransform>
+          <TextBlock TextWrapping = "Wrap" Foreground = "Blue"
+             Text = "Hi, this is Popup" />
+        </Canvas>
+      </Popup>-->
+
+    </Grid>
+  </Grid>
+</UserControl>

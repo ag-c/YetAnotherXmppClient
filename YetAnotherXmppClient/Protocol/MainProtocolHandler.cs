@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Remotion.Linq.Clauses;
 using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
@@ -33,6 +34,8 @@ namespace YetAnotherXmppClient.Protocol
         //private readonly FeatureOptionsDictionary featureOptionsDict = new FeatureOptionsDictionary();
 
         readonly Dictionary<string, string> runtimeParameters = new Dictionary<string, string>();
+
+        public bool IsNegotiationFinished { get; private set; }
 
         public event EventHandler<Exception> FatalErrorOccurred;
         public event EventHandler<string> NegotiationFinished;
@@ -77,9 +80,12 @@ namespace YetAnotherXmppClient.Protocol
             };
         }
 
-        public T Get<T>() where T : ProtocolHandlerBase
+        public T Get<T>() where T : class
         {
-            return (T)this.protocolHandlers[typeof(T)];
+            if(this.protocolHandlers.TryGetValue(typeof(T), out var protoHandler))
+                return (T)(object)protoHandler;
+
+            return (T)this.featureNegotiators.First(fn => fn is T);
         }
 
         public async Task RunAsync(Jid jid, CancellationToken ct)
@@ -170,11 +176,12 @@ namespace YetAnotherXmppClient.Protocol
             await this.PresenceHandler.BroadcastPresenceAsync();
 
 
-            var b = this.Get<PingProtocolHandler>().PingAsync();
+            var b = await this.Get<PingProtocolHandler>().PingAsync();
 
             var omemoHandler = new OmemoProtocolHandler(this.Get<PepProtocolHandler>(), this.xmppStream, this.runtimeParameters);
             await omemoHandler.InitializeAsync();
 
+            this.IsNegotiationFinished = true;
             this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
         }
 

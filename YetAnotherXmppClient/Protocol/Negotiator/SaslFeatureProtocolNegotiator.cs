@@ -17,6 +17,8 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         public XName FeatureName { get; } = XNames.sasl_mechanisms;
         public bool IsNegotiated { get; private set; }
 
+        public Action LoggedIn { get; set; }
+
         public SaslFeatureProtocolNegotiator(XmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
         {
             this.xmppStream = xmppStream;
@@ -37,7 +39,10 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
 
             var success = await this.NegotiateInternalAsync(mechanismToTry, options);
             if (success)
+            {
                 this.IsNegotiated = true;
+                this.LoggedIn?.Invoke();
+            }
 
             return success;
 

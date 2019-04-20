@@ -50,5 +50,10 @@ namespace YetAnotherXmppClient.Extensions
         {
             return xElem.Elements().Concat<object>(xElem.Attributes());
         }
+
+        public static XElement ElementWithLocalName(this XElement xElem, string localName)
+        {
+            return xElem.Elements().FirstOrDefault(xe => xe.Name.LocalName == localName);
+        }
     }
 }

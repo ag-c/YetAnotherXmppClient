@@ -1,78 +1,27 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YetAnotherXmppClient.UI" Height="400" Width="400" Name="myWindow"
+        Title="YetAnotherXmppClient" Height="400" Width="400" Name="myWindow"
         xmlns:view="clr-namespace:YetAnotherXmppClient.UI.View"
         xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
         xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
-        x:Name="RootObject">
+        xmlns:a="https://github.com/avaloniaui"
+        xmlns:rxui="http://reactiveui.net"
+        x:Name="RootObject" MinWidth="200" MinHeight="150">
      
-  <Grid RowDefinitions="Auto,Auto,Auto,Auto,5,*" ColumnDefinitions="130,*">
+  <Grid RowDefinitions="Auto,5,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
           <Popup.Child>
           <AddRosterItemControl />
         </Popup.Child>
       </Popup>-->
 
-    <Grid >
-      <Button Content="Login.." Name="loginButton" Margin="3" IsVisible="{Binding !IsConnected}"/>
-      <Button Content="Logout" Name="logoutButton" Margin="3" IsVisible="{Binding IsConnected}"/>
-    </Grid>
+    <rxui:RoutedViewHost Name="routedViewHost" Height="300"/>
 
-    <StackPanel Orientation="Horizontal" Grid.Column="1">
-      <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
-      <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-    </StackPanel>
+    <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" />
 
-    <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
-
-    <view:RosterView DataContext="{Binding Roster}" Grid.Row="2"/>    <!--  -->
-    <!--IsEnabled="{Binding $parent[Window].DataContext.IsProtocolNegotiationComplete}"-->
-
-    <ComboBox Items="{Binding PresenceShowValues}" Grid.Row="3" />
-
-    <StackPanel Orientation="Vertical" Grid.Row="2" Grid.Column="1">
-      <TextBlock Text="Chat sessions:" />
-      <TabControl Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
-        <!--<TabControl.DataTemplates>
-          <DataTemplate DataType="vm:ChatSessionViewModel">
-            <StackPanel Orientation="Vertical">
-              <TextBlock Text="SampleViewModel.."/>
-              <view:ChatSessionControl />
-            </StackPanel>
-          </DataTemplate>
-        </TabControl.DataTemplates>-->
-        <TabControl.ItemTemplate>
-          <DataTemplate>
-            <TextBlock Text="{Binding Path=OtherJid}" ToolTip.Tip="{Binding OtherJid}" MaxWidth="100"/>
-          </DataTemplate>
-        </TabControl.ItemTemplate>
-        <TabControl.ContentTemplate>
-          <DataTemplate>
-            <view:ChatSessionControl />
-          </DataTemplate>
-        </TabControl.ContentTemplate>
-      </TabControl>
-
-      <!--<CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
-      <Popup IsOpen = "{Binding ElementName = PCheckBox,Path = IsChecked}"
-         PlacementTarget = "{Binding ElementName = PCheckBox}">
-
-        <Canvas Width = "125" Height = "100" Background = "LightGray">
-          <Canvas.RenderTransform>
-            <RotateTransform x:Name = "theTransform" />
-          </Canvas.RenderTransform>
-          <TextBlock TextWrapping = "Wrap" Foreground = "Blue"
-             Text = "Hi, this is Popup" />
-        </Canvas>
-      </Popup>-->
-    
-    </StackPanel>
-
-    <GridSplitter Grid.Row="4" Grid.ColumnSpan="2" Height="5" HorizontalAlignment="Stretch" />
-    
-    <Grid  Grid.Row="5" Grid.ColumnSpan="2">
+    <Grid Grid.Row="2" MinHeight="100">
       <!--LastChildFill="true"-->
-      <Border Background="White" BorderBrush="Gray" BorderThickness="1" Margin="0" Padding="2" ZIndex="100" HorizontalAlignment="Left" VerticalAlignment="Top">
+      <Border Background="Gray" BorderBrush="Gray" Width="50" BorderThickness="1" Margin="0" Padding="2" ZIndex="100" HorizontalAlignment="Left" VerticalAlignment="Top">
         <TextBlock DockPanel.Dock="Top" Text="Log" HorizontalAlignment="Left" ZIndex="100"/>
       </Border>
       <ScrollViewer Grid.Row="5" Name="logScrollViewer" Grid.ColumnSpan="2" HorizontalAlignment="Stretch">

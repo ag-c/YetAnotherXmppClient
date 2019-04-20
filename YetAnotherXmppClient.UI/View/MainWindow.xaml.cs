@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia;
@@ -12,62 +13,28 @@ using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI.View
 {
-    public class MainWindow : ReactiveWindow<MainViewModel>
+    public class MainWindow : ReactiveWindow<MainWindowViewModel>
     {
-        public Button LoginButton => this.FindControl<Button>("loginButton");
-        public Button LogoutButton => this.FindControl<Button>("logoutButton");
+        public static MainWindow Instance { get; private set; }
+
+        public RoutedViewHost RoutedViewHost => this.FindControl<RoutedViewHost>("routedViewHost");
         public ScrollViewer LogScrollViewer => this.FindControl<ScrollViewer>("logScrollViewer");
+
 
         public MainWindow()
         {
-            this.WhenActivated(
-                d =>
-                {
-                    d(this.BindCommand(this.ViewModel, x => x.LoginCommand, x => x.LoginButton));
-                    d(this.BindCommand(this.ViewModel, x => x.LogoutCommand, x => x.LogoutButton));
-                    d(Interactions
-                        .Login
-                        .RegisterHandler(
-                            async interaction =>
-                            {
-                                var window = new LoginWindow();
-                                var credentials = await window.ShowDialog<LoginCredentials>(this);
-
-                                interaction.SetOutput(credentials);
-                            }));
-                    d(Interactions
-                        .SubscriptionRequest
-                        .RegisterHandler(
-                            async interaction =>
-                            {
-                                var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                                await Dispatcher.UIThread.InvokeAsync(() =>
-                                    new MessageBox($"Allow {interaction.Input} to see your status?",
-                                        (dialogResult, e) => { tcs.SetResult(dialogResult.result == MessageBoxButtons.Yes); },
-                                        MessageBoxStyle.Info, MessageBoxButtons.Yes | MessageBoxButtons.No).Show()
-                                );
-                                interaction.SetOutput(await tcs.Task);
-                            }));
-                    d(Interactions
-                        .AddRosterItem
-                        .RegisterHandler(
-                            async interaction =>
-                            {
-                                var window = new AddRosterItemWindow();
-                                var rosterItemInfo = await window.ShowDialog<RosterItemInfo>(this);
-
-                                interaction.SetOutput(rosterItemInfo);
-                            }));
-
-                    
-                    this.ViewModel.WhenAnyValue(vm => vm.LogText)
-                        .Subscribe(async _ => await Dispatcher.UIThread.InvokeAsync(() => this.LogScrollViewer.ScrollToEnd()));
-                    //this.ViewModel.WhenAnyValue(vm => vm.LogText).Subscribe(_ => this.Image.InvalidateVisual());
-                });
+            Instance = this;
             InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif
+            this.ViewModel = new MainWindowViewModel();
+            this.WhenActivated(d =>
+                {
+                    d(this.OneWayBind(this.ViewModel, x => x.Router, x => x.RoutedViewHost.Router));
+                    this.ViewModel.WhenAnyValue(vm => vm.LogText)
+                        .Subscribe(async _ => await Dispatcher.UIThread.InvokeAsync(() => this.LogScrollViewer.ScrollToEnd()));
+                });
         }
 
 

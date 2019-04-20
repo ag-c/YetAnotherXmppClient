@@ -40,7 +40,7 @@ namespace YetAnotherXmppClient.Core.Stanza
 
         public PresenceType? Type
         {
-            get => this.HasAttribute("type") ? (PresenceType)Enum.Parse(typeof(PresenceType), this.Attribute("type").Value) : (PresenceType?)null;
+            get => EnumHelper.Parse<PresenceType>(this.Attribute("type")?.Value);
             set => this.SetAttributeValue("type", value.ToString());
         }
 
@@ -56,7 +56,7 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
-        public PresenceShow? Show => this.HasElement("show") ? (PresenceShow)Enum.Parse(typeof(PresenceShow), this.Element("show").Value) : (PresenceShow?)null;
+        public PresenceShow? Show => EnumHelper.Parse<PresenceShow>(this.Attribute("show")?.Value);
 
         public IEnumerable<string> Stati => this.Elements("status")?.Select(xe => xe.Value);
 

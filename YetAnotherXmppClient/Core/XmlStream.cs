@@ -191,7 +191,7 @@ namespace YetAnotherXmppClient.Core
         public void Dispose()
         {
             this.UnderlyingStream.Dispose();
-            this.xmlReader.Dispose();
+            //this.xmlReader.Dispose();
             this.textWriter.Dispose();
         }
     }

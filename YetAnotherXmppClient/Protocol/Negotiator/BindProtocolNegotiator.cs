@@ -14,7 +14,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         private readonly XmppStream xmppServerStream;
         private readonly Dictionary<string, string> runtimeParameters;
 
-        public Jid JidForConnectedResource { get; set; }
+        public Jid ConnectedJid => new Jid(this.runtimeParameters["jid"]);
 
         public XName FeatureName { get; } = XNames.bind_bind;
         public bool IsNegotiated { get; private set; }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Extensions;
 
@@ -35,18 +37,18 @@ namespace YetAnotherXmppClient.Core.Stanza
 
         public MessageType? Type
         {
-            get => this.HasAttribute("type") ? (MessageType)Enum.Parse(typeof(MessageType), this.Attribute("type")?.Value) : (MessageType?)null;
+            get => EnumHelper.Parse<MessageType>(this.Attribute("type")?.Value);
             set => this.SetAttributeValue("type", value.ToString());
         }
 
-        public string Thread => this.Element("thread")?.Value;
-
+        public string Thread => this.ElementWithLocalName("thread")?.Value;
+                                
         public string Body => this.Element("body")?.Value;
 
 
         //copy ctor
         private Message(XElement messageXElem)
-            : base("{jabber:client}message", messageXElem.ElementsAndAttributes())
+            : base(messageXElem.Name, messageXElem.ElementsAndAttributes())
         {
         }
 
