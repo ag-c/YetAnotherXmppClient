@@ -6,7 +6,6 @@ using Avalonia.Threading;
 using ReactiveUI;
 using Splat;
 using YetAnotherXmppClient.UI.View;
-using Avalonia.ReactiveUI;
 using Console = System.Console;
 
 namespace YetAnotherXmppClient.UI.ViewModel

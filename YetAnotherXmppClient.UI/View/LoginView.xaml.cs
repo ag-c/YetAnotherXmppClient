@@ -1,5 +1,5 @@
-﻿using Avalonia.Markup.Xaml;
-using Avalonia.ReactiveUI;
+﻿using Avalonia;
+using Avalonia.Markup.Xaml;
 using ReactiveUI;
 using YetAnotherXmppClient.UI.ViewModel;
 

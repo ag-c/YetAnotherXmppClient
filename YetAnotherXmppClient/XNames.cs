@@ -38,6 +38,8 @@ namespace YetAnotherXmppClient
         public static readonly XName register_query = "{jabber:iq:register}query";
         public static readonly XName register_registered = "{jabber:iq:register}registered";
 
+        public static readonly XName discoitems_query = "{http://jabber.org/protocol/disco#items}query";
+        public static readonly XName discoitems_item = "{http://jabber.org/protocol/disco#items}item";
         public static readonly XName discoinfo_query = "{http://jabber.org/protocol/disco#info}query";
         public static readonly XName discoinfo_identity = "{http://jabber.org/protocol/disco#info}identity";
         public static readonly XName discoinfo_feature = "{http://jabber.org/protocol/disco#info}feature";

@@ -57,6 +57,7 @@ namespace YetAnotherXmppClient.Protocol
         public RosterProtocolHandler RosterHandler => this.Get<RosterProtocolHandler>();
         public PresenceProtocolHandler PresenceHandler => this.Get<PresenceProtocolHandler>();
         public ImProtocolHandler ImProtocolHandler => this.Get<ImProtocolHandler>();
+        public ServiceDiscoveryProtocolHandler ServiceDiscoveryHandler => this.Get<ServiceDiscoveryProtocolHandler>();
 
 
         public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider)

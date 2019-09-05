@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Reactive;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using ReactiveUI;
 using StarDebris.Avalonia.MessageBox;
@@ -13,6 +14,7 @@ namespace YetAnotherXmppClient.UI.View
     public class MainView : ReactiveUserControl<MainViewModel>
     {
         public Button LogoutButton => this.FindControl<Button>("logoutButton");
+        public Button ServiceDiscoveryButton => this.FindControl<Button>("serviceDiscoveryButton");
 
         public MainView()
         {
@@ -21,6 +23,8 @@ namespace YetAnotherXmppClient.UI.View
                 d =>
                 {
                     d(this.BindCommand(this.ViewModel, x => x.LogoutCommand, x => x.LogoutButton));
+                    d(this.BindCommand(this.ViewModel, x => x.ShowServiceDiscoveryCommand, x => x.ServiceDiscoveryButton));
+
                     //d(Interactions
                     //    .Login
                     //    .RegisterHandler(
@@ -53,6 +57,15 @@ namespace YetAnotherXmppClient.UI.View
                                 var rosterItemInfo = await window.ShowDialog<RosterItemInfo>(MainWindow.Instance);
 
                                 interaction.SetOutput(rosterItemInfo);
+                            }));
+                    d(Interactions
+                        .ShowServiceDiscovery
+                        .RegisterHandler(
+                            async interaction =>
+                            {
+                                var window = new ServiceDiscoveryWindow(new ServiceDiscoveryViewModel(interaction.Input));
+                                await window.ShowDialog(MainWindow.Instance);
+                                interaction.SetOutput(Unit.Default);
                             }));
 
                     //this.ViewModel.WhenAnyValue(vm => vm.LogText).Subscribe(_ => this.Image.InvalidateVisual());

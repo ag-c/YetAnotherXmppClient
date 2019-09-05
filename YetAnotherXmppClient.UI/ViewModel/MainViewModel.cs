@@ -36,6 +36,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         string IRoutableViewModel.UrlPathSegment { get; } = "main";
         IScreen IRoutableViewModel.HostScreen { get; }
 
+        public ReactiveCommand<Unit,Unit> ShowServiceDiscoveryCommand { get; }
         public ReactiveCommand<Unit,Unit> LogoutCommand { get; }
         public Func<Task> OnLogoutRequested { get; set; }
 
@@ -88,6 +89,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.LogoutCommand = ReactiveCommand.CreateFromTask(() => this.OnLogoutRequested?.Invoke());
             this.LogoutCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.LogoutAsync", ex));
 
+            this.ShowServiceDiscoveryCommand = ReactiveCommand.CreateFromTask(this.ShowServiceDiscoveryAsync);
+
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
             this.xmppClient.ProtocolNegotiationFinished += (sender, connectedJid) =>
@@ -104,6 +107,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
             {
                 await this.logWriter.WriteAndFlushAsync(location + ": " + exception);
             }
+        }
+
+        private async Task ShowServiceDiscoveryAsync(CancellationToken ct)
+        {
+            await Interactions.ShowServiceDiscovery.Handle(this.xmppClient.ProtocolHandler.ServiceDiscoveryHandler);
         }
 
         private void HandleDisconnected(object sender, EventArgs e)

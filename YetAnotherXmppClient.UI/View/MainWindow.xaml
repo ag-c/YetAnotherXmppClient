@@ -5,6 +5,7 @@
         xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
         xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
         xmlns:a="https://github.com/avaloniaui"
+        xmlns:rxui2="clr-namespace:Avalonia;assembly=Avalonia.ReactiveUI"
         xmlns:rxui="http://reactiveui.net"
         x:Name="RootObject" MinWidth="200" MinHeight="150">
      
@@ -15,7 +16,7 @@
         </Popup.Child>
       </Popup>-->
 
-    <rxui:RoutedViewHost Name="routedViewHost" Height="300"/>
+    <rxui2:RoutedViewHost Name="routedViewHost" Height="300"/>
 
     <GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" />
 
