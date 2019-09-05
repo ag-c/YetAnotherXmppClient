@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net.Mime;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
@@ -26,13 +27,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             {
                 Expect(this.RuntimeParameters["jid"], message.To, message);
 
-                var messageResp = new Message(new XElement(XNames.receipts_received))
-                {
-                    Id = message.Id,
-                    From = this.RuntimeParameters["jid"], //alt. copy from to-attribute
-                    To = message.From
-                };
-                await this.XmppStream.WriteElementAsync(messageResp);
+                var response = message.CreateResponse(
+                    content: new XElement(XNames.receipts_received)/*, 
+                    from: this.RuntimeParameters["jid"]*/);
+
+                await this.XmppStream.WriteElementAsync(response);
             }
         }
     }

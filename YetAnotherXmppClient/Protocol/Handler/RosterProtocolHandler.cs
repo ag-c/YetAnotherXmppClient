@@ -74,16 +74,20 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var ver = rosterQuery.Ver; //UNDONE
 
             this.currentRosterItems.Clear();
-
             foreach (var item in rosterQuery.Items)
             {
                 this.currentRosterItems.TryAdd(item.Jid, RosterItem.FromXElement(item));
             }
 
-            Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
-            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
+            this.RaiseRosterUpdated();
 
             return this.currentRosterItems.Values;
+        }
+
+        private void RaiseRosterUpdated()
+        {
+            Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
+            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
         }
 
         public async Task<bool> AddRosterItemAsync(string bareJid, string name, IEnumerable<string> groups)
@@ -102,8 +106,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
             //Expectation.Expect("result", responseIq.Attribute("type")?.Value, responseIq);
 
             this.currentRosterItems.TryAdd(bareJid, new RosterItem { Jid = bareJid, Name = name});
-            Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
-            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
+
+            this.RaiseRosterUpdated();
 
             return true;
         }
@@ -124,8 +128,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
             //Expect("result", responseIq.Attribute("type")?.Value, responseIq);
 
             this.currentRosterItems.TryRemove(bareJid, out _);
-            Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
-            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
+
+            this.RaiseRosterUpdated();
 
             return true;
         }
@@ -164,8 +168,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     });
                 }
 
-                Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
-                this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
+                this.RaiseRosterUpdated();
 
                 //UNDONE reply to server (2.1.6.  Roster Push)
             }

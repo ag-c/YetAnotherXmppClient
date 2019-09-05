@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient
 {
@@ -18,11 +19,6 @@ namespace YetAnotherXmppClient
         }
     }
 
-    //    public class Features : List<IFeature>
-    //    {
-    //        
-    //    }
-
 
     public class MechanismsFeature : Feature
     {
@@ -33,6 +29,7 @@ namespace YetAnotherXmppClient
             this.Name = XNames.sasl_mechanisms;
             this.IsRequired = true;
         }
+
         public static MechanismsFeature FromXElement(XElement xElem)
         {
             return new MechanismsFeature { Mechanisms = xElem.Elements(XNames.sasl_mechanism).Select(xe => xe.Value) };
@@ -44,7 +41,7 @@ namespace YetAnotherXmppClient
     {
         public static IEnumerable<Feature> FromXElement(XElement xElem)
         {
-            Expectation.Expect(XNamespaces.stream + "features", xElem.Name, xElem);
+            Expect(XNamespaces.stream + "features", xElem.Name, xElem);
             foreach (var featureElem in xElem.Elements())
             {
                 if (featureElem.Name == XNames.sasl_mechanisms)

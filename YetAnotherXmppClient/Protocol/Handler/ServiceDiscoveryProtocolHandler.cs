@@ -5,6 +5,7 @@ using System.Xml.Linq;
 using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using static YetAnotherXmppClient.Expectation;
 
@@ -115,22 +116,18 @@ namespace YetAnotherXmppClient.Protocol.Handler
         async void IIqReceivedCallback.IqReceived(Iq iq)
         {
             Expect(() => iq.HasElement(XNames.discoinfo_query), iq);
+            
+            var response = iq.CreateResultResponse(
+                content: new XElement(XNames.discoinfo_query,
+                            new DiscoInfoIdentity("client", "pc", "YetAnotherXmppClient"),
+                            new DiscoInfoFeature("http://jabber.org/protocol/disco#info"),
+                            new DiscoInfoFeature("urn:xmpp:time"),
+                            new DiscoInfoFeature("eu.siacs.conversations.axolotl.devicelist+notify"),
+                            new DiscoInfoFeature("jabber:iq:version")),
+                from: this.RuntimeParameters["jid"]);
 
-            var iqResp = new Iq(IqType.result, 
-                new XElement(XNames.discoinfo_query, 
-                    new XElement(XNames.discoinfo_identity, new XAttribute("category", "client"), new XAttribute("type", "pc"), new XAttribute("name", "YetAnotherXmppClient")),
-                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "http://jabber.org/protocol/disco#info")),
-                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "urn:xmpp:time")),
-                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "eu.siacs.conversations.axolotl.devicelist+notify")),
-                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "jabber:iq:version"))
-                    ))
-            {
-                Id = iq.Id,
-                From = this.RuntimeParameters["jid"],
-                To = iq.From
-            };
+            await this.XmppStream.WriteElementAsync(response);
 
-            await this.XmppStream.WriteElementAsync(iqResp);
         }
     }
 }

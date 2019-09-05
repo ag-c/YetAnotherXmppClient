@@ -59,9 +59,6 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
             XElement xElem;
             while(true)
             {
-                //var xmlFragment = await this.xmlReader.ReadElementOrClosingTagAsync();//this.xmlReader.ReadNextElementAsync();
-                //Expect(() => xmlFragment.PartType == XmlPartType.Element);
-                //xElem = XElement.Parse(xmlFragment.RawXml);
                 xElem = await this.xmppStream.ReadElementAsync();
                 if (xElem.Name == XNames.sasl_challenge)
                 {

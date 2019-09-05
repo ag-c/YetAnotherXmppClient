@@ -1,6 +1,6 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="YetAnotherXmppClient" Height="400" Width="400" Name="myWindow"
+        Title="YetAnotherXmppClient" Height="500" Width="500" Name="myWindow"
         xmlns:view="clr-namespace:YetAnotherXmppClient.UI.View"
         xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
         xmlns:local="clr-namespace:YetAnotherXmppClient.UI"

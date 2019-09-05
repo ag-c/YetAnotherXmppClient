@@ -18,5 +18,15 @@ namespace YetAnotherXmppClient.Extensions
             var contentXElem = iq.Elements().Single();
             return (TContentElem)constructorInfo.Invoke(new object[] { contentXElem });
         }
+
+        public static Iq CreateResultResponse(this Iq iq, XElement content, string from = null)
+        {
+            return new Iq(IqType.result, content)
+                       {
+                           From = from ?? iq.To,
+                           To = iq.From,
+                           Id = iq.Id
+                       };
+        }
     }
 }

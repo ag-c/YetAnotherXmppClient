@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Extensions;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -37,18 +38,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //4.1 Server-To-Client Pings & 4.4 Client-to-Client Pings
-        void IIqReceivedCallback.IqReceived(Iq iq)
+        async void IIqReceivedCallback.IqReceived(Iq iq)
         {
             var content = iq.Elements().Single();
 
             if (content.Name == XNames.ping_ping)
             {   
-                this.XmppStream.WriteElementAsync(new Iq(IqType.result)
-                {
-                    Id = iq.Id,
-                    From = this.RuntimeParameters["jid"],
-                    To = iq.From
-                });
+                await this.XmppStream.WriteElementAsync(
+                    iq.CreateResultResponse(null, from: this.RuntimeParameters["jid"]));
             }
         }
     }
