@@ -51,6 +51,7 @@ namespace YetAnotherXmppClient.Protocol
                                                                         typeof(MessageReceiptsProtocolHandler),
                                                                         typeof(PepProtocolHandler),
                                                                         typeof(VCardProtocolHandler),
+                                                                        typeof(SoftwareVersionProtocolHandler),
                                                                     };
         private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
 

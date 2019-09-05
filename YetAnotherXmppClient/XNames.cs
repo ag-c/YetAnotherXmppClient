@@ -73,6 +73,11 @@ namespace YetAnotherXmppClient
         public static readonly XName axolotl_encrypted = "{eu.siacs.conversations.axolotl}encrypted";
         public static readonly XName axolotl_header = "{eu.siacs.conversations.axolotl}header";
         public static readonly XName axolotl_key = "{eu.siacs.conversations.axolotl}key";
+
+        public static readonly XName version_query = "{jabber:iq:version}query";
+        public static readonly XName version_name = "{jabber:iq:version}name";
+        public static readonly XName version_version = "{jabber:iq:version}version";
+        public static readonly XName version_os = "{jabber:iq:version}os";
     }
 
     public class XNamespaces
@@ -83,5 +88,6 @@ namespace YetAnotherXmppClient
         public static readonly XNamespace discoinfo = "http://jabber.org/protocol/disco#info";
         public static readonly XNamespace time = "urn:xmpp:time";
         public static readonly XNamespace ping = "urn:xmpp:ping";
+        public static readonly XNamespace version = "jabber:iq:version";
     }
 }

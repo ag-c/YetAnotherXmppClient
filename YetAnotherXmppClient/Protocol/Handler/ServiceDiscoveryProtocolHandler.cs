@@ -121,7 +121,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     new XElement(XNames.discoinfo_identity, new XAttribute("category", "client"), new XAttribute("type", "pc"), new XAttribute("name", "YetAnotherXmppClient")),
                     new XElement(XNames.discoinfo_feature, new XAttribute("var", "http://jabber.org/protocol/disco#info")),
                     new XElement(XNames.discoinfo_feature, new XAttribute("var", "urn:xmpp:time")),
-                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "eu.siacs.conversations.axolotl.devicelist+notify"))))
+                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "eu.siacs.conversations.axolotl.devicelist+notify")),
+                    new XElement(XNames.discoinfo_feature, new XAttribute("var", "jabber:iq:version"))
+                    ))
             {
                 Id = iq.Id,
                 From = this.RuntimeParameters["jid"],
