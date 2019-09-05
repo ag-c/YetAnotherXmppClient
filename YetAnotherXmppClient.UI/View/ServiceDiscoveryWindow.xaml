@@ -5,21 +5,32 @@
         xmlns:models="clr-namespace:YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;assembly=YetAnotherXmppClient"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="YetAnotherXmppClient.UI.View.ServiceDiscoveryWindow"
-        Title="ServiceDiscoveryWindow"
+        Title="Service Discovery"
         Width="300" Height="300">
   <Grid RowDefinitions="Auto,*">
     <Button Content="Refresh" Name="refreshButton"/>
-    <TreeView Items="{Binding RootEntityInfo}" Grid.Row="1">
-      <TreeView.DataTemplates>
-        <TreeDataTemplate DataType="models:EntityInfo" ItemsSource="{Binding Children}">
-          <TextBlock Foreground="Red" Text="{Binding Jid}" />
-        </TreeDataTemplate>
-        <!--
-        <DataTemplate DataType="models:Team">
-          <TextBlock Text="{Binding TeamName}" />
-        </DataTemplate>
-        -->
-      </TreeView.DataTemplates>
-    </TreeView>
+    <Grid ColumnDefinitions="Auto,*" Grid.Row="1">
+      <TreeView Items="{Binding RootEntityInfo}" Name="treeView" MinWidth="100" VerticalAlignment="Stretch">
+        <TreeView.DataTemplates>
+          <TreeDataTemplate DataType="models:EntityInfo" ItemsSource="{Binding Children}">
+            <TextBlock Text="{Binding Jid}" />
+          </TreeDataTemplate>
+          <!--
+          <DataTemplate DataType="models:Team">
+            <TextBlock Text="{Binding TeamName}" />
+          </DataTemplate>
+          -->
+        </TreeView.DataTemplates>
+      </TreeView>
+      <ScrollViewer Grid.Row="5" Name="logScrollViewer" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Grid.Column="1">
+        <StackPanel Orientation="Vertical">
+          <TextBlock Text="Features" Margin="2"/>
+          <ListBox Items="{Binding #treeView.SelectedItem.Features}" MemberSelector="Var" Margin="6" />
+          <TextBlock Text="Identities" Margin="2,9,2,2"/>
+          <ListBox Items="{Binding #treeView.SelectedItem.Identities}" MemberSelector="Name" Margin="6" />
+        </StackPanel>
+      </ScrollViewer>
+      
+    </Grid>
   </Grid>
 </Window>

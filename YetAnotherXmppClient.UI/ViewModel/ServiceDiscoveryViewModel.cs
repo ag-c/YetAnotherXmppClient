@@ -10,10 +10,10 @@ using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.UI.ViewModel
 {
-    public class EntityViewModel
-    {
-        private ObservableCollection<EntityViewModel> Entities { get; set; } = new ObservableCollection<EntityViewModel>();
-    }
+    //public class EntityViewModel
+    //{
+    //    private ObservableCollection<EntityViewModel> Entities { get; set; } = new ObservableCollection<EntityViewModel>();
+    //}
 
     public class ServiceDiscoveryViewModel : ReactiveObject
     {
@@ -38,7 +38,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public async Task OnRefreshAsync()
         {
-            var info = await handler.QueryEntityInformationTreeAsync();
+            var info = await this.handler.QueryEntityInformationTreeAsync();
             this.RootEntityInfo.Clear();
             this.RootEntityInfo.Add(info);
         }
