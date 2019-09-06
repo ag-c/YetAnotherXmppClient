@@ -112,7 +112,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private async Task ShowServiceDiscoveryAsync(CancellationToken ct)
         {
-            await Interactions.ShowServiceDiscovery.Handle(this.xmppClient.ProtocolHandler.ServiceDiscoveryHandler);
+            await Interactions.ShowServiceDiscovery.Handle(this.xmppClient.ProtocolHandler.Get<ServiceDiscoveryProtocolHandler>());
         }
 
         private void HandleDisconnected(object sender, EventArgs e)
@@ -132,7 +132,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             var viewModel = this.ChatSessions.FirstOrDefault(vm => vm.OtherJid == jid);
             if (viewModel == null)
             {
-                var chatSession = this.xmppClient.ProtocolHandler.ImProtocolHandler.StartChatSession(jid);
+                var chatSession = this.xmppClient.ProtocolHandler.Get<ImProtocolHandler>().StartChatSession(jid);
                 viewModel = new ChatSessionViewModel(chatSession);
                 this.ChatSessions.Add(viewModel);
             }

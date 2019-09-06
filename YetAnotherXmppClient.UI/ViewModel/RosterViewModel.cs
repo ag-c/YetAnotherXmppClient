@@ -110,8 +110,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
             var rosterItemInfo = await Interactions.AddRosterItem.Handle(Unit.Default);
             if (rosterItemInfo != null)
             {
-                var b = await this.xmppClient.ProtocolHandler.RosterHandler.AddRosterItemAsync(rosterItemInfo.Jid, rosterItemInfo.Name, null);
-                await this.xmppClient.ProtocolHandler.PresenceHandler.RequestSubscriptionAsync(rosterItemInfo.Jid);
+                var b = await this.xmppClient.ProtocolHandler.Get<RosterProtocolHandler>().AddRosterItemAsync(rosterItemInfo.Jid, rosterItemInfo.Name, null);
+                await this.xmppClient.ProtocolHandler.Get<PresenceProtocolHandler>().RequestSubscriptionAsync(rosterItemInfo.Jid);
             }
         }
 
@@ -120,7 +120,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (this.SelectedRosterItem == null)
                 return;
 
-            await this.xmppClient.ProtocolHandler.RosterHandler.DeleteRosterItemAsync(this.SelectedRosterItem.Jid);
+            await this.xmppClient.ProtocolHandler.Get<RosterProtocolHandler>().DeleteRosterItemAsync(this.SelectedRosterItem.Jid);
         }
 
         private void AvatarReceived(object sender, (string BareJid, byte[] Bytes) e)

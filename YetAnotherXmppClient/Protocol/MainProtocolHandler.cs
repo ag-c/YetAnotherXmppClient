@@ -58,11 +58,6 @@ namespace YetAnotherXmppClient.Protocol
                                                                     };
         private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
 
-        public RosterProtocolHandler RosterHandler => this.Get<RosterProtocolHandler>();
-        public PresenceProtocolHandler PresenceHandler => this.Get<PresenceProtocolHandler>();
-        public ImProtocolHandler ImProtocolHandler => this.Get<ImProtocolHandler>();
-        public ServiceDiscoveryProtocolHandler ServiceDiscoveryHandler => this.Get<ServiceDiscoveryProtocolHandler>();
-
 
         public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider, IMediator mediator)
         {
@@ -178,8 +173,8 @@ namespace YetAnotherXmppClient.Protocol
             Log.Debug("Stream negotiation is complete");
 
             // initial roster get & presence set
-            var rosterItems = await this.RosterHandler.RequestRosterAsync();
-            await this.PresenceHandler.BroadcastPresenceAsync();
+            var rosterItems = await this.Get<RosterProtocolHandler>().RequestRosterAsync();
+            await this.Get<PresenceProtocolHandler>().BroadcastPresenceAsync();
 
 
             var b = await this.Get<PingProtocolHandler>().PingAsync();
@@ -188,7 +183,6 @@ namespace YetAnotherXmppClient.Protocol
             await omemoHandler.InitializeAsync();
 
             this.IsNegotiationFinished = true;
-            //this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
             await this.mediator.PublishAsync(new StreamNegotiationCompletedEvent { ConnectedJid = this.runtimeParameters["jid"] });
         }
 
@@ -252,7 +246,7 @@ namespace YetAnotherXmppClient.Protocol
 
         public async Task TerminateSessionAsync()
         {
-            await this.PresenceHandler.SendUnavailableAsync();
+            await this.Get<PresenceProtocolHandler>().SendUnavailableAsync();
 
             await this.xmppStream.WriteClosingTagAsync("stream:stream");
         }
