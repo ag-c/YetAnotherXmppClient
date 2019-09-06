@@ -3,20 +3,18 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reactive;
 using System.Reactive.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
-using JetBrains.Annotations;
 using ReactiveUI;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Protocol.Handler;
+using Unit = System.Reactive.Unit;
 
 namespace YetAnotherXmppClient.UI.ViewModel
 {
@@ -37,7 +35,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
-    public class RosterViewModel : ReactiveObject
+    public class RosterViewModel : ReactiveObject, IEventHandler<RosterUpdateEvent>, IEventHandler<StreamNegotiationCompletedEvent>
     {
         private readonly XmppClient xmppClient;
 
@@ -68,23 +66,27 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.DeleteRosterItemCommand = ReactiveCommand.CreateFromTask(this.DeleteRosterItemAsync);
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
-            this.xmppClient.ProtocolNegotiationFinished += (sender, connectedJid) =>
-                {
-                    this.xmppClient.ProtocolHandler.Get<VCardProtocolHandler>().AvatarReceived += this.AvatarReceived; 
-                };
-            this.xmppClient.RosterUpdated += (sender, items) => this.RosterItems = items.Select(x => new RosterItemWithAvatar
-            {
-                                                                                                         Jid = x.Jid,
-                                                                                                         Name = x.Name,
-                                                                                                         Subscription = x.Subscription,
-                                                                                                         Groups = x.Groups,
-                                                                                                         IsSubscriptionPending = x.IsSubscriptionPending
-                                                                                                     });
+
+            this.xmppClient.Mediator.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.Mediator.RegisterHandler<RosterUpdateEvent>(this, publishLatestEventToNewHandler: true);
 
             async Task PrintException(string location, Exception exception)
             {
                 await logWriter.WriteAndFlushAsync(location + ": " + exception);
             }
+        }
+
+        Task IEventHandler<RosterUpdateEvent>.HandleEventAsync(RosterUpdateEvent rosterUpdate)
+        {
+            this.RosterItems = rosterUpdate.Items.Select(x => new RosterItemWithAvatar
+                                                                  {
+                                                                      Jid = x.Jid,
+                                                                      Name = x.Name,
+                                                                      Subscription = x.Subscription,
+                                                                      Groups = x.Groups,
+                                                                      IsSubscriptionPending = x.IsSubscriptionPending
+                                                                  });
+            return Task.CompletedTask;
         }
 
         private void HandleDisconnected(object sender, EventArgs e)
@@ -126,6 +128,12 @@ namespace YetAnotherXmppClient.UI.ViewModel
             var item = this.RosterItems.FirstOrDefault(x => x.Jid == e.BareJid);
             if (item != null)
                 item.Avatar = new Bitmap(new MemoryStream(e.Bytes));
+        }
+
+        Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
+        {
+            this.xmppClient.ProtocolHandler.Get<VCardProtocolHandler>().AvatarReceived += this.AvatarReceived;
+            return Task.CompletedTask;
         }
     }
 }

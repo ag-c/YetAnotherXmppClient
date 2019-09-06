@@ -7,6 +7,8 @@ using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -43,13 +45,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         //<threadid, chatdata>
         private readonly ConcurrentDictionary<string, ChatSession> chatSessions = new ConcurrentDictionary<string, ChatSession>();
 
-        public ImProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, runtimeParameters)
+        public ImProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterMessageCallback(this);
         }
-
-        public Action<ChatSession, string> MessageReceived { get; set; }
 
 
         public async Task SendMessageAsync(string recipientJid, string message, string thread=null)
@@ -65,7 +65,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
 
-        void IMessageReceivedCallback.MessageReceived(Message message)
+        async void IMessageReceivedCallback.MessageReceived(Message message)
         {
             Expect("message", message.Name.LocalName, message);
 
@@ -99,7 +99,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 this.chatSessions.TryAdd(newThread, chatSession);
             }
 
-            this.MessageReceived?.Invoke(chatSession, text);
+            await this.Mediator.PublishAsync(new MessageReceivedEvent(chatSession, text));
         }
 
         public ChatSession StartChatSession(string fullJid)

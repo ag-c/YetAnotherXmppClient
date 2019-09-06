@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 
 namespace YetAnotherXmppClient.Protocol.Negotiator
 {
@@ -13,16 +15,17 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
     {
         private readonly XmppStream xmppStream;
         private readonly IEnumerable<string> clientMechanisms;
+        private readonly IMediator mediator;
 
         public XName FeatureName { get; } = XNames.sasl_mechanisms;
         public bool IsNegotiated { get; private set; }
 
-        public Action LoggedIn { get; set; }
 
-        public SaslFeatureProtocolNegotiator(XmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms) //: base(serverStream)
+        public SaslFeatureProtocolNegotiator(XmppStream xmppStream/*Stream serverStream*/, IEnumerable<string> clientMechanisms, IMediator mediator) //: base(serverStream)
         {
             this.xmppStream = xmppStream;
             this.clientMechanisms = clientMechanisms;
+            this.mediator = mediator;
         }
 
         public async Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
@@ -41,7 +44,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
             if (success)
             {
                 this.IsNegotiated = true;
-                this.LoggedIn?.Invoke();
+                await this.mediator.PublishAsync(new LoggedInEvent());
             }
 
             return success;

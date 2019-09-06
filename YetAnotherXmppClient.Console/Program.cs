@@ -11,6 +11,8 @@ using System.Xml;
 using System.Xml.XPath;
 using Serilog.Core;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
 
 namespace YetAnotherXmppClient.Console
 {
@@ -41,14 +43,16 @@ namespace YetAnotherXmppClient.Console
             {
                 var xmppClient = new XmppClient();
                 //await xmppClient.RegisterAsync("draugr.de");
-                xmppClient.SubscriptionRequestReceived = requestingJid =>
-                {
-                    Debugger.Break();
-                    return Task.FromResult(true);
-                };
+//                xmppClient.SubscriptionRequestReceived = requestingJid =>
+//                {
+//                    Debugger.Break();
+//                    return Task.FromResult(true);
+//                };
+                xmppClient.Mediator.RegisterHandler<SubscriptionRequestQuery, bool>(qry => Task.FromResult(true));
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
-                xmppClient.MessageReceived += (chatSession, text) => Debugger.Break();
-                await xmppClient.StartAsync(jid, "***");
+                //                xmppClient.MessageReceived += (chatSession, text) => Debugger.Break();
+                xmppClient.Mediator.RegisterHandler<MessageReceivedEvent>(msg => Task.FromResult(true));
+                await xmppClient.StartAsync(jid, "gehe1m");
 
                 Console.ReadLine();
             }

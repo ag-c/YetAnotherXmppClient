@@ -12,6 +12,9 @@ using ReactiveUI;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.UI.ViewModel
@@ -27,7 +30,10 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public string Jid { get; set; }
         public string Password { get; set; }
     }
-    public class MainViewModel : ReactiveObject, IRoutableViewModel
+    public class MainViewModel : ReactiveObject, IRoutableViewModel, 
+                                 IQueryHandler<SubscriptionRequestQuery, bool>, 
+                                 IEventHandler<StreamNegotiationCompletedEvent>,
+                                 IEventHandler<MessageReceivedEvent>
     {
         private XmppClient xmppClient;
 
@@ -56,7 +62,6 @@ namespace YetAnotherXmppClient.UI.ViewModel
         }
 
         private string connectedJid;
-
         public string ConnectedJid
         {
             get => this.connectedJid;
@@ -93,15 +98,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
-            this.xmppClient.ProtocolNegotiationFinished += (sender, connectedJid) =>
-            {
-                this.ConnectedJid = connectedJid;
-                this.IsProtocolNegotiationComplete = true;
-            };
 
-            this.xmppClient.SubscriptionRequestReceived += this.HandleSubscriptionRequestReceivedAsync;
-            this.xmppClient.MessageReceived = this.OnMessageReceived;
-            
+            this.xmppClient.Mediator.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.Mediator.RegisterHandler<MessageReceivedEvent>(this);
+            this.xmppClient.Mediator.RegisterHandler<SubscriptionRequestQuery, bool>(this);
+
 
             async Task PrintException(string location, Exception exception)
             {
@@ -155,9 +156,9 @@ namespace YetAnotherXmppClient.UI.ViewModel
             }).Wait();
         }
 
-        private async Task<bool> HandleSubscriptionRequestReceivedAsync(string bareJid)
+        async Task<bool> IQueryHandler<SubscriptionRequestQuery, bool>.HandleQueryAsync(SubscriptionRequestQuery query)
         {
-            return await Interactions.SubscriptionRequest.Handle(bareJid);
+            return await Interactions.SubscriptionRequest.Handle(query.BareJid);
         }
 
 
@@ -165,5 +166,28 @@ namespace YetAnotherXmppClient.UI.ViewModel
         //{
         //    await this.xmppClient.ShutdownAsync();
         //}
+
+        Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
+        {
+            this.ConnectedJid = evt.ConnectedJid;
+            this.IsProtocolNegotiationComplete = true;
+            return Task.CompletedTask;
+        }
+
+        Task IEventHandler<MessageReceivedEvent>.HandleEventAsync(MessageReceivedEvent evt)
+        {
+            return Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var viewModel = this.ChatSessions.FirstOrDefault(vm => vm.Thread == evt.Session.Thread);
+                    if (viewModel == null)
+                    {
+                        this.ChatSessions.Add(new ChatSessionViewModel(evt.Session));
+                    }
+                    else
+                    {
+                        viewModel.Refresh();
+                    }
+                });
+        }
     }
 }

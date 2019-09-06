@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -11,8 +12,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
     //XEP-0184: Message Receipts
     public class MessageReceiptsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
     {
-        public MessageReceiptsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, runtimeParameters)
+        public MessageReceiptsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterMessageContentCallback(XNames.receipts_request, this);
         }

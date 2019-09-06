@@ -7,19 +7,21 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
     class PepProtocolHandler : ProtocolHandlerBase
     {
-        public PepProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, runtimeParameters)
+        public PepProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, runtimeParameters, mediator)
         {
         }
 
         //XEP-0163/6.1
         public async Task<bool> DetermineSupportAsync()
         {
+            //UNDONE use ServiceDiscoveryProtoHandler
             var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query))
             {
                 From = this.RuntimeParameters["jid"],

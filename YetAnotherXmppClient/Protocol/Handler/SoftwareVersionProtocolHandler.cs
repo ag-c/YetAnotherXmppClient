@@ -5,14 +5,15 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
     //XEP-0092
     internal class SoftwareVersionProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
-        public SoftwareVersionProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, runtimeParameters)
+        public SoftwareVersionProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.version, this);
         }

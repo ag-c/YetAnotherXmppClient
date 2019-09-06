@@ -7,6 +7,7 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
 using static YetAnotherXmppClient.Expectation;
 
 //XEP-0030
@@ -48,8 +49,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
     
     public class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
-        public ServiceDiscoveryProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters) 
-            : base(xmppStream, runtimeParameters)
+        public ServiceDiscoveryProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator) 
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.discoinfo, this);
         }

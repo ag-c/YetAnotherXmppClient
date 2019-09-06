@@ -11,6 +11,8 @@ using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Protocol.Handler;
 using YetAnotherXmppClient.Protocol.Negotiator;
 using static YetAnotherXmppClient.Expectation;
@@ -31,6 +33,8 @@ namespace YetAnotherXmppClient.Protocol
 
         private readonly IEnumerable<IFeatureProtocolNegotiator> featureNegotiators;
         private readonly IFeatureOptionsProvider featureOptionsProvider;
+
+        private readonly IMediator mediator;
         //private readonly FeatureOptionsDictionary featureOptionsDict = new FeatureOptionsDictionary();
 
         readonly Dictionary<string, string> runtimeParameters = new Dictionary<string, string>();
@@ -38,7 +42,6 @@ namespace YetAnotherXmppClient.Protocol
         public bool IsNegotiationFinished { get; private set; }
 
         public event EventHandler<Exception> FatalErrorOccurred;
-        public event EventHandler<string> NegotiationFinished;
 
         private static IEnumerable<Type> ProtocolHandlerTypes = new[]
                                                                     {
@@ -61,22 +64,23 @@ namespace YetAnotherXmppClient.Protocol
         public ServiceDiscoveryProtocolHandler ServiceDiscoveryHandler => this.Get<ServiceDiscoveryProtocolHandler>();
 
 
-        public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider)
+        public MainProtocolHandler(Stream serverStream, IFeatureOptionsProvider featureOptionsProvider, IMediator mediator)
         {
             this.featureOptionsProvider = featureOptionsProvider;
+            this.mediator = mediator;
             this.xmppStream = new XmppStream(serverStream);
 
             // create protocol handlers
             foreach (var type in ProtocolHandlerTypes)
             {
-                var instance = (ProtocolHandlerBase)Activator.CreateInstance(type, this.xmppStream, this.runtimeParameters);
+                var instance = (ProtocolHandlerBase)Activator.CreateInstance(type, this.xmppStream, this.runtimeParameters, this.mediator);
                 this.protocolHandlers.Add(type, instance);
             }
 
             this.featureNegotiators = new IFeatureProtocolNegotiator[]
             {
                 new StartTlsProtocolNegotiator(this.xmppStream), 
-                new SaslFeatureProtocolNegotiator(this.xmppStream, Mechanisms),
+                new SaslFeatureProtocolNegotiator(this.xmppStream, Mechanisms, this.mediator),
                 new BindProtocolNegotiator(this.xmppStream, this.runtimeParameters),
                 new Rfc3921SessionProtocolNegotiator(this.xmppStream, this.runtimeParameters)
             };
@@ -184,7 +188,8 @@ namespace YetAnotherXmppClient.Protocol
             await omemoHandler.InitializeAsync();
 
             this.IsNegotiationFinished = true;
-            this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
+            //this.NegotiationFinished?.Invoke(this, this.runtimeParameters["jid"]);
+            await this.mediator.PublishAsync(new StreamNegotiationCompletedEvent { ConnectedJid = this.runtimeParameters["jid"] });
         }
 
         //4.2.Opening a Stream

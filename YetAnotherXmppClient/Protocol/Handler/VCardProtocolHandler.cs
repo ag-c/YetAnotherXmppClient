@@ -7,6 +7,7 @@ using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -22,8 +23,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public event EventHandler<(string BareJid, byte[] Bytes)> AvatarReceived;
 
 
-        public VCardProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, runtimeParameters)
+        public VCardProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.xmppStream = xmppStream;
             this.XmppStream.RegisterPresenceContentCallback(XNames.vcard_temp_update_x, this);

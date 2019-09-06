@@ -10,6 +10,8 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -42,14 +44,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
     public class RosterProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
-        private ConcurrentDictionary<string, RosterItem> currentRosterItems = new ConcurrentDictionary<string, RosterItem>();
+        private readonly ConcurrentDictionary<string, RosterItem> currentRosterItems = new ConcurrentDictionary<string, RosterItem>();
         private readonly IIqFactory iqFactory;
 
-        public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
 
-
-        public RosterProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, runtimeParameters)
+        public RosterProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.iqFactory = new DefaultClientIqFactory(() => runtimeParameters["jid"]);
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.roster, this);
@@ -79,15 +79,15 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 this.currentRosterItems.TryAdd(item.Jid, RosterItem.FromXElement(item));
             }
 
-            this.RaiseRosterUpdated();
+            await this.RaiseRosterUpdatedAsync();
 
             return this.currentRosterItems.Values;
         }
 
-        private void RaiseRosterUpdated()
+        private Task RaiseRosterUpdatedAsync()
         {
             Log.Logger.CurrentRosterItems(this.currentRosterItems.Values);
-            this.RosterUpdated?.Invoke(this, this.currentRosterItems.Values);
+            return this.Mediator.PublishAsync(new RosterUpdateEvent(this.currentRosterItems.Values));
         }
 
         public async Task<bool> AddRosterItemAsync(string bareJid, string name, IEnumerable<string> groups)
@@ -107,7 +107,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             this.currentRosterItems.TryAdd(bareJid, new RosterItem { Jid = bareJid, Name = name});
 
-            this.RaiseRosterUpdated();
+            await this.RaiseRosterUpdatedAsync();
 
             return true;
         }
@@ -129,12 +129,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             this.currentRosterItems.TryRemove(bareJid, out _);
 
-            this.RaiseRosterUpdated();
+            this.RaiseRosterUpdatedAsync();
 
             return true;
         }
 
-        void IIqReceivedCallback.IqReceived(Iq iq)
+        async void IIqReceivedCallback.IqReceived(Iq iq)
         {
             Log.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iq);
 
@@ -168,7 +168,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     });
                 }
 
-                this.RaiseRosterUpdated();
+                await this.RaiseRosterUpdatedAsync();
 
                 //UNDONE reply to server (2.1.6.  Roster Push)
             }

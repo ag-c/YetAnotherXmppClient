@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -14,7 +15,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
     {
         private bool isNotSupportedByServer;
 
-        public PingProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters) : base(xmppStream, runtimeParameters)
+        public PingProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator) 
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.ping, this);
         }

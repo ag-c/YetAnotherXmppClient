@@ -6,14 +6,11 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Protocol;
-using YetAnotherXmppClient.Protocol.Handler;
-using YetAnotherXmppClient.Protocol.Negotiator;
 
 namespace YetAnotherXmppClient
 {
-    public delegate bool OnSubscriptionRequestReceivedDelegate(Jid jid);
-
     public class XmppClient : IFeatureOptionsProvider
     {
         public static readonly int DefaultPort = 5222;
@@ -26,23 +23,11 @@ namespace YetAnotherXmppClient
 
         public MainProtocolHandler ProtocolHandler { get; private set; }
 
-        public event EventHandler<string> protocolNegotiationFinished;
-        public event EventHandler<string> ProtocolNegotiationFinished // parameter is connected jid
-        {
-            add
-            {
-                this.protocolNegotiationFinished += value;
-                if (this.ProtocolHandler?.IsNegotiationFinished ?? false)
-                    value(this, this.ProtocolHandler.Get<BindProtocolNegotiator>().ConnectedJid);
-            }
-            remove => this.protocolNegotiationFinished -= value;
-        }
         public event EventHandler Disconnected;
-        public Func<string, Task<bool>> SubscriptionRequestReceived { get; set; }
-        public event EventHandler<IEnumerable<RosterItem>> RosterUpdated;
-        public Action<ChatSession, string> MessageReceived { get; set; }
-        public Action LoggedIn { get; set; }
-        
+
+
+        public IMediator Mediator { get; } = new Mediator();
+
 
         public async Task StartAsync(Jid jid, string password)
         {
@@ -57,13 +42,8 @@ namespace YetAnotherXmppClient
             
             Log.Information($"Connection established");
 
-            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
+            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this.Mediator);
             this.ProtocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
-            this.ProtocolHandler.NegotiationFinished += (s, e) => this.protocolNegotiationFinished?.Invoke(this, e);
-            this.ProtocolHandler.RosterHandler.RosterUpdated += (s, e) => this.RosterUpdated?.Invoke(this, e);
-            this.ProtocolHandler.PresenceHandler.OnSubscriptionRequestReceived = this.SubscriptionRequestReceived;
-            this.ProtocolHandler.ImProtocolHandler.MessageReceived = this.MessageReceived;
-            this.ProtocolHandler.Get<SaslFeatureProtocolNegotiator>().LoggedIn = () => this.LoggedIn?.Invoke();
 
             Task.Run(() => this.ProtocolHandler.RunAsync(jid, this.cancelTokenSource.Token).ContinueWith(_ => this.HandleProtocolHandlingEnded()));
         }
@@ -79,7 +59,7 @@ namespace YetAnotherXmppClient
 
             Log.Information($"Connection established");
 
-            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this);
+            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this.Mediator);
 
             await this.ProtocolHandler.RegisterAsync(new CancellationTokenSource().Token);
         }

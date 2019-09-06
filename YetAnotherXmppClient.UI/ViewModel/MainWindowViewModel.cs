@@ -1,16 +1,15 @@
-﻿using System;
-using System.IO;
-using System.Reactive.Linq;
+﻿using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using ReactiveUI;
 using Splat;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.UI.View;
-using Console = System.Console;
 
 namespace YetAnotherXmppClient.UI.ViewModel
 {
-    public class MainWindowViewModel : ReactiveObject, IScreen
+    public class MainWindowViewModel : ReactiveObject, IScreen, IEventHandler<StreamNegotiationCompletedEvent>
     {
         private static MainWindowViewModel instance;
         public static DebugTextWriterDecorator LogWriter = new DebugTextWriterDecorator(new StringWriter(), _ => instance?.RaisePropertyChanged(nameof(LogText)));
@@ -36,7 +35,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
             //    eh => this.xmppClient.Disconnected -= eh)
             //    .ObserveOn(RxApp.MainThreadScheduler)
             //    .Subscribe(_ => )
-            this.xmppClient.LoggedIn = this.NavigateToMainView;
+
+            this.xmppClient.Mediator.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
 
             this.NavigateToLoginView();
         }
@@ -46,15 +46,20 @@ namespace YetAnotherXmppClient.UI.ViewModel
             Dispatcher.UIThread.InvokeAsync(() => this.Router.Navigate.Execute(new LoginViewModel(this.xmppClient, LogWriter)));
         }
 
-        private void NavigateToMainView()
+        private Task NavigateToMainViewAsync()
         {
-            Dispatcher.UIThread.InvokeAsync(() =>
+            return Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     var vm = new MainViewModel(this.xmppClient, LogWriter);
                     //vm.LogoutCommand.Subscribe(_ => Console.WriteLine(""));
                     vm.OnLogoutRequested = this.LogoutAsync;
                     this.Router.Navigate.Execute(vm);
                 });
+        }
+
+        Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
+        {
+            return this.NavigateToMainViewAsync();
         }
 
         private async Task LogoutAsync()

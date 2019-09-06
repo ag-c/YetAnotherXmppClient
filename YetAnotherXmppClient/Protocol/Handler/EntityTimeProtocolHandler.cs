@@ -3,18 +3,19 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Infrastructure;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
     class EntityTimeProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
-        public EntityTimeProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters) 
-            : base(xmppStream, runtimeParameters)
+        public EntityTimeProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator) 
+            : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.time, this);
         }
 
-        public void IqReceived(Iq iq)
+        void IIqReceivedCallback.IqReceived(Iq iq)
         {
             throw new NotImplementedException();
         }

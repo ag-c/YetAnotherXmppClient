@@ -8,6 +8,8 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -24,14 +26,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
     //RFC 6121 
     public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback
     {
-        public Func<string, Task<bool>> OnSubscriptionRequestReceived { get; set; }
-
         // <full-jid, presence>
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
 
 
-        public PresenceProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters)
-            : base(xmppStream, null)
+        public PresenceProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
+            : base(xmppStream, null, mediator)
         {
             this.XmppStream.RegisterPresenceCallback(this);
         }
@@ -95,11 +95,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
             else if (presence.Type == PresenceType.subscribe)
             {
                 // reject subscription request if no handler is registered (TODO correct behavior?)
-                Log.Logger.LogIfMissingSubscriptionRequestHandler(this.OnSubscriptionRequestReceived == null);
+                //UNDONE Log.Logger.LogIfMissingSubscriptionRequestHandler(this.OnSubscriptionRequestReceived == null);
 
-                var responseType = this.OnSubscriptionRequestReceived != null && await this.OnSubscriptionRequestReceived(presence.From) 
-                                       ? PresenceType.subscribed
-                                       : PresenceType.unsubscribed;
+                //var responseType = this.OnSubscriptionRequestReceived != null && await this.OnSubscriptionRequestReceived(presence.From) 
+                //                       ? PresenceType.subscribed
+                //                       : PresenceType.unsubscribed;
+                //-----------
+                var requestGranted = await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From));//UNDONE why generic types not inferred
+                var responseType = requestGranted ? PresenceType.subscribed : PresenceType.unsubscribed;
 
                 var response = new Core.Stanza.Presence(responseType)
                 {
