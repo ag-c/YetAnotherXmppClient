@@ -22,7 +22,7 @@
           -->
         </TreeView.DataTemplates>
       </TreeView>
-      <ScrollViewer Grid.Row="5" Name="logScrollViewer" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Grid.Column="1">
+      <ScrollViewer Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Grid.Column="1">
         <StackPanel Orientation="Vertical">
           <TextBlock Text="Features" Margin="2"/>
           <ListBox Items="{Binding #treeView.SelectedItem.Features}" MemberSelector="Var" Margin="6" />
