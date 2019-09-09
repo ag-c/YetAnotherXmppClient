@@ -5,6 +5,7 @@ using Xunit;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
+using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.Tests
 {
@@ -57,6 +58,31 @@ namespace YetAnotherXmppClient.Tests
                                                                      ItemName = "Mercutio",
                                                                      Subscription = SubscriptionState.from,
                                                                  });
+        }
+
+        [Fact]
+        public void Blocklist()
+        {
+            var iq = Iq.FromXElement(XElement.Parse(@"<iq type='result' id='blocklist1'>
+                                                        <blocklist xmlns='urn:xmpp:blocking'>
+                                                          <item jid='romeo@montague.net'/>
+                                                          <item jid='iago@shakespeare.lit'/>
+                                                        </blocklist>
+                                                      </iq>"));
+            var blocklist = iq.GetContent<Blocklist>();
+
+            blocklist.Jids.Should().BeEquivalentTo("romeo@montague.net", "iago@shakespeare.lit");
+        }
+
+        [Fact]
+        public void EmptyBlocklist()
+        {
+            var iq = Iq.FromXElement(XElement.Parse(@"<iq type='result' id='blocklist1'>
+                                                        <blocklist xmlns='urn:xmpp:blocking'/>
+                                                      </iq>"));
+            var blocklist = iq.GetContent<Blocklist>();
+
+            blocklist.Jids.Should().BeEmpty();
         }
     }
 }

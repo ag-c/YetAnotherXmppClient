@@ -36,7 +36,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.RefreshCommand = ReactiveCommand.CreateFromTask(this.OnRefreshAsync);
         }
 
-        public async Task OnRefreshAsync()
+        private async Task OnRefreshAsync()
         {
             var info = await this.handler.QueryEntityInformationTreeAsync();
             this.RootEntityInfo.Clear();

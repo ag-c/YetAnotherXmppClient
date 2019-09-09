@@ -78,6 +78,11 @@ namespace YetAnotherXmppClient
         public static readonly XName version_name = "{jabber:iq:version}name";
         public static readonly XName version_version = "{jabber:iq:version}version";
         public static readonly XName version_os = "{jabber:iq:version}os";
+
+        public static readonly XName blocking_blocklist = "{urn:xmpp:blocking}blocklist";
+        public static readonly XName blocking_item = "{urn:xmpp:blocking}item";
+        public static readonly XName blocking_block = "{urn:xmpp:blocking}block";
+        public static readonly XName blocking_unblock = "{urn:xmpp:blocking}unblock";
     }
 
     public class XNamespaces

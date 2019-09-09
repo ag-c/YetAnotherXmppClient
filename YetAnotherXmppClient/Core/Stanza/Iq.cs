@@ -62,4 +62,20 @@ namespace YetAnotherXmppClient.Core.Stanza
             return new Iq(xElem);
         }
     }
+
+    public class IqGet : Iq
+    {
+        public IqGet(object content = null, string name = "iq")
+            : base(IqType.get, content, name)
+        {
+        }
+    }
+
+    public class IqSet : Iq
+    {
+        public IqSet(object content = null, string name = "iq")
+            : base(IqType.set, content, name)
+        {
+        }
+    }
 }

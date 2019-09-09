@@ -50,6 +50,9 @@
     <None Update="View\AddRosterItemWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
+    <None Update="View\BlockingWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </None>
     <None Update="View\ChatSessionControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>

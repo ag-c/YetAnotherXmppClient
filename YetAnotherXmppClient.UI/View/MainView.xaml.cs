@@ -15,6 +15,7 @@ namespace YetAnotherXmppClient.UI.View
     {
         public Button LogoutButton => this.FindControl<Button>("logoutButton");
         public Button ServiceDiscoveryButton => this.FindControl<Button>("serviceDiscoveryButton");
+        public Button BlockingButton => this.FindControl<Button>("blockingButton");
 
         public MainView()
         {
@@ -24,6 +25,7 @@ namespace YetAnotherXmppClient.UI.View
                 {
                     d(this.BindCommand(this.ViewModel, x => x.LogoutCommand, x => x.LogoutButton));
                     d(this.BindCommand(this.ViewModel, x => x.ShowServiceDiscoveryCommand, x => x.ServiceDiscoveryButton));
+                    d(this.BindCommand(this.ViewModel, x => x.ShowBlockingCommand, x => x.BlockingButton));
 
                     //d(Interactions
                     //    .Login
@@ -67,6 +69,15 @@ namespace YetAnotherXmppClient.UI.View
                                 await window.ShowDialog(MainWindow.Instance);
                                 interaction.SetOutput(Unit.Default);
                             }));
+                    d(Interactions
+                        .ShowBlocking
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var window = new BlockingWindow(new BlockingViewModel(interaction.Input));
+                                    await window.ShowDialog(MainWindow.Instance);
+                                    interaction.SetOutput(Unit.Default);
+                                }));
 
                     //this.ViewModel.WhenAnyValue(vm => vm.LogText).Subscribe(_ => this.Image.InvalidateVisual());
                 });

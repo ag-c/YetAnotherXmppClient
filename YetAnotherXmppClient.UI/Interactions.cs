@@ -11,6 +11,7 @@ namespace YetAnotherXmppClient.UI
         public static Interaction<string, bool> SubscriptionRequest { get; } = new Interaction<string, bool>();
         public static Interaction<Unit, RosterItemInfo> AddRosterItem { get; } = new Interaction<Unit, RosterItemInfo>();
         public static Interaction<ServiceDiscoveryProtocolHandler, Unit> ShowServiceDiscovery { get; } = new Interaction<ServiceDiscoveryProtocolHandler, Unit>();
+        public static Interaction<BlockingProtocolHandler, Unit> ShowBlocking { get; } = new Interaction<BlockingProtocolHandler, Unit>();
 
     }
 }

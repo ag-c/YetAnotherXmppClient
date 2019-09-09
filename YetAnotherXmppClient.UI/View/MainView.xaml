@@ -11,13 +11,14 @@
           <AddRosterItemControl />
         </Popup.Child>
       </Popup>-->
-    <Grid ColumnDefinitions="*,Auto,Auto" Grid.ColumnSpan="2">
+    <Grid ColumnDefinitions="*,Auto,Auto,Auto" Grid.ColumnSpan="2">
       <StackPanel Orientation="Horizontal">
         <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
         <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
       </StackPanel>
       <Button Content="Service Discovery.." Grid.Column="1" Margin="3" Name="serviceDiscoveryButton"/>
-      <Button Content="Logout" Grid.Column="2" Margin="3" Name="logoutButton"/>
+      <Button Content="Blocking.." Grid.Column="2" Margin="3" Name="blockingButton"/>
+      <Button Content="Logout" Grid.Column="3" Margin="3" Name="logoutButton"/>
     </Grid>
     <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
 
