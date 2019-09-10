@@ -1,6 +1,6 @@
 More or less implemented XMPP client functionality:
-* RFC 3920
-* RFC 3921
+* RFC 6120
+* RFC 6121
 * XEP-0030: Service Discovery
 * XEP-0054: vcard-temp
 * XEP-0092: Software Version
