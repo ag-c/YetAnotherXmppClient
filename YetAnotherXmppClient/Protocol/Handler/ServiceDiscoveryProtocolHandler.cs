@@ -8,6 +8,8 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Queries;
+using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 using static YetAnotherXmppClient.Expectation;
 
 //XEP-0030
@@ -28,6 +30,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             public string Name { get; set; }
         }
 
+        //UNDONE move to other namespace
         public class EntityInfo
         {
             public string Jid { get; set; }
@@ -47,12 +50,13 @@ namespace YetAnotherXmppClient.Protocol.Handler
     }
 
     
-    public class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
+    public class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>
     {
         public ServiceDiscoveryProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator) 
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.discoinfo, this);
+            this.Mediator.RegisterHandler<QueryEntityInformationTreeQuery, EntityInfo>(this);
         }
 
         public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync()
@@ -129,6 +133,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             await this.XmppStream.WriteElementAsync(response);
 
+        }
+
+        Task<EntityInfo> IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>.HandleQueryAsync(QueryEntityInformationTreeQuery query)
+        {
+            return this.QueryEntityInformationTreeAsync();
         }
     }
 }

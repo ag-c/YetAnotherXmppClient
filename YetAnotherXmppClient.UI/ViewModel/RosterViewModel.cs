@@ -13,6 +13,7 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler;
 using Unit = System.Reactive.Unit;
 
@@ -35,7 +36,10 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public event PropertyChangedEventHandler PropertyChanged;
     }
 
-    public class RosterViewModel : ReactiveObject, IEventHandler<RosterUpdateEvent>, IEventHandler<StreamNegotiationCompletedEvent>
+    public class RosterViewModel : ReactiveObject, 
+        IEventHandler<RosterUpdateEvent>, 
+        IEventHandler<StreamNegotiationCompletedEvent>,
+        IEventHandler<AvatarReceivedEvent>
     {
         private readonly XmppClient xmppClient;
 
@@ -67,8 +71,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
 
-            this.xmppClient.Mediator.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
-            this.xmppClient.Mediator.RegisterHandler<RosterUpdateEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.RegisterHandler<RosterUpdateEvent>(this, publishLatestEventToNewHandler: true);
 
             async Task PrintException(string location, Exception exception)
             {
@@ -110,8 +114,16 @@ namespace YetAnotherXmppClient.UI.ViewModel
             var rosterItemInfo = await Interactions.AddRosterItem.Handle(Unit.Default);
             if (rosterItemInfo != null)
             {
-                var b = await this.xmppClient.ProtocolHandler.Get<RosterProtocolHandler>().AddRosterItemAsync(rosterItemInfo.Jid, rosterItemInfo.Name, null);
-                await this.xmppClient.ProtocolHandler.Get<PresenceProtocolHandler>().RequestSubscriptionAsync(rosterItemInfo.Jid);
+                var b1 = await this.xmppClient.QueryAsync<AddRosterItemQuery, bool>(new AddRosterItemQuery
+                {
+                    BareJid = rosterItemInfo.Jid,
+                    Name = rosterItemInfo.Name,
+                    Groups = null
+                });
+                var b2 = await this.xmppClient.QueryAsync<RequestSubscriptionQuery, bool>(new RequestSubscriptionQuery
+                {
+                    Jid = rosterItemInfo.Jid,
+                });
             }
         }
 
@@ -120,19 +132,20 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (this.SelectedRosterItem == null)
                 return;
 
-            await this.xmppClient.ProtocolHandler.Get<RosterProtocolHandler>().DeleteRosterItemAsync(this.SelectedRosterItem.Jid);
-        }
-
-        private void AvatarReceived(object sender, (string BareJid, byte[] Bytes) e)
-        {
-            var item = this.RosterItems.FirstOrDefault(x => x.Jid == e.BareJid);
-            if (item != null)
-                item.Avatar = new Bitmap(new MemoryStream(e.Bytes));
+            await this.xmppClient.QueryAsync<DeleteRosterItemQuery, bool>(new DeleteRosterItemQuery {BareJid = this.SelectedRosterItem.Jid});
         }
 
         Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
         {
-            this.xmppClient.ProtocolHandler.Get<VCardProtocolHandler>().AvatarReceived += this.AvatarReceived;
+            this.xmppClient.RegisterHandler<AvatarReceivedEvent>(this);
+            return Task.CompletedTask;
+        }
+
+        public Task HandleEventAsync(AvatarReceivedEvent evt)
+        {
+            var item = this.RosterItems.FirstOrDefault(x => x.Jid == evt.BareJid);
+            if (item != null)
+                item.Avatar = new Bitmap(new MemoryStream(evt.Bytes));
             return Task.CompletedTask;
         }
     }

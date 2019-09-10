@@ -75,17 +75,32 @@ namespace YetAnotherXmppClient.Tests
         }
 
         [Fact]
-        public async Task Query()
+        public async Task QueryAsync()
         {
             var mediator = new Mediator();
             var query = new Query1();
-            var mock = new Mock<IQueryHandler<Query1, bool>>();
+            var mock = new Mock<IAsyncQueryHandler<Query1, bool>>();
             mock.Setup(foo => foo.HandleQueryAsync(It.IsAny<Query1>())).Returns(Task.FromResult(true));
 
             mediator.RegisterHandler(mock.Object);
             var result = await mediator.QueryAsync<Query1, bool>(query);
 
             mock.Verify(foo => foo.HandleQueryAsync(query), Times.Once());
+            result.Should().BeTrue();
+        }
+
+        [Fact]
+        public async Task Query()
+        {
+            var mediator = new Mediator();
+            var query = new Query1();
+            var mock = new Mock<IQueryHandler<Query1, bool>>();
+            mock.Setup(foo => foo.HandleQuery(It.IsAny<Query1>())).Returns(true);
+
+            mediator.RegisterHandler(mock.Object);
+            var result = mediator.Query<Query1, bool>(query);
+
+            mock.Verify(foo => foo.HandleQuery(query), Times.Once());
             result.Should().BeTrue();
         }
     }

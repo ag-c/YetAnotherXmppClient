@@ -9,10 +9,12 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
+    //UNDONE move to correct namespace
     public class ChatSession : IEquatable<ChatSession>
     {
         private readonly Func<string, Task> sendMessageAction;
@@ -40,7 +42,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
     }
 
-    public class ImProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
+    public class ImProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IQueryHandler<StartChatSessionQuery, ChatSession>
     {
         //<threadid, chatdata>
         private readonly ConcurrentDictionary<string, ChatSession> chatSessions = new ConcurrentDictionary<string, ChatSession>();
@@ -109,6 +111,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var session = new ChatSession(thread, fullJid, msg => this.SendMessageAsync(fullJid, msg, thread));
             this.chatSessions.TryAdd(thread, session);
             return session;
+        }
+
+        ChatSession IQueryHandler<StartChatSessionQuery, ChatSession>.HandleQuery(StartChatSessionQuery query)
+        {
+            return this.StartChatSession(query.Jid);
         }
     }
 }

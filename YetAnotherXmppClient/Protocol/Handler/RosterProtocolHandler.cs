@@ -12,6 +12,7 @@ using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -42,7 +43,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
     }
 
 
-    public class RosterProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
+    public class RosterProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
+        IAsyncQueryHandler<AddRosterItemQuery, bool>,
+        IAsyncQueryHandler<DeleteRosterItemQuery, bool>
     {
         private readonly ConcurrentDictionary<string, RosterItem> currentRosterItems = new ConcurrentDictionary<string, RosterItem>();
         private readonly IIqFactory iqFactory;
@@ -53,6 +56,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             this.iqFactory = new DefaultClientIqFactory(() => runtimeParameters["jid"]);
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.roster, this);
+            this.Mediator.RegisterHandler<AddRosterItemQuery, bool>(this);
+            this.Mediator.RegisterHandler<DeleteRosterItemQuery, bool>(this);
         }
         
         public async Task<IEnumerable<RosterItem>> RequestRosterAsync()
@@ -129,7 +134,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             this.currentRosterItems.TryRemove(bareJid, out _);
 
-            this.RaiseRosterUpdatedAsync();
+            await this.RaiseRosterUpdatedAsync();
 
             return true;
         }
@@ -176,6 +181,16 @@ namespace YetAnotherXmppClient.Protocol.Handler
             {
                 //Debugger.Break();
             }
+        }
+
+        Task<bool> IAsyncQueryHandler<AddRosterItemQuery, bool>.HandleQueryAsync(AddRosterItemQuery query)
+        {
+            return this.AddRosterItemAsync(query.BareJid, query.Name, query.Groups);
+        }
+
+        Task<bool> IAsyncQueryHandler<DeleteRosterItemQuery, bool>.HandleQueryAsync(DeleteRosterItemQuery query)
+        {
+            return this.DeleteRosterItemAsync(query.BareJid);
         }
     }
 }
