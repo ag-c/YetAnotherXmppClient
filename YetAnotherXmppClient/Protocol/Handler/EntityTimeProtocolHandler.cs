@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+
+// XEP-0202: Entity Time
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -15,9 +18,17 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.time, this);
         }
 
-        void IIqReceivedCallback.IqReceived(Iq iq)
+        async void IIqReceivedCallback.IqReceived(Iq iq)
         {
-            throw new NotImplementedException();
+            var tz = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
+            var tzo = tz.ToString(@"hh\:mm");
+            var utc = DateTime.UtcNow.ToString(@"yyyy-mm-dd\Thh:mm:ss\Z");
+
+            var iqResp = iq.CreateResultResponse(new XElement(XNames.time_time,
+                new XElement(XNames.time_tzo, tzo),
+                new XElement(XNames.time_utc, utc)));
+
+            await this.XmppStream.WriteElementAsync(iqResp);
         }
     }
 }
