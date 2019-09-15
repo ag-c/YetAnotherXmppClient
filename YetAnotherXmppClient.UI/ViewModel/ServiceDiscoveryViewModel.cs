@@ -5,6 +5,8 @@ using System.Reactive;
 using System.Text;
 using System.Threading.Tasks;
 using ReactiveUI;
+using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
@@ -17,7 +19,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
     public class ServiceDiscoveryViewModel : ReactiveObject
     {
-        private readonly ServiceDiscoveryProtocolHandler handler;
+        private readonly IMediator mediator;
 
         //private EntityInfo rootEntityInfo;
         //public EntityInfo RootEntityInfo
@@ -30,15 +32,15 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
 
 
-        public ServiceDiscoveryViewModel(ServiceDiscoveryProtocolHandler handler)
+        public ServiceDiscoveryViewModel(IMediator mediator)
         {
-            this.handler = handler;
+            this.mediator = mediator;
             this.RefreshCommand = ReactiveCommand.CreateFromTask(this.OnRefreshAsync);
         }
 
         private async Task OnRefreshAsync()
         {
-            var info = await this.handler.QueryEntityInformationTreeAsync();
+            var info = await this.mediator.QueryAsync<QueryEntityInformationTreeQuery, EntityInfo>(new QueryEntityInformationTreeQuery());
             this.RootEntityInfo.Clear();
             this.RootEntityInfo.Add(info);
         }

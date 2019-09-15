@@ -48,10 +48,10 @@ namespace YetAnotherXmppClient.Console
 //                    Debugger.Break();
 //                    return Task.FromResult(true);
 //                };
-                xmppClient.Mediator.RegisterHandler<SubscriptionRequestQuery, bool>(qry => Task.FromResult(true));
+                xmppClient.RegisterHandler<SubscriptionRequestQuery, bool>(qry => Task.FromResult(true));
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
                 //                xmppClient.MessageReceived += (chatSession, text) => Debugger.Break();
-                xmppClient.Mediator.RegisterHandler<MessageReceivedEvent>(msg => Task.FromResult(true));
+                xmppClient.RegisterHandler<MessageReceivedEvent>(msg => Task.CompletedTask);
                 await xmppClient.StartAsync(jid, "gehe1m");
 
                 Console.ReadLine();

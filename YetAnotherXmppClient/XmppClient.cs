@@ -11,7 +11,7 @@ using YetAnotherXmppClient.Protocol;
 
 namespace YetAnotherXmppClient
 {
-    public class XmppClient : IFeatureOptionsProvider
+    public class XmppClient : Mediator, IFeatureOptionsProvider
     {
         public static readonly int DefaultPort = 5222;
 
@@ -21,12 +21,12 @@ namespace YetAnotherXmppClient
         private Jid jid;
         private string password;
 
-        public MainProtocolHandler ProtocolHandler { get; private set; }
+        private MainProtocolHandler ProtocolHandler { get; /*private*/ set; }
 
         public event EventHandler Disconnected;
 
 
-        public IMediator Mediator { get; } = new Mediator();
+        //public IMediator Mediator { get; } = new Mediator();
 
 
         public async Task StartAsync(Jid jid, string password)
@@ -42,7 +42,7 @@ namespace YetAnotherXmppClient
             
             Log.Information($"Connection established");
 
-            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this.Mediator);
+            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this);
             this.ProtocolHandler.FatalErrorOccurred += this.HandleFatalProtocolErrorOccurred;
 
             Task.Run(() => this.ProtocolHandler.RunAsync(jid, this.cancelTokenSource.Token).ContinueWith(_ => this.HandleProtocolHandlingEnded()));
@@ -59,7 +59,7 @@ namespace YetAnotherXmppClient
 
             Log.Information($"Connection established");
 
-            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this.Mediator);
+            this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this);
 
             await this.ProtocolHandler.RegisterAsync(new CancellationTokenSource().Token);
         }

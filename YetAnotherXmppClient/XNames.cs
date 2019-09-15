@@ -83,6 +83,10 @@ namespace YetAnotherXmppClient
         public static readonly XName blocking_item = "{urn:xmpp:blocking}item";
         public static readonly XName blocking_block = "{urn:xmpp:blocking}block";
         public static readonly XName blocking_unblock = "{urn:xmpp:blocking}unblock";
+
+        public static readonly XName time_time = "{urn:xmpp:time}time";
+        public static readonly XName time_utc = "{urn:xmpp:time}utc";
+        public static readonly XName time_tzo = "{urn:xmpp:time}tzo";
     }
 
     public class XNamespaces

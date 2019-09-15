@@ -31,7 +31,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public string Password { get; set; }
     }
     public class MainViewModel : ReactiveObject, IRoutableViewModel, 
-                                 IQueryHandler<SubscriptionRequestQuery, bool>, 
+                                 IAsyncQueryHandler<SubscriptionRequestQuery, bool>, 
                                  IEventHandler<StreamNegotiationCompletedEvent>,
                                  IEventHandler<MessageReceivedEvent>
     {
@@ -101,9 +101,9 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
 
-            this.xmppClient.Mediator.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
-            this.xmppClient.Mediator.RegisterHandler<MessageReceivedEvent>(this);
-            this.xmppClient.Mediator.RegisterHandler<SubscriptionRequestQuery, bool>(this);
+            this.xmppClient.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.RegisterHandler<MessageReceivedEvent>(this);
+            this.xmppClient.RegisterHandler<SubscriptionRequestQuery, bool>(this);
 
 
             async Task PrintException(string location, Exception exception)
@@ -114,12 +114,12 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private async Task ShowServiceDiscoveryAsync(CancellationToken ct)
         {
-            await Interactions.ShowServiceDiscovery.Handle(this.xmppClient.ProtocolHandler.Get<ServiceDiscoveryProtocolHandler>());
+            await Interactions.ShowServiceDiscovery.Handle(this.xmppClient);
         }
 
         private async Task ShowBlockingAsync(CancellationToken ct)
         {
-            await Interactions.ShowBlocking.Handle(this.xmppClient.ProtocolHandler.Get<BlockingProtocolHandler>());
+            await Interactions.ShowBlocking.Handle(this.xmppClient);
         }
 
         private void HandleDisconnected(object sender, EventArgs e)
@@ -139,7 +139,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
             var viewModel = this.ChatSessions.FirstOrDefault(vm => vm.OtherJid == jid);
             if (viewModel == null)
             {
-                var chatSession = this.xmppClient.ProtocolHandler.Get<ImProtocolHandler>().StartChatSession(jid);
+                //var chatSession = this.xmppClient.ProtocolHandler.Get<ImProtocolHandler>().StartChatSession(jid);
+                var chatSession = this.xmppClient.Query<StartChatSessionQuery, ChatSession>(new StartChatSessionQuery { Jid = jid });
                 viewModel = new ChatSessionViewModel(chatSession);
                 this.ChatSessions.Add(viewModel);
             }
@@ -163,7 +164,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             }).Wait();
         }
 
-        async Task<bool> IQueryHandler<SubscriptionRequestQuery, bool>.HandleQueryAsync(SubscriptionRequestQuery query)
+        async Task<bool> IAsyncQueryHandler<SubscriptionRequestQuery, bool>.HandleQueryAsync(SubscriptionRequestQuery query)
         {
             return await Interactions.SubscriptionRequest.Handle(query.BareJid);
         }

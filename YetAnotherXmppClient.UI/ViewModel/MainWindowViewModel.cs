@@ -36,7 +36,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             //    .ObserveOn(RxApp.MainThreadScheduler)
             //    .Subscribe(_ => )
 
-            this.xmppClient.Mediator.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
 
             this.NavigateToLoginView();
         }

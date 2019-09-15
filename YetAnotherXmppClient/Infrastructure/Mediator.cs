@@ -20,6 +20,12 @@ namespace YetAnotherXmppClient.Infrastructure
     public interface IQueryHandler { }
     public interface IQueryHandler<TQuery, TResult> : IQueryHandler
     {
+        TResult HandleQuery(TQuery query);
+    }
+
+    public interface IAsyncQueryHandler { }
+    public interface IAsyncQueryHandler<TQuery, TResult> : IAsyncQueryHandler
+    {
         Task<TResult> HandleQueryAsync(TQuery query);
     }
 
@@ -27,6 +33,7 @@ namespace YetAnotherXmppClient.Infrastructure
     {
         void RegisterHandler<TEvent>(IEventHandler<TEvent> handler, bool publishLatestEventToNewHandler = false) where TEvent : IEvent;
         void RegisterHandler<TQuery, TResult>(IQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>;
+        void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>;
         void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery,Task<TResult>>> handler) where TQuery : IQuery<TResult>;
         void RegisterHandler<TEvent>(Expression<Func<TEvent, Task>> handler) where TEvent : IEvent;
 
@@ -39,6 +46,7 @@ namespace YetAnotherXmppClient.Infrastructure
         private readonly Dictionary<Type, object> latestEvents = new Dictionary<Type, object>();
         private readonly Dictionary<Type, List<IEventHandler>> eventHandlers = new Dictionary<Type, List<IEventHandler>>();
         private readonly Dictionary<Type, IQueryHandler> queryHandlers = new Dictionary<Type, IQueryHandler>();
+        private readonly Dictionary<Type, IAsyncQueryHandler> asyncQueryHandlers = new Dictionary<Type, IAsyncQueryHandler>();
         private readonly Dictionary<Type, Delegate> delQueryHandlers = new Dictionary<Type, Delegate>();
         private readonly Dictionary<Type, Delegate> delEventHandlers = new Dictionary<Type, Delegate>();
 
@@ -58,6 +66,11 @@ namespace YetAnotherXmppClient.Infrastructure
             this.queryHandlers.Add(typeof(TQuery), handler);
         }
 
+        public void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
+        {
+            this.asyncQueryHandlers.Add(typeof(TQuery), handler);
+        }
+
         public void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery, Task<TResult>>> handler) where TQuery : IQuery<TResult>
         {
             this.delQueryHandlers.Add(typeof(TQuery), ((LambdaExpression)handler).Compile(false));
@@ -68,6 +81,17 @@ namespace YetAnotherXmppClient.Infrastructure
             this.delEventHandlers.Add(typeof(TEvent), ((LambdaExpression)handler).Compile(false));
         }
 
+        public TResult Query<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>
+        {
+            if (this.delQueryHandlers.ContainsKey(typeof(TQuery)))
+            {
+                return (TResult)this.delQueryHandlers[typeof(TQuery)].DynamicInvoke(query);
+            }
+
+            var handler = this.queryHandlers[typeof(TQuery)];
+            return ((IQueryHandler<TQuery, TResult>)handler).HandleQuery(query);
+        }
+
         public Task<TResult> QueryAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>
         {
             if (this.delQueryHandlers.ContainsKey(typeof(TQuery)))
@@ -75,8 +99,8 @@ namespace YetAnotherXmppClient.Infrastructure
                 return (Task<TResult>)this.delQueryHandlers[typeof(TQuery)].DynamicInvoke(query);
             }
 
-            var handler = this.queryHandlers[typeof(TQuery)];
-            return ((IQueryHandler<TQuery, TResult>)handler).HandleQueryAsync(query);
+            var handler = this.asyncQueryHandlers[typeof(TQuery)];
+            return ((IAsyncQueryHandler<TQuery, TResult>)handler).HandleQueryAsync(query);
         }
 
         public async Task PublishAsync<TEvent>(TEvent evt) where TEvent : IEvent
