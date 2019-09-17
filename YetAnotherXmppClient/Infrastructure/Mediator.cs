@@ -105,7 +105,7 @@ namespace YetAnotherXmppClient.Infrastructure
 
         public async Task PublishAsync<TEvent>(TEvent evt) where TEvent : IEvent
         {
-            this.latestEvents.Add(typeof(TEvent), evt);
+            this.latestEvents[typeof(TEvent)] = evt;
 
             if (this.delEventHandlers.ContainsKey(typeof(TEvent)))
             {

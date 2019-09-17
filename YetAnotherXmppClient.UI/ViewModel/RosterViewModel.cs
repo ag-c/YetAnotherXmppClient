@@ -10,48 +10,60 @@ using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using ReactiveUI;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler;
+using RosterItem = YetAnotherXmppClient.Protocol.Handler.RosterItem;
 using Unit = System.Reactive.Unit;
 
 namespace YetAnotherXmppClient.UI.ViewModel
 {
-    public class RosterItemWithAvatar : RosterItem, INotifyPropertyChanged 
+    public class RosterItemWithAvatarViewModel : ReactiveObject
     {
         private IBitmap avatar;
-
         public IBitmap Avatar
         {
             get => this.avatar;
-            set
-            {
-                this.avatar = value;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Avatar)));
-            }
+            set => this.RaiseAndSetIfChanged(ref this.avatar, value);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public string Jid { get; set; }
+        public string Name { get; set; }
+        public IEnumerable<string> Groups { get; set; }
+        public SubscriptionState Subscription { get; set; }
+        public bool IsSubscriptionPending { get; set; }
+
+        private bool isOnline;
+        public bool IsOnline
+        {
+            get => this.isOnline;
+            set
+            {
+                this.RaiseAndSetIfChanged(ref this.isOnline, value);
+            }
+        }
     }
 
     public class RosterViewModel : ReactiveObject, 
         IEventHandler<RosterUpdateEvent>, 
         IEventHandler<StreamNegotiationCompletedEvent>,
-        IEventHandler<AvatarReceivedEvent>
+        IEventHandler<AvatarReceivedEvent>,
+        IEventHandler<PresenceEvent>
     {
         private readonly XmppClient xmppClient;
 
-        private IEnumerable<RosterItemWithAvatar> rosterItems;
+        private RosterItemWithAvatarViewModel[] rosterItems;
 
-        public IEnumerable<RosterItemWithAvatar> RosterItems
+        public RosterItemWithAvatarViewModel[] RosterItems
         {
-            get => this.rosterItems?.ToArray();
+            get => this.rosterItems;
             set => this.RaiseAndSetIfChanged(ref this.rosterItems, value);
         }
 
-        public RosterItemWithAvatar SelectedRosterItem { get; set; }
+        public RosterItemWithAvatarViewModel SelectedRosterItem { get; set; }
 
         public ReactiveCommand StartChatCommand { get; }
         public ReactiveCommand AddRosterItemCommand { get; }
@@ -73,6 +85,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
             this.xmppClient.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
             this.xmppClient.RegisterHandler<RosterUpdateEvent>(this, publishLatestEventToNewHandler: true);
+            this.xmppClient.RegisterHandler<PresenceEvent>(this);
 
             async Task PrintException(string location, Exception exception)
             {
@@ -82,14 +95,14 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         Task IEventHandler<RosterUpdateEvent>.HandleEventAsync(RosterUpdateEvent rosterUpdate)
         {
-            this.RosterItems = rosterUpdate.Items.Select(x => new RosterItemWithAvatar
+            this.RosterItems = rosterUpdate.Items.Select(x => new RosterItemWithAvatarViewModel
                                                                   {
                                                                       Jid = x.Jid,
                                                                       Name = x.Name,
                                                                       Subscription = x.Subscription,
                                                                       Groups = x.Groups,
-                                                                      IsSubscriptionPending = x.IsSubscriptionPending
-                                                                  });
+                                                                      IsSubscriptionPending = x.IsSubscriptionPending,
+                                                                  }).ToArray();
             return Task.CompletedTask;
         }
 
@@ -141,11 +154,23 @@ namespace YetAnotherXmppClient.UI.ViewModel
             return Task.CompletedTask;
         }
 
-        public Task HandleEventAsync(AvatarReceivedEvent evt)
+        Task IEventHandler<AvatarReceivedEvent>.HandleEventAsync(AvatarReceivedEvent evt)
         {
             var item = this.RosterItems.FirstOrDefault(x => x.Jid == evt.BareJid);
             if (item != null)
                 item.Avatar = new Bitmap(new MemoryStream(evt.Bytes));
+
+            return Task.CompletedTask;
+        }
+
+        Task IEventHandler<PresenceEvent>.HandleEventAsync(PresenceEvent evt)
+        {
+            var item = this.RosterItems.FirstOrDefault(ri => ri.Jid == evt.Jid.Bare);
+            if (item != null)
+            {
+                Dispatcher.UIThread.InvokeAsync(() => item.IsOnline = evt.IsAvailable );
+            }
+
             return Task.CompletedTask;
         }
     }

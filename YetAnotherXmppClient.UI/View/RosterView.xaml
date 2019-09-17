@@ -8,7 +8,8 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="YetAnotherXmppClient.UI.View.RosterView">
   <UserControl.Resources>
-    <converter:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
+        <converter:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
+        <converter:IsOnlineBooleanToBrushConverter x:Key="isOnlineToBrushiValueConverter"/>
   </UserControl.Resources>
   
   <Grid RowDefinitions="Auto,*" >
@@ -30,7 +31,7 @@
                 <MenuItem Header="Remove Item" Command="{Binding $parent[UserControl].DataContext.DeleteRosterItemCommand}"/>
               </ContextMenu>
             </StackPanel.ContextMenu>
-            <TextBlock VerticalAlignment="Center">
+              <TextBlock VerticalAlignment="Center" Foreground="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}">
               <TextBlock.Text>
                 <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
                   <Binding Path="Name" />

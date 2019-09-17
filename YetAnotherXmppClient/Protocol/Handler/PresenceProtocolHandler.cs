@@ -9,6 +9,7 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using static YetAnotherXmppClient.Expectation;
 
@@ -86,11 +87,17 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Expect(XNames.presence, presence.Name, presence);
 
-            if (!presence.Type.HasValue)
+            if (!presence.Type.HasValue || presence.Type == PresenceType.unavailable)
             {
                 Expect(() => presence.HasAttribute("from"), presence);
 
                 this.PresenceByJid.AddAndUpdate(presence.From, existing => UpdatePresence(existing, presence));
+
+                await this.Mediator.PublishAsync(new PresenceEvent
+                                                     {
+                                                         Jid = new Jid(presence.From),
+                                                         IsAvailable = !presence.Type.HasValue
+                                                     });
             }
             else if (presence.Type == PresenceType.subscribe)
             {
