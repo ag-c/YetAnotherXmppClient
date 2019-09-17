@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Queries;
@@ -35,6 +36,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
     public class BlockingProtocolHandler : ProtocolHandlerBase, 
         IAsyncQueryHandler<RetrieveBlockListQuery, IEnumerable<string>>,
         IAsyncQueryHandler<BlockQuery, bool>,
+        IAsyncQueryHandler<UnblockQuery, bool>,
         IAsyncQueryHandler<UnblockAllQuery, bool>
     {
         public BlockingProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
@@ -42,6 +44,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             this.Mediator.RegisterHandler<RetrieveBlockListQuery, IEnumerable<string>>(this);
             this.Mediator.RegisterHandler<BlockQuery, bool>(this);
+            this.Mediator.RegisterHandler<UnblockQuery, bool>(this);
             this.Mediator.RegisterHandler<UnblockAllQuery, bool>(this);
         }
 
@@ -61,14 +64,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         public async Task<bool> UnblockAsync(string bareJid)
         {
-            var iq = new IqSet(new XElement(XNames.blocking_unblock, new XElement(XNames.blocking_item, new XAttribute("jid", bareJid.ToBareJid()))));
+            var iq = new IqSet(new Unblock(bareJid));
             var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
             return iqResp.Type == IqType.result;
         }
 
         public async Task<bool> UnblockAllAsync()
         {
-            var iq = new IqSet(new XElement(XNames.blocking_unblock));
+            var iq = new IqSet(new Unblock());
             var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
             return iqResp.Type == IqType.result;
         }
@@ -86,6 +89,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         Task<bool> IAsyncQueryHandler<UnblockAllQuery, bool>.HandleQueryAsync(UnblockAllQuery query)
         {
             return this.UnblockAllAsync();
+        }
+
+        Task<bool> IAsyncQueryHandler<UnblockQuery, bool>.HandleQueryAsync(UnblockQuery query)
+        {
+            return this.UnblockAsync(query.BareJid);
         }
     }
 }
