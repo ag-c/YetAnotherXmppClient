@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
@@ -18,7 +19,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.time, this);
         }
 
-        async void IIqReceivedCallback.IqReceived(Iq iq)
+        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
         {
             var tz = TimeZoneInfo.Local.GetUtcOffset(DateTime.Now);
             var tzo = tz.ToString(@"hh\:mm");

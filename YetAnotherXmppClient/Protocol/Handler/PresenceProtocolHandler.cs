@@ -83,7 +83,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //UNDONE async
-        async void IPresenceReceivedCallback.PresenceReceived(Core.Stanza.Presence presence)
+        async Task IPresenceReceivedCallback.PresenceReceivedAsync(Core.Stanza.Presence presence)
         {
             Expect(XNames.presence, presence.Name, presence);
 
@@ -101,13 +101,6 @@ namespace YetAnotherXmppClient.Protocol.Handler
             }
             else if (presence.Type == PresenceType.subscribe)
             {
-                // reject subscription request if no handler is registered (TODO correct behavior?)
-                //UNDONE Log.Logger.LogIfMissingSubscriptionRequestHandler(this.OnSubscriptionRequestReceived == null);
-
-                //var responseType = this.OnSubscriptionRequestReceived != null && await this.OnSubscriptionRequestReceived(presence.From) 
-                //                       ? PresenceType.subscribed
-                //                       : PresenceType.unsubscribed;
-                //-----------
                 var requestGranted = await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From));//UNDONE why generic types not inferred
                 var responseType = requestGranted ? PresenceType.subscribed : PresenceType.unsubscribed;
 

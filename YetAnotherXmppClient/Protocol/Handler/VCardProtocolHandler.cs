@@ -72,7 +72,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return false;
         }
 
-        async void IPresenceReceivedCallback.PresenceReceived(Core.Stanza.Presence presence)
+        async Task IPresenceReceivedCallback.PresenceReceivedAsync(Core.Stanza.Presence presence)
         {
             var xElem = presence.Element(XNames.vcard_temp_update_x);
             var sha1Hash = xElem.Element(XNames.vcard_temp_update_photo)?.Value;

@@ -40,7 +40,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //4.1 Server-To-Client Pings & 4.4 Client-to-Client Pings
-        async void IIqReceivedCallback.IqReceived(Iq iq)
+        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
         {
             var content = iq.Elements().Single();
 

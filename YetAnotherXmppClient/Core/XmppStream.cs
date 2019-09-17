@@ -15,17 +15,17 @@ namespace YetAnotherXmppClient.Core
 {
     public interface IIqReceivedCallback
     {
-        void IqReceived(Iq iq);
+        Task IqReceivedAsync(Iq iq);
     }
 
     public interface IMessageReceivedCallback
     {
-        void MessageReceived(Message message);
+        Task MessageReceivedAsync(Message message);
     }
 
     public interface IPresenceReceivedCallback
     {
-        void PresenceReceived(Presence presence);
+        Task PresenceReceivedAsync(Presence presence);
     }
 
     public class XmppStream : XmlStream
@@ -73,7 +73,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "iq" && xe.FirstElement().NamespaceEquals(iqContentNamespace),
-                xe => callback.IqReceived(Iq.FromXElement(xe))
+                xe => callback.IqReceivedAsync(Iq.FromXElement(xe))
             );
         }
 
@@ -81,7 +81,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "presence",
-                xe => callback.PresenceReceived(Presence.FromXElement(xe))
+                xe => callback.PresenceReceivedAsync(Presence.FromXElement(xe))
             );
         }
 
@@ -89,7 +89,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "message",
-                xe => callback.MessageReceived(Message.FromXElement(xe))
+                xe => callback.MessageReceivedAsync(Message.FromXElement(xe))
             );
         }
         
@@ -97,7 +97,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "message" && xe.Elements().Any(e => e.Name == contentName),
-                xe => callback.MessageReceived(Message.FromXElement(xe))
+                xe => callback.MessageReceivedAsync(Message.FromXElement(xe))
             );
         }
 
@@ -105,7 +105,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "presence" && xe.Elements().Any(e => e.Name == contentName),
-                xe => callback.PresenceReceived(Presence.FromXElement(xe))
+                xe => callback.PresenceReceivedAsync(Presence.FromXElement(xe))
             );
         }
 

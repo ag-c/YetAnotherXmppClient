@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.Mime;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
@@ -20,7 +21,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         //UNDONE async?
         //XEP-0184/3. Protocol Format
-        async void IMessageReceivedCallback.MessageReceived(Message message)
+        async Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
         {
             // does <message/> contain <request/> and id-attribute?
             if (message.HasElement(XNames.receipts_request)

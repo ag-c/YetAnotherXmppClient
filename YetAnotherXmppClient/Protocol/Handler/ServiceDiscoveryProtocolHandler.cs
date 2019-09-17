@@ -118,7 +118,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             });
         }
 
-        async void IIqReceivedCallback.IqReceived(Iq iq)
+        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
         {
             Expect(() => iq.HasElement(XNames.discoinfo_query), iq);
             
@@ -138,6 +138,13 @@ namespace YetAnotherXmppClient.Protocol.Handler
         Task<EntityInfo> IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>.HandleQueryAsync(QueryEntityInformationTreeQuery query)
         {
             return this.QueryEntityInformationTreeAsync();
+        }
+
+        public async Task<bool> IsFeatureSupportedAsync(string name)
+        {
+            var jid = new Jid(this.RuntimeParameters["jid"]);
+            var rootInfo = await this.QueryEntityInformationAsync(jid.Server);
+            return rootInfo.Features.Any(f => f.Var == name);
         }
     }
 }

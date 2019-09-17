@@ -67,7 +67,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         private int ownDeviceId;
-        public void MessageReceived(Message message)
+
+        Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
         {
             var listElem = message.Element(XNames.pubsubevent_event)?.Element(XNames.pubsubevent_items)?.Element(XNames.pubsubevent_item)?.Element(XNames.axolotl_list);
             if (listElem != null)
@@ -80,6 +81,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     //TODO reannounce myself
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         //4.7
