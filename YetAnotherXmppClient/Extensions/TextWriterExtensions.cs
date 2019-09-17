@@ -7,8 +7,8 @@ namespace YetAnotherXmppClient.Extensions
     {
         public static async Task WriteAndFlushAsync(this TextWriter textWriter, string str)
         {
-            await textWriter.WriteAsync(str);
-            await textWriter.FlushAsync();
+            await textWriter.WriteAsync(str).ConfigureAwait(false);
+            await textWriter.FlushAsync().ConfigureAwait(false);
         }
     }
 }

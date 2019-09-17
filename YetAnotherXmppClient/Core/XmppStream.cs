@@ -115,13 +115,13 @@ namespace YetAnotherXmppClient.Core
 
             using (var xmlWriter = XmlWriter.Create(this.UnderlyingStream, new XmlWriterSettings { Async = true, WriteEndDocumentOnClose = false }))
             {
-                await xmlWriter.WriteStartDocumentAsync();
-                await xmlWriter.WriteStartElementAsync("stream", "stream", "http://etherx.jabber.org/streams");
-                await xmlWriter.WriteAttributeStringAsync("", "from", null, jid);
-                await xmlWriter.WriteAttributeStringAsync("", "to", null, jid.Server);
-                await xmlWriter.WriteAttributeStringAsync("", "version", null, version);
-                await xmlWriter.WriteAttributeStringAsync("xml", "lang", null, "en");
-                await xmlWriter.WriteAttributeStringAsync("xmlns", "", null, "jabber:client");
+                await xmlWriter.WriteStartDocumentAsync().ConfigureAwait(false);
+                await xmlWriter.WriteStartElementAsync("stream", "stream", "http://etherx.jabber.org/streams").ConfigureAwait(false);
+                await xmlWriter.WriteAttributeStringAsync("", "from", null, jid).ConfigureAwait(false);
+                await xmlWriter.WriteAttributeStringAsync("", "to", null, jid.Server).ConfigureAwait(false);
+                await xmlWriter.WriteAttributeStringAsync("", "version", null, version).ConfigureAwait(false);
+                await xmlWriter.WriteAttributeStringAsync("xml", "lang", null, "en").ConfigureAwait(false);
+                await xmlWriter.WriteAttributeStringAsync("xmlns", "", null, "jabber:client").ConfigureAwait(false);
             }
         }
 
@@ -129,11 +129,11 @@ namespace YetAnotherXmppClient.Core
         {
             Log.Debug("Reading response stream header..");
 
-            var (name, attributes) = await this.ReadOpeningTagAsync();
+            var (name, attributes) = await this.ReadOpeningTagAsync().ConfigureAwait(false);
 
             if (name == "stream:error")
             {
-                var error = await this.ReadElementAsync();
+                var error = await this.ReadElementAsync().ConfigureAwait(false);
                 throw new XmppException(error.ToString());
             }
             Expect("stream:stream", actual: name);
@@ -146,7 +146,7 @@ namespace YetAnotherXmppClient.Core
         {
             Log.Debug("Reading stream features..");
 
-            var xElem = await this.ReadElementAsync();
+            var xElem = await this.ReadElementAsync().ConfigureAwait(false);
 
             Expect("features", actual: xElem.Name.LocalName, context: xElem);
 
@@ -157,9 +157,9 @@ namespace YetAnotherXmppClient.Core
         {
             var readUntilMatchTask = this.ReadUntilElementMatchesAsync(xe => xe.IsIq() && xe.Attribute("id")?.Value == iq.Id);
 
-            await this.WriteElementAsync(iq);
+            await this.WriteElementAsync(iq).ConfigureAwait(false);
 
-            var iqResponse = await readUntilMatchTask;
+            var iqResponse = await readUntilMatchTask.ConfigureAwait(false);
 
             return Iq.FromXElement(iqResponse);
         }

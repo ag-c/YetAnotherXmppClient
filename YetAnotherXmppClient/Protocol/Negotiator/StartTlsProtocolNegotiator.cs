@@ -22,9 +22,9 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
         public async Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
         {
             Log.Debug("Initiating TLS negotiation..");
-            await this.xmppServerStream.WriteElementAsync(new XElement(XNames.starttls));
+            await this.xmppServerStream.WriteElementAsync(new XElement(XNames.starttls)).ConfigureAwait(false);
 
-            var xElem = await this.xmppServerStream.ReadElementAsync();
+            var xElem = await this.xmppServerStream.ReadElementAsync().ConfigureAwait(false);
             if (xElem.Name == XNames.failure)
             {
                 //UNDONE If the failure case occurs, the initiating entity MAY attempt to
@@ -36,7 +36,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
             {
                 var sslStream = new SslStream(this.xmppServerStream.UnderlyingStream, false, this.UserCertificateValidationCallback);
 
-                await sslStream.AuthenticateAsClientAsync(options["server"]);
+                await sslStream.AuthenticateAsClientAsync(options["server"]).ConfigureAwait(false);
                 //UNDONE 5.4.3.3. TLS Success
 
                 this.xmppServerStream.Reinitialize(sslStream);

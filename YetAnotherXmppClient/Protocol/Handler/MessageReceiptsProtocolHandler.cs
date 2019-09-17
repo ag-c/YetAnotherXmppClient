@@ -33,7 +33,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     content: new XElement(XNames.receipts_received)/*, 
                     from: this.RuntimeParameters["jid"]*/);
 
-                await this.XmppStream.WriteElementAsync(response);
+                await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
             }
         }
     }

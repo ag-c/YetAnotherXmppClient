@@ -36,7 +36,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var deviceIds = new int[] { 123, 456 };
 
-            await this.pepHandler.PublishEventAsync(Node, "current", new AxolotlList(deviceIds));
+            await this.pepHandler.PublishEventAsync(Node, "current", new AxolotlList(deviceIds)).ConfigureAwait(false);
         }
 
         //4.4
@@ -52,7 +52,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     new XElement(XNames.axolotl_signedPreKeyPublic, new XAttribute("signedPreKeyId", "1"), signedPreKeyPublic),
                     new XElement(XNames.axolotl_signedPreKeySignature, signedPreKeySignature),
                     new XElement(XNames.axolotl_identityKey, identityKey),
-                    new XElement(XNames.axolotl_prekeys, preKeysPublic.Select((key, idx) => new XElement(XNames.axolotl_preKeyPublic, new XAttribute("preKeyId", idx.ToString()), key)))));
+                    new XElement(XNames.axolotl_prekeys, preKeysPublic.Select((key, idx) => new XElement(XNames.axolotl_preKeyPublic, new XAttribute("preKeyId", idx.ToString()), key))))).ConfigureAwait(false);
         }
 
         public async Task FetchingDevicesBundleInfo(string jid)
@@ -63,7 +63,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                              To = jid.ToBareJid()
                          };
 
-            var ipResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var ipResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
         }
 
         private int ownDeviceId;

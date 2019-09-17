@@ -31,7 +31,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
 
             var requestIq = new Iq(IqType.set, new Bind(resource));
 
-            var responseIq = await this.xmppServerStream.WriteIqAndReadReponseAsync(requestIq);
+            var responseIq = await this.xmppServerStream.WriteIqAndReadReponseAsync(requestIq).ConfigureAwait(false);
 
             Expect(IqType.result, responseIq.Type, responseIq);
 

@@ -63,7 +63,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 Type = MessageType.chat
             };
 
-            await this.XmppStream.WriteElementAsync(messageElem);
+            await this.XmppStream.WriteElementAsync(messageElem).ConfigureAwait(false);
         }
 
 
@@ -101,7 +101,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 this.chatSessions.TryAdd(newThread, chatSession);
             }
 
-            await this.Mediator.PublishAsync(new MessageReceivedEvent(chatSession, text));
+            await this.Mediator.PublishAsync(new MessageReceivedEvent(chatSession, text)).ConfigureAwait(false);
         }
 
         public ChatSession StartChatSession(string fullJid)

@@ -64,7 +64,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var requestIq = this.iqFactory.CreateGetIq(new RosterQuery());
 
-            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
+            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq).ConfigureAwait(false);
 
             Expect(IqType.result, responseIq.Type, responseIq);
 
@@ -84,7 +84,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 this.currentRosterItems.TryAdd(item.Jid, RosterItem.FromXElement(item));
             }
 
-            await this.RaiseRosterUpdatedAsync();
+            await this.RaiseRosterUpdatedAsync().ConfigureAwait(false);
 
             return this.currentRosterItems.Values;
         }
@@ -99,7 +99,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var requestIq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, name, groups));
 
-            await this.XmppStream.WriteElementAsync(requestIq);
+            await this.XmppStream.WriteElementAsync(requestIq).ConfigureAwait(false);
             //var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
 
             //if (responseIq.IsErrorType())
@@ -112,7 +112,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             this.currentRosterItems.TryAdd(bareJid, new RosterItem { Jid = bareJid, Name = name});
 
-            await this.RaiseRosterUpdatedAsync();
+            await this.RaiseRosterUpdatedAsync().ConfigureAwait(false);
 
             return true;
         }
@@ -122,7 +122,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var requestIq = this.iqFactory.CreateSetIq(new RosterQuery(bareJid, remove: true), from: this.RuntimeParameters["jid"]);
             
             //var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(requestIq);
-            await this.XmppStream.WriteElementAsync(requestIq);
+            await this.XmppStream.WriteElementAsync(requestIq).ConfigureAwait(false);
 
             //if (responseIq.IsErrorType())
             //{
@@ -134,7 +134,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             this.currentRosterItems.TryRemove(bareJid, out _);
 
-            await this.RaiseRosterUpdatedAsync();
+            await this.RaiseRosterUpdatedAsync().ConfigureAwait(false);
 
             return true;
         }
@@ -173,7 +173,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     });
                 }
 
-                await this.RaiseRosterUpdatedAsync();
+                await this.RaiseRosterUpdatedAsync().ConfigureAwait(false);
 
                 //UNDONE reply to server (2.1.6.  Roster Push)
             }

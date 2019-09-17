@@ -62,11 +62,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync()
         {
             var server = this.RuntimeParameters["jid"].ToBareJid().Split('@')[1];//UNDONE unsafe
-            var rootInfo = await this.QueryEntityInformationAsync(server);
+            var rootInfo = await this.QueryEntityInformationAsync(server).ConfigureAwait(false);
 
-            var items = await this.DiscoverItemsAsync(server);
+            var items = await this.DiscoverItemsAsync(server).ConfigureAwait(false);
             //UNDONE recursive
-            rootInfo.Children = await Task.WhenAll(items.Select(item => this.QueryEntityInformationAsync(item.Jid)));
+            rootInfo.Children = await Task.WhenAll(items.Select(item => this.QueryEntityInformationAsync(item.Jid))).ConfigureAwait(false);
 
             return rootInfo;
         }
@@ -79,7 +79,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = jid
             };
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             var queryElem = iqResp.Element(XNames.discoinfo_query);
             return new ServiceDiscovery.EntityInfo
@@ -106,7 +106,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = entityId //this.RuntimeParameters["jid"].ToBareJid()
             };
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             Expect(IqType.result, iqResp.Type, iqResp);
 
@@ -131,7 +131,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                             new DiscoInfoFeature("jabber:iq:version")),
                 from: this.RuntimeParameters["jid"]);
 
-            await this.XmppStream.WriteElementAsync(response);
+            await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
 
         }
 
@@ -143,7 +143,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public async Task<bool> IsFeatureSupportedAsync(string name)
         {
             var jid = new Jid(this.RuntimeParameters["jid"]);
-            var rootInfo = await this.QueryEntityInformationAsync(jid.Server);
+            var rootInfo = await this.QueryEntityInformationAsync(jid.Server).ConfigureAwait(false);
             return rootInfo.Features.Any(f => f.Var == name);
         }
     }

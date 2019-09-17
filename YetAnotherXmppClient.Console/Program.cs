@@ -52,7 +52,7 @@ namespace YetAnotherXmppClient.Console
                 //xmppClient.RosterUpdated += (sender, items) => Debugger.Break();
                 //                xmppClient.MessageReceived += (chatSession, text) => Debugger.Break();
                 xmppClient.RegisterHandler<MessageReceivedEvent>(msg => Task.CompletedTask);
-                await xmppClient.StartAsync(jid, "gehe1m");
+                await xmppClient.StartAsync(jid, "gehe1m").ConfigureAwait(false);
 
                 Console.ReadLine();
             }

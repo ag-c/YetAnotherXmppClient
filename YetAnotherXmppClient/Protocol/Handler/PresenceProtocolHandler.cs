@@ -50,7 +50,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = contactJid.ToBareJid()
             };
 
-            await this.XmppStream.WriteElementAsync(presence);
+            await this.XmppStream.WriteElementAsync(presence).ConfigureAwait(false);
             //UNDONE no response
             //if (presenceResp.IsErrorType())
             //{
@@ -69,7 +69,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = contactJid.ToBareJid()
             };
 
-            await this.XmppStream.WriteElementAsync(presence);
+            await this.XmppStream.WriteElementAsync(presence).ConfigureAwait(false);
         }
 
         public async Task UnsubscribeAsync(string contactJid)
@@ -79,7 +79,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = contactJid.ToBareJid()
             };
 
-            await this.XmppStream.WriteElementAsync(presence);
+            await this.XmppStream.WriteElementAsync(presence).ConfigureAwait(false);
         }
 
         //UNDONE async
@@ -97,11 +97,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
                                                      {
                                                          Jid = new Jid(presence.From),
                                                          IsAvailable = !presence.Type.HasValue
-                                                     });
+                                                     }).ConfigureAwait(false);
             }
             else if (presence.Type == PresenceType.subscribe)
             {
-                var requestGranted = await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From));//UNDONE why generic types not inferred
+                var requestGranted = await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From)).ConfigureAwait(false);//UNDONE why generic types not inferred
                 var responseType = requestGranted ? PresenceType.subscribed : PresenceType.unsubscribed;
 
                 var response = new Core.Stanza.Presence(responseType)
@@ -109,7 +109,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     To = presence.From
                 };
 
-                await this.XmppStream.WriteElementAsync(response);
+                await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
             }
 
             Presence UpdatePresence(Presence existing, Core.Stanza.Presence newPresenceElem)

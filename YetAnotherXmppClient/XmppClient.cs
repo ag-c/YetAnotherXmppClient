@@ -8,6 +8,7 @@ using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Protocol;
+using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient
 {
@@ -26,9 +27,6 @@ namespace YetAnotherXmppClient
         public event EventHandler Disconnected;
 
 
-        //public IMediator Mediator { get; } = new Mediator();
-
-
         public async Task StartAsync(Jid jid, string password)
         {
             this.jid = jid;
@@ -38,7 +36,7 @@ namespace YetAnotherXmppClient
 
             Log.Information($"Connecting to {jid.Server}:{DefaultPort}..");
             
-            await this.tcpClient.ConnectAsync(jid.Server, DefaultPort);
+            await this.tcpClient.ConnectAsync(jid.Server, DefaultPort).ConfigureAwait(false);
             
             Log.Information($"Connection established");
 
@@ -48,6 +46,12 @@ namespace YetAnotherXmppClient
             Task.Run(() => this.ProtocolHandler.RunAsync(jid, this.cancelTokenSource.Token).ContinueWith(_ => this.HandleProtocolHandlingEnded()));
         }
 
+        public Task<bool> IsFeatureSupportedAsync(string name)
+        {
+            var handler = this.ProtocolHandler.Get<ServiceDiscoveryProtocolHandler>();
+            return handler.IsFeatureSupportedAsync(name);
+        }
+
         public async Task RegisterAsync(string server)
         {
             this.jid = new Jid($"unknown@{server}/resource");
@@ -55,18 +59,18 @@ namespace YetAnotherXmppClient
 
             Log.Information($"Connecting to {server}:{DefaultPort}..");
 
-            await this.tcpClient.ConnectAsync(server, DefaultPort);
+            await this.tcpClient.ConnectAsync(server, DefaultPort).ConfigureAwait(false);
 
             Log.Information($"Connection established");
 
             this.ProtocolHandler = new MainProtocolHandler(this.tcpClient.GetStream(), this, this);
 
-            await this.ProtocolHandler.RegisterAsync(new CancellationTokenSource().Token);
+            await this.ProtocolHandler.RegisterAsync(new CancellationTokenSource().Token).ConfigureAwait(false);
         }
 
         public async Task ShutdownAsync()
         {
-            await this.ProtocolHandler.TerminateSessionAsync();
+            await this.ProtocolHandler.TerminateSessionAsync().ConfigureAwait(false);
             this.cancelTokenSource.Cancel(false);
             this.ProtocolHandler.Dispose();
             this.ProtocolHandler = null;

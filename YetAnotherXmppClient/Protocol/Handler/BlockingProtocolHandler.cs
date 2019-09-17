@@ -47,7 +47,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         public async Task<IEnumerable<string>> RetrieveBlockListAsync()
         {
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(new IqGet(new XElement(XNames.blocking_blocklist)));
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(new IqGet(new XElement(XNames.blocking_blocklist))).ConfigureAwait(false);
             var blocklist = iqResp.GetContent<Blocklist>();
             return blocklist.Jids;
         }
@@ -55,21 +55,21 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public async Task<bool> BlockAsync(string bareJid)
         {
             var iq = new IqSet(new XElement(XNames.blocking_block, new XElement(XNames.blocking_item, new XAttribute("jid", bareJid.ToBareJid()))));
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
             return iqResp.Type == IqType.result;
         }
 
         public async Task<bool> UnblockAsync(string bareJid)
         {
             var iq = new IqSet(new XElement(XNames.blocking_unblock, new XElement(XNames.blocking_item, new XAttribute("jid", bareJid.ToBareJid()))));
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
             return iqResp.Type == IqType.result;
         }
 
         public async Task<bool> UnblockAllAsync()
         {
             var iq = new IqSet(new XElement(XNames.blocking_unblock));
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
             return iqResp.Type == IqType.result;
         }
 

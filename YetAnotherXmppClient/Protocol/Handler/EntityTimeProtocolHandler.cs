@@ -29,7 +29,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 new XElement(XNames.time_tzo, tzo),
                 new XElement(XNames.time_utc, utc)));
 
-            await this.XmppStream.WriteElementAsync(iqResp);
+            await this.XmppStream.WriteElementAsync(iqResp).ConfigureAwait(false);
         }
     }
 }

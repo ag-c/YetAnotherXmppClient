@@ -25,7 +25,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
 
         public async Task<bool> NegotiateAsync(Feature feature, Dictionary<string, string> options)
         {
-            await this.EstablishSessionAsync();
+            await this.EstablishSessionAsync().ConfigureAwait(false);
             this.IsNegotiated = true;
             return true;
         }
@@ -39,7 +39,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
                 To = new Jid(this.runtimeParameters["jid"]).Server
             };
 
-            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.xmppServerStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             Expect("iq", iqResp.Name.LocalName, iqResp);
             Expect(IqType.result, iqResp.Type, iqResp);

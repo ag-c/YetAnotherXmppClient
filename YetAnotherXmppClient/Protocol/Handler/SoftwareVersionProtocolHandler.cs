@@ -30,7 +30,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 content: new VersionQuery("YetAnotherXmppClient", "0.0.1", "TODO"),
                 from: this.RuntimeParameters["jid"]);
 
-            await this.XmppStream.WriteElementAsync(responseIq);
+            await this.XmppStream.WriteElementAsync(responseIq).ConfigureAwait(false);
         }
     }
 }
