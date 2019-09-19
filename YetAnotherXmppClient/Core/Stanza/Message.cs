@@ -43,7 +43,7 @@ namespace YetAnotherXmppClient.Core.Stanza
 
         public string Thread => this.ElementWithLocalName("thread")?.Value;
                                 
-        public string Body => this.Element("body")?.Value;
+        public string Body => this.ElementWithLocalName("body")?.Value;
 
 
         //copy ctor

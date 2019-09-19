@@ -63,7 +63,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return new ChatMessage
                        {
                            DateTime = DateTime.Now,
-                           From = this.OtherJid,
+                           From = from,
                            Text = text
                        };
         }
