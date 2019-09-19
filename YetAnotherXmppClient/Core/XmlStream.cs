@@ -166,7 +166,7 @@ namespace YetAnotherXmppClient.Core
                 if (matchFunc(xElem))
                 {
                     hasMatch = true;
-                    await callback(xElem).ConfigureAwait(false);
+                    Task.Run(async () => await callback(xElem).ConfigureAwait(false));
                     if(isOneTime)
                         this.matchingCallbacks.RemoveAt(i);
                 }

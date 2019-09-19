@@ -15,13 +15,23 @@ using static YetAnotherXmppClient.Expectation;
 namespace YetAnotherXmppClient.Protocol.Handler
 {
     //UNDONE move to correct namespace
+    public class ChatMessage
+    {
+        public DateTime DateTime { get; set; }
+        public string From { get; set; }
+        public string Text { get; set; }
+    }
+
+    //UNDONE move to correct namespace
     public class ChatSession : IEquatable<ChatSession>
     {
         private readonly Func<string, Task> sendMessageAction;
 
         public string Thread { get; }
         public string OtherJid { get; internal set; }
-        public List<string> Messages { get; } = new List<string>(); //UNDONE
+        public List<ChatMessage> Messages { get; } = new List<ChatMessage>();
+
+        public event EventHandler<ChatMessage> NewMessage;
 
         public ChatSession(string thread, string otherJid, /*Func<string, string, string, Task>*/Func<string, Task> sendMessageAction)
         {
@@ -30,10 +40,32 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.sendMessageAction = sendMessageAction;
         }
 
-        public Task SendMessageAsync(string message)
+        public async Task SendMessageAsync(string text)
         {
-            this.Messages.Add("Me: " + message);
-            return this.sendMessageAction(message);
+            var message = this.CreateMessage("Me", text);
+            this.Messages.Add(message);
+            await this.sendMessageAction(text).ConfigureAwait(false);
+
+            this.NewMessage?.Invoke(this, message);
+        }
+
+        internal void AddIncomingMessage(string text)
+        {
+            var message = this.CreateMessage(this.OtherJid, text);
+
+            this.Messages.Add(this.CreateMessage(this.OtherJid, text));
+
+            this.NewMessage?.Invoke(this, message);
+        }
+
+        private ChatMessage CreateMessage(string from, string text)
+        {
+            return new ChatMessage
+                       {
+                           DateTime = DateTime.Now,
+                           From = this.OtherJid,
+                           Text = text
+                       };
         }
 
         public bool Equals(ChatSession other)
@@ -50,6 +82,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public ImProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
+            this.Mediator.RegisterHandler<StartChatSessionQuery, ChatSession>(this);
             this.XmppStream.RegisterMessageCallback(this);
         }
 
@@ -88,7 +121,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     thread => new ChatSession(message.Thread, sender, 
                         msg => this.SendMessageAsync(sender, msg, message.Thread)));
                 chatSession.OtherJid = sender; // take over full jid of sender
-                chatSession.Messages.Add(text);
+                //chatSession.Messages.Add(text);
+                chatSession.AddIncomingMessage(text);
             }
             else
             {

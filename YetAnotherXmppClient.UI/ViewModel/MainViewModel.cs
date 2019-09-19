@@ -147,33 +147,10 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.SelectedChatSession = viewModel;
         }
 
-        
-        private void OnMessageReceived(ChatSession chatSession, string text)
-        {
-            Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                var viewModel = this.ChatSessions.FirstOrDefault(vm => vm.Thread == chatSession.Thread);
-                if (viewModel == null)
-                {
-                    this.ChatSessions.Add(new ChatSessionViewModel(chatSession));
-                }
-                else
-                {
-                    viewModel.Refresh();
-                }
-            }).Wait();
-        }
-
         async Task<bool> IAsyncQueryHandler<SubscriptionRequestQuery, bool>.HandleQueryAsync(SubscriptionRequestQuery query)
         {
             return await Interactions.SubscriptionRequest.Handle(query.BareJid);
         }
-
-
-        //private async Task LogoutAsync(CancellationToken ct)
-        //{
-        //    await this.xmppClient.ShutdownAsync();
-        //}
 
         Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
         {

@@ -168,7 +168,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             var item = this.RosterItems.FirstOrDefault(ri => ri.Jid == evt.Jid.Bare);
             if (item != null)
             {
-                Dispatcher.UIThread.InvokeAsync(() => item.IsOnline = evt.IsAvailable );
+                Dispatcher.UIThread.InvokeAsync(() => item.IsOnline = evt.IsAvailable);
             }
 
             return Task.CompletedTask;

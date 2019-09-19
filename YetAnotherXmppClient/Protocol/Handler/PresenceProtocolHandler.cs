@@ -96,18 +96,20 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 await this.Mediator.PublishAsync(new PresenceEvent
                                                      {
                                                          Jid = new Jid(presence.From),
-                                                         IsAvailable = !presence.Type.HasValue
+                                                         IsAvailable = presence.IsAvailable
                                                      }).ConfigureAwait(false);
             }
             else if (presence.Type == PresenceType.subscribe)
             {
-                var requestGranted = await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From)).ConfigureAwait(false);//UNDONE why generic types not inferred
+                var requestGranted =
+                    await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From))
+                        .ConfigureAwait(false); //UNDONE why generic types not inferred
                 var responseType = requestGranted ? PresenceType.subscribed : PresenceType.unsubscribed;
 
                 var response = new Core.Stanza.Presence(responseType)
-                {
-                    To = presence.From
-                };
+                                   {
+                                       To = presence.From
+                                   };
 
                 await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
             }
@@ -120,7 +122,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 existing.Priority = newPresenceElem.Priority;
                 return existing;
             }
-    }
+        }
 
         public Task BroadcastPresenceAsync(PresenceShow? show = null, string status = null)
         {
