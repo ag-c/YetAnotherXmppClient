@@ -13,8 +13,11 @@
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Grid ColumnDefinitions="Auto,Auto,*">
-                <TextBlock Text="{Binding DateTime}" Margin="3" Grid.Column="0" />
-                <TextBlock Text="{Binding From, StringFormat=\{0\}:}" Foreground="Red" Margin="3" Grid.Column="1" />
+                <TextBlock Text="{Binding DateTime}" Margin="3" Grid.Column="0" /> <!--, StringFormat=\{0:0\}-->
+                <StackPanel Orientation="Horizontal" Grid.Column="1">
+                  <TextBlock Text="{Binding From}" Foreground="Red" Margin="3,3,0,3"/>
+                  <TextBlock Text=":" Margin="0,3,3,3"  />
+                </StackPanel>
                 <TextBlock Text="{Binding Text}" Margin="3" Grid.Column="2" />
               </Grid>
             </DataTemplate>
