@@ -56,9 +56,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
     {
         private readonly XmppClient xmppClient;
 
-        private RosterItemWithAvatarViewModel[] rosterItems;
+        private readonly Dictionary<string, PresenceEvent> latestPresenceEvents = new Dictionary<string, PresenceEvent>();
+
         private readonly AsyncLock rosterItemsLock = new AsyncLock();
 
+        private RosterItemWithAvatarViewModel[] rosterItems = new RosterItemWithAvatarViewModel[0];
         public RosterItemWithAvatarViewModel[] RosterItems
         {
             get => this.rosterItems;
@@ -164,6 +166,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                                                           Subscription = x.Subscription,
                                                                           Groups = x.Groups,
                                                                           IsSubscriptionPending = x.IsSubscriptionPending,
+                                                                          IsOnline = this.latestPresenceEvents.TryGetValue(x.Jid, out var evt) ? evt.IsAvailable : false
                                                                       }).ToArray();
             }
         }
@@ -181,6 +184,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         {
             using (await this.rosterItemsLock.LockAsync())
             {
+                this.latestPresenceEvents[evt.Jid.Bare] = evt;
                 var item = this.RosterItems.FirstOrDefault(ri => ri.Jid == evt.Jid.Bare);
                 if (item != null)
                 {
