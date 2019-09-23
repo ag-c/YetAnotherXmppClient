@@ -21,26 +21,18 @@ namespace YetAnotherXmppClient.UI.ViewModel
     {
         private readonly IMediator mediator;
 
-        //private EntityInfo rootEntityInfo;
-        //public EntityInfo RootEntityInfo
-        //{
-        //    get => this.rootEntityInfo;
-        //    set => this.RaiseAndSetIfChanged(ref this.rootEntityInfo, value);
-        //}
         public ObservableCollection<EntityInfo> RootEntityInfo { get; set; } = new ObservableCollection<EntityInfo>();
 
-        public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
 
-
-        public ServiceDiscoveryViewModel(IMediator mediator)
+        public ServiceDiscoveryViewModel(IMediator mediator, string jid)
         {
             this.mediator = mediator;
-            this.RefreshCommand = ReactiveCommand.CreateFromTask(this.OnRefreshAsync);
+            this.OnRefreshAsync(jid);
         }
 
-        private async Task OnRefreshAsync()
+        private async Task OnRefreshAsync(string jid)
         {
-            var info = await this.mediator.QueryAsync<QueryEntityInformationTreeQuery, EntityInfo>(new QueryEntityInformationTreeQuery());
+            var info = await this.mediator.QueryAsync<QueryEntityInformationTreeQuery, EntityInfo>(new QueryEntityInformationTreeQuery { Jid = jid});
             this.RootEntityInfo.Clear();
             this.RootEntityInfo.Add(info);
         }

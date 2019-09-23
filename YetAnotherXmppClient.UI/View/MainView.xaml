@@ -17,7 +17,7 @@
         <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
       </StackPanel>
       <Button Content="Service Discovery.." Grid.Column="1" Margin="3" Name="serviceDiscoveryButton"/>
-      <Button Content="Blocking.." Grid.Column="2" Margin="3" Name="blockingButton"/>
+      <Button Content="Blocking.." IsVisible="{Binding IsBlockingFeatureSupported}" Grid.Column="2" Margin="3" Name="blockingButton"/>
       <Button Content="Logout" Grid.Column="3" Margin="3" Name="logoutButton"/>
     </Grid>
     <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
@@ -26,7 +26,7 @@
     <!--  -->
     <!--IsEnabled="{Binding $parent[Window].DataContext.IsProtocolNegotiationComplete}"-->
 
-    <ComboBox Items="{Binding PresenceShowValues}" Grid.Row="3" Margin="3,0,3,3"/>
+    <ComboBox Items="{Binding PresenceShowValues}" SelectedItem="{Binding SelectedPresenceShowValue}" Grid.Row="3" Margin="3,0,3,3"/>
 
     <Grid RowDefinitions="Auto,*"  Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Stretch" Margin="0,0,3,3">
       <TextBlock Text="Chat sessions:" />

@@ -59,12 +59,17 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.Mediator.RegisterHandler<QueryEntityInformationTreeQuery, EntityInfo>(this);
         }
 
-        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync()
+        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync(string jid)
         {
-            var server = this.RuntimeParameters["jid"].ToBareJid().Split('@')[1];//UNDONE unsafe
-            var rootInfo = await this.QueryEntityInformationAsync(server).ConfigureAwait(false);
+            if (jid == null)
+            {
+                var _jid = new Jid(this.RuntimeParameters["jid"]);
+                jid = _jid.Server;
+            }
 
-            var items = await this.DiscoverItemsAsync(server).ConfigureAwait(false);
+            var rootInfo = await this.QueryEntityInformationAsync(jid).ConfigureAwait(false);
+
+            var items = await this.DiscoverItemsAsync(jid).ConfigureAwait(false);
             //UNDONE recursive
             rootInfo.Children = await Task.WhenAll(items.Select(item => this.QueryEntityInformationAsync(item.Jid))).ConfigureAwait(false);
 
@@ -137,7 +142,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         Task<EntityInfo> IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>.HandleQueryAsync(QueryEntityInformationTreeQuery query)
         {
-            return this.QueryEntityInformationTreeAsync();
+            return this.QueryEntityInformationTreeAsync(query.Jid);
         }
 
         public async Task<bool> IsFeatureSupportedAsync(string name)

@@ -28,6 +28,17 @@ namespace YetAnotherXmppClient.UI.View
                             }
                         };
                     timer.Start();
+
+                    d(Interactions
+                        .AddRosterItem
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var window = new AddRosterItemWindow();
+                                    var rosterItemInfo = await window.ShowDialog<RosterItemInfo>(MainWindow.Instance);
+
+                                    interaction.SetOutput(rosterItemInfo);
+                                }));
                 });
         }
 

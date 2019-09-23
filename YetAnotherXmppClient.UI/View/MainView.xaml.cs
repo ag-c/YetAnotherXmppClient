@@ -51,21 +51,11 @@ namespace YetAnotherXmppClient.UI.View
                                 interaction.SetOutput(await tcs.Task);
                             }));
                     d(Interactions
-                        .AddRosterItem
-                        .RegisterHandler(
-                            async interaction =>
-                            {
-                                var window = new AddRosterItemWindow();
-                                var rosterItemInfo = await window.ShowDialog<RosterItemInfo>(MainWindow.Instance);
-
-                                interaction.SetOutput(rosterItemInfo);
-                            }));
-                    d(Interactions
                         .ShowServiceDiscovery
                         .RegisterHandler(
                             async interaction =>
                             {
-                                var window = new ServiceDiscoveryWindow(new ServiceDiscoveryViewModel(interaction.Input));
+                                var window = new ServiceDiscoveryWindow(new ServiceDiscoveryViewModel(interaction.Input.Mediator, interaction.Input.Jid));
                                 await window.ShowDialog(MainWindow.Instance);
                                 interaction.SetOutput(Unit.Default);
                             }));

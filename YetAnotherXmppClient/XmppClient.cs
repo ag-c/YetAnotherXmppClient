@@ -48,8 +48,8 @@ namespace YetAnotherXmppClient
 
         public Task<bool> IsFeatureSupportedAsync(string name)
         {
-            var handler = this.ProtocolHandler.Get<ServiceDiscoveryProtocolHandler>();
-            return handler.IsFeatureSupportedAsync(name);
+            var handler = this.ProtocolHandler?.Get<ServiceDiscoveryProtocolHandler>();
+            return handler?.IsFeatureSupportedAsync(name);
         }
 
         public async Task RegisterAsync(string server)

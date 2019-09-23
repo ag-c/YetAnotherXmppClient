@@ -8,8 +8,6 @@ namespace YetAnotherXmppClient.UI.View
 {
     public class ServiceDiscoveryWindow : ReactiveWindow<ServiceDiscoveryViewModel>
     {
-        public Button RefreshButton => this.FindControl<Button>("refreshButton");
-
         public ServiceDiscoveryWindow(ServiceDiscoveryViewModel viewModel)
         {
             this.DataContext = viewModel;
@@ -17,12 +15,6 @@ namespace YetAnotherXmppClient.UI.View
 #if DEBUG
             this.AttachDevTools();
 #endif
-
-            this.WhenActivated(
-                d =>
-                {
-                    d(this.BindCommand(this.ViewModel, x => x.RefreshCommand, x => x.RefreshButton));
-                });
         }
 
         private void InitializeComponent()

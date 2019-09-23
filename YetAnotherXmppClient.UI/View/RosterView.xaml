@@ -29,6 +29,8 @@
                 <Separator/>
                 <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
                 <MenuItem Header="Remove Item" Command="{Binding $parent[UserControl].DataContext.DeleteRosterItemCommand}"/>
+                <Separator/>
+                <MenuItem Header="Service Discovery.." Command="{Binding $parent[UserControl].DataContext.ShowServiceDiscoveryCommand}"/>
               </ContextMenu>
             </StackPanel.ContextMenu>
               <TextBlock VerticalAlignment="Center" Foreground="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}">

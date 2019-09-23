@@ -7,8 +7,7 @@
         x:Class="YetAnotherXmppClient.UI.View.ServiceDiscoveryWindow"
         Title="Service Discovery"
         Width="300" Height="300">
-  <Grid RowDefinitions="Auto,*">
-    <Button Content="Refresh" Name="refreshButton"/>
+  <Grid>
     <Grid ColumnDefinitions="Auto,*" Grid.Row="1">
       <TreeView Items="{Binding RootEntityInfo}" Name="treeView" MinWidth="100" VerticalAlignment="Stretch">
         <TreeView.DataTemplates>

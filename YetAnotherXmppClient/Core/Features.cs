@@ -54,5 +54,7 @@ namespace YetAnotherXmppClient
                 }
             }
         }
+
+        public const string Blocking = "urn:xmpp:blocking";
     }
 }

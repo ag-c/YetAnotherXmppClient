@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Nito.AsyncEx;
 using ReactiveUI;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
@@ -56,6 +57,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         private readonly XmppClient xmppClient;
 
         private RosterItemWithAvatarViewModel[] rosterItems;
+        private readonly AsyncLock rosterItemsLock = new AsyncLock();
 
         public RosterItemWithAvatarViewModel[] RosterItems
         {
@@ -68,6 +70,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ReactiveCommand StartChatCommand { get; }
         public ReactiveCommand AddRosterItemCommand { get; }
         public ReactiveCommand DeleteRosterItemCommand { get; }
+        public ReactiveCommand<Unit, Unit> ShowServiceDiscoveryCommand { get; }
 
         public Action<Jid> OnInitiateChatSession { get; set; }
 
@@ -80,6 +83,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.StartChatCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.StartChatSession", ex));
             this.AddRosterItemCommand = ReactiveCommand.CreateFromTask(this.AddRosterItemAsync);
             this.DeleteRosterItemCommand = ReactiveCommand.CreateFromTask(this.DeleteRosterItemAsync);
+            this.ShowServiceDiscoveryCommand = ReactiveCommand.CreateFromTask(this.ShowServiceDiscoveryAsync);
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
 
@@ -91,19 +95,6 @@ namespace YetAnotherXmppClient.UI.ViewModel
             {
                 await logWriter.WriteAndFlushAsync(location + ": " + exception);
             }
-        }
-
-        Task IEventHandler<RosterUpdateEvent>.HandleEventAsync(RosterUpdateEvent rosterUpdate)
-        {
-            this.RosterItems = rosterUpdate.Items.Select(x => new RosterItemWithAvatarViewModel
-                                                                  {
-                                                                      Jid = x.Jid,
-                                                                      Name = x.Name,
-                                                                      Subscription = x.Subscription,
-                                                                      Groups = x.Groups,
-                                                                      IsSubscriptionPending = x.IsSubscriptionPending,
-                                                                  }).ToArray();
-            return Task.CompletedTask;
         }
 
         private void HandleDisconnected(object sender, EventArgs e)
@@ -148,10 +139,33 @@ namespace YetAnotherXmppClient.UI.ViewModel
             await this.xmppClient.QueryAsync<DeleteRosterItemQuery, bool>(new DeleteRosterItemQuery {BareJid = this.SelectedRosterItem.Jid});
         }
 
+        private async Task ShowServiceDiscoveryAsync(CancellationToken ct)
+        {
+            if (this.SelectedRosterItem == null)
+                return;
+
+            await Interactions.ShowServiceDiscovery.Handle((this.xmppClient, this.SelectedRosterItem.Jid));
+        }
+
         Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
         {
             this.xmppClient.RegisterHandler<AvatarReceivedEvent>(this);
             return Task.CompletedTask;
+        }
+
+        async Task IEventHandler<RosterUpdateEvent>.HandleEventAsync(RosterUpdateEvent rosterUpdate)
+        {
+            using (await this.rosterItemsLock.LockAsync())
+            {
+                this.RosterItems = rosterUpdate.Items.Select(x => new RosterItemWithAvatarViewModel
+                                                                      {
+                                                                          Jid = x.Jid,
+                                                                          Name = x.Name,
+                                                                          Subscription = x.Subscription,
+                                                                          Groups = x.Groups,
+                                                                          IsSubscriptionPending = x.IsSubscriptionPending,
+                                                                      }).ToArray();
+            }
         }
 
         Task IEventHandler<AvatarReceivedEvent>.HandleEventAsync(AvatarReceivedEvent evt)
@@ -163,15 +177,16 @@ namespace YetAnotherXmppClient.UI.ViewModel
             return Task.CompletedTask;
         }
 
-        Task IEventHandler<PresenceEvent>.HandleEventAsync(PresenceEvent evt)
+        async Task IEventHandler<PresenceEvent>.HandleEventAsync(PresenceEvent evt)
         {
-            var item = this.RosterItems.FirstOrDefault(ri => ri.Jid == evt.Jid.Bare);
-            if (item != null)
+            using (await this.rosterItemsLock.LockAsync())
             {
-                Dispatcher.UIThread.InvokeAsync(() => item.IsOnline = evt.IsAvailable);
+                var item = this.RosterItems.FirstOrDefault(ri => ri.Jid == evt.Jid.Bare);
+                if (item != null)
+                {
+                    Dispatcher.UIThread.InvokeAsync(() => item.IsOnline = evt.IsAvailable);
+                }
             }
-
-            return Task.CompletedTask;
         }
     }
 }

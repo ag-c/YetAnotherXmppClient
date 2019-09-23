@@ -69,9 +69,17 @@ namespace YetAnotherXmppClient.UI.ViewModel
             set => this.RaiseAndSetIfChanged(ref this.connectedJid, value);
         }
 
+        private bool isBlockingFeatureSupported;
+        public bool IsBlockingFeatureSupported
+        {
+            get => this.isBlockingFeatureSupported;
+            set => this.RaiseAndSetIfChanged(ref this.isBlockingFeatureSupported, value);
+        }
+
         public ObservableCollection<ChatSessionViewModel> ChatSessions { get; } = new ObservableCollection<ChatSessionViewModel>();
 
         private ChatSessionViewModel selectedChatSession;
+
         public ChatSessionViewModel SelectedChatSession
         {
             get => this.selectedChatSession;
@@ -114,7 +122,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private async Task ShowServiceDiscoveryAsync(CancellationToken ct)
         {
-            await Interactions.ShowServiceDiscovery.Handle(this.xmppClient);
+            await Interactions.ShowServiceDiscovery.Handle((this.xmppClient, null));
         }
 
         private async Task ShowBlockingAsync(CancellationToken ct)
@@ -152,11 +160,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
             return await Interactions.SubscriptionRequest.Handle(query.BareJid);
         }
 
-        Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
+        async Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)
         {
             this.ConnectedJid = evt.ConnectedJid;
             this.IsProtocolNegotiationComplete = true;
-            return Task.CompletedTask;
+            this.IsBlockingFeatureSupported = await this.xmppClient.IsFeatureSupportedAsync(Features.Blocking);
         }
 
         Task IEventHandler<MessageReceivedEvent>.HandleEventAsync(MessageReceivedEvent evt)
