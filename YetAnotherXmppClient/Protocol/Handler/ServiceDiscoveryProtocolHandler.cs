@@ -76,9 +76,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return rootInfo;
         }
 
-        private async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationAsync(string jid)
+        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationAsync(string jid, string node = null)
         { 
-            var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query))
+            var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query, node == null ? null : new XAttribute("node", node)))
             {
                 From = this.RuntimeParameters["jid"],
                 To = jid

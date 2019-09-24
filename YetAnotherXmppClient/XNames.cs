@@ -89,6 +89,8 @@ namespace YetAnotherXmppClient
         public static readonly XName time_tzo = "{urn:xmpp:time}tzo";
 
         public static readonly XName last_query = "{jabber:iq:last}query";
+
+        public static readonly XName caps_c = "{http://jabber.org/protocol/caps}c";
     }
 
     public class XNamespaces

@@ -73,6 +73,7 @@ namespace YetAnotherXmppClient.Protocol
                 var instance = (ProtocolHandlerBase)Activator.CreateInstance(type, this.xmppStream, this.runtimeParameters, this.mediator);
                 this.protocolHandlers.Add(type, instance);
             }
+            this.protocolHandlers.Add(typeof(EntityCapabilitiesProtocolHandler), new EntityCapabilitiesProtocolHandler(this.xmppStream, this.runtimeParameters, this.mediator, this.Get<ServiceDiscoveryProtocolHandler>()));
 
             this.featureNegotiators = new IFeatureProtocolNegotiator[]
             {
