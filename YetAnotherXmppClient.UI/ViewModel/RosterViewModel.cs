@@ -41,10 +41,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public bool IsOnline
         {
             get => this.isOnline;
-            set
-            {
-                this.RaiseAndSetIfChanged(ref this.isOnline, value);
-            }
+            set => this.RaiseAndSetIfChanged(ref this.isOnline, value);
         }
     }
 
@@ -73,6 +70,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ReactiveCommand AddRosterItemCommand { get; }
         public ReactiveCommand DeleteRosterItemCommand { get; }
         public ReactiveCommand<Unit, Unit> ShowServiceDiscoveryCommand { get; }
+        public ReactiveCommand<Unit, Unit> ShowLastActivityCommand { get; }
 
         public Action<Jid> OnInitiateChatSession { get; set; }
 
@@ -86,6 +84,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.AddRosterItemCommand = ReactiveCommand.CreateFromTask(this.AddRosterItemAsync);
             this.DeleteRosterItemCommand = ReactiveCommand.CreateFromTask(this.DeleteRosterItemAsync);
             this.ShowServiceDiscoveryCommand = ReactiveCommand.CreateFromTask(this.ShowServiceDiscoveryAsync);
+            this.ShowLastActivityCommand = ReactiveCommand.CreateFromTask(this.ShowLastActivityAsync);
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
 
@@ -147,6 +146,14 @@ namespace YetAnotherXmppClient.UI.ViewModel
                 return;
 
             await Interactions.ShowServiceDiscovery.Handle((this.xmppClient, this.SelectedRosterItem.Jid));
+        }
+
+        private async Task ShowLastActivityAsync(CancellationToken ct)
+        {
+            if (this.SelectedRosterItem == null)
+                return;
+
+            await Interactions.ShowLastActivity.Handle((this.xmppClient, this.SelectedRosterItem.Jid));
         }
 
         Task IEventHandler<StreamNegotiationCompletedEvent>.HandleEventAsync(StreamNegotiationCompletedEvent evt)

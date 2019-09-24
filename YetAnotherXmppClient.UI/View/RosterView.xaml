@@ -31,6 +31,7 @@
                 <MenuItem Header="Remove Item" Command="{Binding $parent[UserControl].DataContext.DeleteRosterItemCommand}"/>
                 <Separator/>
                 <MenuItem Header="Service Discovery.." Command="{Binding $parent[UserControl].DataContext.ShowServiceDiscoveryCommand}"/>
+                <MenuItem Header="Last Activity.." Command="{Binding $parent[UserControl].DataContext.ShowLastActivityCommand}"/>
               </ContextMenu>
             </StackPanel.ContextMenu>
               <TextBlock VerticalAlignment="Center" Foreground="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}">
