@@ -27,11 +27,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (message.HasElement(XNames.receipts_request)
                 && message.HasAttribute("id"))
             {
-                Expect(this.RuntimeParameters["jid"], message.To, message);
-
                 var response = message.CreateResponse(
-                    content: new XElement(XNames.receipts_received)/*, 
-                    from: this.RuntimeParameters["jid"]*/);
+                    content: new XElement(XNames.receipts_received), 
+                    from: this.RuntimeParameters["jid"]);
 
                 await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
             }
