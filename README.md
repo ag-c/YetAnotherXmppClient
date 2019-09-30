@@ -5,6 +5,7 @@ More or less implemented XMPP client functionality:
 * XEP-0030: Service Discovery
 * XEP-0054: vcard-temp
 * XEP-0092: Software Version
+* XEP-0115: Entity Capabilities
 * XEP-0153: vCard-Based Avatars
 * XEP-0163: Personal Eventing Protocol
 * XEP-0184: Message Receipts
