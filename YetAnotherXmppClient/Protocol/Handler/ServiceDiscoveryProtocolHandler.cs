@@ -133,7 +133,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                             new DiscoInfoFeature("http://jabber.org/protocol/disco#info"),
                             new DiscoInfoFeature("urn:xmpp:time"),
                             new DiscoInfoFeature("eu.siacs.conversations.axolotl.devicelist+notify"),
-                            new DiscoInfoFeature("jabber:iq:version")),
+                            new DiscoInfoFeature("jabber:iq:version"),
+                            new DiscoInfoFeature(Features.ChatStateNotifications)),
                 from: this.RuntimeParameters["jid"]);
 
             await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);

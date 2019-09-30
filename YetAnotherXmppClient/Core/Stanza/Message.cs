@@ -52,7 +52,7 @@ namespace YetAnotherXmppClient.Core.Stanza
         {
         }
 
-        public Message(object content) : base("{jabber:client}message", content)
+        public Message(params object[] content) : base("{jabber:client}message", content)
         {
         }
 
