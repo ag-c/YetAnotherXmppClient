@@ -6,7 +6,6 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
-using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
@@ -19,7 +18,6 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterMessageContentCallback(XNames.receipts_request, this);
         }
 
-        //UNDONE async?
         //XEP-0184/3. Protocol Format
         async Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
         {
