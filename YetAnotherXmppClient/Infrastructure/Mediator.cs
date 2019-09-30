@@ -58,7 +58,7 @@ namespace YetAnotherXmppClient.Infrastructure
             this.eventHandlers[typeof(TEvent)].Add(handler);
 
             if (this.latestEvents.ContainsKey(typeof(TEvent)))
-                handler.HandleEventAsync((TEvent)this.latestEvents[typeof(TEvent)]).Wait(); //UNDONE!
+                Task.Run(() => handler.HandleEventAsync((TEvent)this.latestEvents[typeof(TEvent)]));
         }
 
         public void RegisterHandler<TQuery, TResult>(IQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
@@ -68,7 +68,8 @@ namespace YetAnotherXmppClient.Infrastructure
 
         public void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
         {
-            this.asyncQueryHandlers.Add(typeof(TQuery), handler);
+            if(!this.asyncQueryHandlers.ContainsKey(typeof(TQuery))) //UNDONE bad design
+                this.asyncQueryHandlers.Add(typeof(TQuery), handler);
         }
 
         public void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery, Task<TResult>>> handler) where TQuery : IQuery<TResult>
@@ -109,14 +110,14 @@ namespace YetAnotherXmppClient.Infrastructure
 
             if (this.delEventHandlers.ContainsKey(typeof(TEvent)))
             {
-                await (Task)this.delEventHandlers[typeof(TEvent)].DynamicInvoke(evt);
+                await ((Task)this.delEventHandlers[typeof(TEvent)].DynamicInvoke(evt)).ConfigureAwait(false);
             }
 
             if (!this.eventHandlers.ContainsKey(evt.GetType()))
                 return;
 
             var handlerList = this.eventHandlers[evt.GetType()];
-            await Task.WhenAll(handlerList.Select(handler => ((IEventHandler<TEvent>)handler).HandleEventAsync(evt)));
+            await Task.WhenAll(handlerList.Select(handler => ((IEventHandler<TEvent>)handler).HandleEventAsync(evt))).ConfigureAwait(false);
         }
     }
 }
