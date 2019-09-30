@@ -31,7 +31,7 @@
     <Grid RowDefinitions="Auto,*"  Grid.Row="2" Grid.Column="1" Grid.RowSpan="2" VerticalAlignment="Stretch" Margin="0,0,3,3">
       <TextBlock Text="Chat sessions:" />
       <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Stretch">
-      <TabControl Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
+      <TabControl Name="chatSessionsTabControl" Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
         <TabControl.ItemTemplate>
           <DataTemplate>
             <TextBlock Text="{Binding Path=OtherJid}" ToolTip.Tip="{Binding OtherJid}" MaxWidth="100"/>

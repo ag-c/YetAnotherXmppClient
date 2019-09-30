@@ -182,5 +182,15 @@ namespace YetAnotherXmppClient.UI.ViewModel
                     }
                 });
         }
+
+        public void HandleSessionActivation(ChatSessionViewModel chatSessionViewModel, bool activated)
+        {
+            this.xmppClient.ExecuteAsync(new SendChatStateNotificationCommand
+                                             {
+                                                 FullJid = chatSessionViewModel.OtherJid,
+                                                 Thread = chatSessionViewModel.Thread,
+                                                 State = activated ? ChatState.active : ChatState.inactive
+                                             });
+        }
     }
 }

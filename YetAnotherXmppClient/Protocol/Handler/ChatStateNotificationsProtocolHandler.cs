@@ -7,6 +7,7 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
 
 //XEP-0085: Chat State Notifications
 
@@ -21,12 +22,13 @@ namespace YetAnotherXmppClient.Protocol.Handler
         paused,
     }
 
-    class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
+    class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
     {
         public ChatStateNotificationsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterMessageCallback(this);
+            this.Mediator.RegisterHandler<SendChatStateNotificationCommand>(this);
         }
 
         public Task MessageReceivedAsync(Message message)
@@ -96,6 +98,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 default:
                     throw new ArgumentOutOfRangeException(nameof(state), state, null);
             }
+        }
+
+        Task IAsyncCommandHandler<SendChatStateNotificationCommand>.HandleCommandAsync(SendChatStateNotificationCommand command)
+        {
+            return this.SendStandaloneChatStateMessageAsync(command.FullJid, command.State, command.Thread);
         }
     }
 }
