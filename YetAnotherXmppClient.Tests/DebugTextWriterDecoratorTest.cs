@@ -52,8 +52,8 @@ namespace YetAnotherXmppClient.Tests
             string onFlushedArg = null;
             var debugTextWriter = new DebugTextWriterDecorator(new StringWriter(), str => onFlushedArg = str);
 
-            await debugTextWriter.WriteAsync("123");
-            await debugTextWriter.FlushAsync();
+            await debugTextWriter.WriteAsync("123").ConfigureAwait(false);
+            await debugTextWriter.FlushAsync().ConfigureAwait(false);
 
             onFlushedArg.Should().Be("123");
         }

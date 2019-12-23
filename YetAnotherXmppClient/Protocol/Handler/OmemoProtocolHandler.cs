@@ -36,7 +36,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             var deviceIds = new int[] { 123, 456 };
 
-            await this.pepHandler.PublishEventAsync(Node, "current", new AxolotlList(deviceIds));
+            await this.pepHandler.PublishEventAsync(Node, "current", new AxolotlList(deviceIds)).ConfigureAwait(false);
         }
 
         //4.4
@@ -52,7 +52,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     new XElement(XNames.axolotl_signedPreKeyPublic, new XAttribute("signedPreKeyId", "1"), signedPreKeyPublic),
                     new XElement(XNames.axolotl_signedPreKeySignature, signedPreKeySignature),
                     new XElement(XNames.axolotl_identityKey, identityKey),
-                    new XElement(XNames.axolotl_prekeys, preKeysPublic.Select((key, idx) => new XElement(XNames.axolotl_preKeyPublic, new XAttribute("preKeyId", idx.ToString()), key)))));
+                    new XElement(XNames.axolotl_prekeys, preKeysPublic.Select((key, idx) => new XElement(XNames.axolotl_preKeyPublic, new XAttribute("preKeyId", idx.ToString()), key))))).ConfigureAwait(false);
         }
 
         public async Task FetchingDevicesBundleInfo(string jid)
@@ -63,11 +63,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
                              To = jid.ToBareJid()
                          };
 
-            var ipResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var ipResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
         }
 
         private int ownDeviceId;
-        public void MessageReceived(Message message)
+
+        Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
         {
             var listElem = message.Element(XNames.pubsubevent_event)?.Element(XNames.pubsubevent_items)?.Element(XNames.pubsubevent_item)?.Element(XNames.axolotl_list);
             if (listElem != null)
@@ -80,6 +81,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     //TODO reannounce myself
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         //4.7

@@ -28,10 +28,10 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 return false;
 
             var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(new Iq(IqType.get, new XElement(XNames.ping_ping))
-            {
-                From = this.RuntimeParameters["jid"],
-                To = new Jid(this.RuntimeParameters["jid"]).Server
-            });
+                                                                              {
+                                                                                  From = this.RuntimeParameters["jid"],
+                                                                                  To = new Jid(this.RuntimeParameters["jid"]).Server
+                                                                              }).ConfigureAwait(false);
 
             if(iqResp.Elements("{jabber:client}error").Any())
                 this.isNotSupportedByServer = true;
@@ -40,14 +40,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //4.1 Server-To-Client Pings & 4.4 Client-to-Client Pings
-        async void IIqReceivedCallback.IqReceived(Iq iq)
+        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
         {
             var content = iq.Elements().Single();
 
             if (content.Name == XNames.ping_ping)
             {   
                 await this.XmppStream.WriteElementAsync(
-                    iq.CreateResultResponse(null, from: this.RuntimeParameters["jid"]));
+                    iq.CreateResultResponse(null, @from: this.RuntimeParameters["jid"])).ConfigureAwait(false);
             }
         }
     }

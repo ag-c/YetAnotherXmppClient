@@ -28,7 +28,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = this.RuntimeParameters["jid"].ToBareJid()
             };
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             var pepSupported = iqResp.Element(XNames.discoinfo_query).Elements(XNames.discoinfo_identity)
                 .Any(idt => idt.Attribute("category")?.Value == "pubsub" &&
@@ -52,7 +52,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = this.RuntimeParameters["jid"].ToBareJid() //UNDONE only server?
             };
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
         }
     }
 }

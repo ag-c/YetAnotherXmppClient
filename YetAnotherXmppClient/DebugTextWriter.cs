@@ -28,20 +28,20 @@ namespace YetAnotherXmppClient
 
         public override async Task WriteAsync(char[] buffer, int index, int count)
         {
-            await this.Decoratee.WriteAsync(buffer, index, count);
-            await this.debugWriter.WriteAsync(buffer, index, count);
+            await this.Decoratee.WriteAsync(buffer, index, count).ConfigureAwait(false);
+            await this.debugWriter.WriteAsync(buffer, index, count).ConfigureAwait(false);
         }
 
         public override async Task WriteAsync(string value)
         {
-            await this.Decoratee.WriteAsync(value);
-            await this.debugWriter.WriteAsync(value);
+            await this.Decoratee.WriteAsync(value).ConfigureAwait(false);
+            await this.debugWriter.WriteAsync(value).ConfigureAwait(false);
         }
 
         public override async Task WriteAsync(char value)
         {
-            await this.Decoratee.WriteAsync(value);
-            await this.debugWriter.WriteAsync(value);
+            await this.Decoratee.WriteAsync(value).ConfigureAwait(false);
+            await this.debugWriter.WriteAsync(value).ConfigureAwait(false);
         }
 
         public override void Write(char value)
@@ -70,15 +70,15 @@ namespace YetAnotherXmppClient
 
         public override async Task FlushAsync()
         {
-            await this.Decoratee.FlushAsync();
+            await this.Decoratee.FlushAsync().ConfigureAwait(false);
             //await this.debugWriter.FlushAsync();
             this.RaiseOnFlushed();
         }
 
         public override async Task WriteLineAsync(string value)
         {
-            await this.Decoratee.WriteLineAsync(value);
-            await this.debugWriter.WriteLineAsync(value);
+            await this.Decoratee.WriteLineAsync(value).ConfigureAwait(false);
+            await this.debugWriter.WriteLineAsync(value).ConfigureAwait(false);
         }
 
         protected override void Dispose(bool disposing)

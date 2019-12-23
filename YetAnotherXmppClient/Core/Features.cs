@@ -54,5 +54,8 @@ namespace YetAnotherXmppClient
                 }
             }
         }
+
+        public const string Blocking = "urn:xmpp:blocking";
+        public const string ChatStateNotifications = "http://jabber.org/protocol/chatstates";
     }
 }

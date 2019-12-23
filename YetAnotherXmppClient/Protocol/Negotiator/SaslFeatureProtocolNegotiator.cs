@@ -40,11 +40,11 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
                 throw new InvalidOperationException("no supported sasl mechanism");
             }
 
-            var success = await this.NegotiateInternalAsync(mechanismToTry, options);
+            var success = await this.NegotiateInternalAsync(mechanismToTry, options).ConfigureAwait(false);
             if (success)
             {
                 this.IsNegotiated = true;
-                await this.mediator.PublishAsync(new LoggedInEvent());
+                await this.mediator.PublishAsync(new LoggedInEvent()).ConfigureAwait(false);
             }
 
             return success;
@@ -56,16 +56,16 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
             var username = options["username"];
             var password = options["password"];
             //6.4.2. Initiation
-            await this.WriteInitiationAsync(mechanismToTry, username, password);
+            await this.WriteInitiationAsync(mechanismToTry, username, password).ConfigureAwait(false);
 
             //6.4.3. Challenge-Response Sequence
             XElement xElem;
             while(true)
             {
-                xElem = await this.xmppStream.ReadElementAsync();
+                xElem = await this.xmppStream.ReadElementAsync().ConfigureAwait(false);
                 if (xElem.Name == XNames.sasl_challenge)
                 {
-                    await this.xmppStream.WriteElementAsync(new XElement(XNames.sasl_response));
+                    await this.xmppStream.WriteElementAsync(new XElement(XNames.sasl_response)).ConfigureAwait(false);
                 }
                 else
                 {
@@ -86,7 +86,7 @@ namespace YetAnotherXmppClient.Protocol.Negotiator
                 Convert.ToBase64String(Encoding.UTF8.GetBytes($"{(char) 0}{username}{(char) 0}{password}"))
             );
 
-            await this.xmppStream.WriteElementAsync(xElem);
+            await this.xmppStream.WriteElementAsync(xElem).ConfigureAwait(false);
         }
     }
 }

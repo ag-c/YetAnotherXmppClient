@@ -7,6 +7,7 @@ namespace YetAnotherXmppClient.Core
         public string Local { get; }
         public string Server { get; }
         public string Resource { get; }
+        public string Bare => this.Local + "@" + this.Server;
 
         public Jid(string jid)
         {

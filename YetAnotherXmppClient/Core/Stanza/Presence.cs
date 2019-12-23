@@ -73,6 +73,8 @@ namespace YetAnotherXmppClient.Core.Stanza
             }
         }
 
+        public bool IsAvailable => !this.Type.HasValue; //UNDONE is this correct?
+
         //copy ctor
         private Presence(XElement presenceXElem)
             : base("{jabber:client}presence", presenceXElem.ElementsAndAttributes())

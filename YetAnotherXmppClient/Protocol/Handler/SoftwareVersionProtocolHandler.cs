@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
@@ -18,7 +19,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.version, this);
         }
 
-        async void IIqReceivedCallback.IqReceived(Iq iq)
+        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
         {
             if (!iq.HasElement(XNames.version_query))
             {
@@ -29,7 +30,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 content: new VersionQuery("YetAnotherXmppClient", "0.0.1", "TODO"),
                 from: this.RuntimeParameters["jid"]);
 
-            await this.XmppStream.WriteElementAsync(responseIq);
+            await this.XmppStream.WriteElementAsync(responseIq).ConfigureAwait(false);
         }
     }
 }

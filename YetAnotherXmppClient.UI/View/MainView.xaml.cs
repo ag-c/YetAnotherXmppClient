@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia;
@@ -6,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
+using Microsoft.EntityFrameworkCore.Internal;
 using ReactiveUI;
 using StarDebris.Avalonia.MessageBox;
 using YetAnotherXmppClient.UI.ViewModel;
@@ -17,6 +19,7 @@ namespace YetAnotherXmppClient.UI.View
         public Button LogoutButton => this.FindControl<Button>("logoutButton");
         public Button ServiceDiscoveryButton => this.FindControl<Button>("serviceDiscoveryButton");
         public Button BlockingButton => this.FindControl<Button>("blockingButton");
+        public TabControl ChatSessionsTabControl => this.FindControl<TabControl>("chatSessionsTabControl");
 
         public MainView()
         {
@@ -52,21 +55,11 @@ namespace YetAnotherXmppClient.UI.View
                                 interaction.SetOutput(await tcs.Task);
                             }));
                     d(Interactions
-                        .AddRosterItem
-                        .RegisterHandler(
-                            async interaction =>
-                            {
-                                var window = new AddRosterItemWindow();
-                                var rosterItemInfo = await window.ShowDialog<RosterItemInfo>(MainWindow.Instance);
-
-                                interaction.SetOutput(rosterItemInfo);
-                            }));
-                    d(Interactions
                         .ShowServiceDiscovery
                         .RegisterHandler(
                             async interaction =>
                             {
-                                var window = new ServiceDiscoveryWindow(new ServiceDiscoveryViewModel(interaction.Input));
+                                var window = new ServiceDiscoveryWindow(new ServiceDiscoveryViewModel(interaction.Input.Mediator, interaction.Input.Jid));
                                 await window.ShowDialog(MainWindow.Instance);
                                 interaction.SetOutput(Unit.Default);
                             }));
@@ -81,6 +74,18 @@ namespace YetAnotherXmppClient.UI.View
                                 }));
 
                     //this.ViewModel.WhenAnyValue(vm => vm.LogText).Subscribe(_ => this.Image.InvalidateVisual());
+
+                    this.ChatSessionsTabControl.SelectionChanged += (sender, args) =>
+                        {
+                            if (args.AddedItems.Any())
+                            {
+                                this.ViewModel.HandleSessionActivation((ChatSessionViewModel)args.AddedItems[0], true);
+                            }
+                            if (args.RemovedItems.Any())
+                            {
+                                this.ViewModel.HandleSessionActivation((ChatSessionViewModel)args.RemovedItems[0], false);
+                            }
+                        };
                 });
         }
 

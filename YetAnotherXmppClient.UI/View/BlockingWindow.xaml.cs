@@ -10,6 +10,7 @@ namespace YetAnotherXmppClient.UI.View
     public class BlockingWindow : ReactiveWindow<BlockingViewModel>
     {
         public Button BlockButton => this.FindControl<Button>("blockButton");
+        public Button UnblockButton => this.FindControl<Button>("unblockButton");
         public Button UnblockAllButton => this.FindControl<Button>("unblockAllButton");
 
         public BlockingWindow()
@@ -27,6 +28,7 @@ namespace YetAnotherXmppClient.UI.View
                 d =>
                     {
                         d(this.BindCommand(this.ViewModel, x => x.BlockCommand, x => x.BlockButton));
+                        d(this.BindCommand(this.ViewModel, x => x.UnblockCommand, x => x.UnblockButton));
                         d(this.BindCommand(this.ViewModel, x => x.UnblockAllCommand, x => x.UnblockAllButton));
                     });
         }

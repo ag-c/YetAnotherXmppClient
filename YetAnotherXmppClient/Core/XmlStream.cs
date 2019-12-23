@@ -19,7 +19,7 @@ namespace YetAnotherXmppClient.Core
         private readonly AsyncLock readerLock = new AsyncLock();
         private readonly AsyncLock writerLock = new AsyncLock();
 
-        private readonly List<(Func<XElement, bool> MatchFunc, Action<XElement> Callback, bool IsOneTime)> matchingCallbacks = new List<(Func<XElement, bool> MatchFunc, Action<XElement> Callback, bool IsOneTime)>();
+        private readonly List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callback, bool IsOneTime)> matchingCallbacks = new List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callback, bool IsOneTime)>();
 
         public Stream UnderlyingStream { get; private set; }
 
@@ -51,9 +51,18 @@ namespace YetAnotherXmppClient.Core
             return new StreamWriter(stream);
         }
 
-        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Action<XElement> callback, bool oneTime = false)
+        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Func<XElement, Task> callback, bool oneTime = false)
         {
             this.matchingCallbacks.Add((matchFunc, callback, oneTime));
+        }
+
+        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Action<XElement> callback, bool oneTime = false)
+        {
+            this.matchingCallbacks.Add((matchFunc, xe =>
+                                               {
+                                                   callback(xe);
+                                                   return Task.CompletedTask;
+                                               }, oneTime));
         }
 
         protected async Task<XElement> ReadUntilElementMatchesAsync(Func<XElement, bool> matchFunc)
@@ -64,14 +73,14 @@ namespace YetAnotherXmppClient.Core
 
                 this.RegisterElementCallback(matchFunc, tcs.SetResult, oneTime: true);
 
-                return await tcs.Task;
+                return await tcs.Task.ConfigureAwait(false);
             }
             else
             {   // read elements until a match
                 XElement xElem;
                 do
                 {
-                    xElem = await this.InternalReadAndProcessElementAsync();
+                    xElem = await this.InternalReadAndProcessElementAsync().ConfigureAwait(false);
                 }
                 while (!matchFunc(xElem));
 
@@ -85,11 +94,11 @@ namespace YetAnotherXmppClient.Core
 
             Log.Debug("Reading xml opening tag..");
 
-            await this.xmlReader.MoveToContentAsync();
+            await this.xmlReader.MoveToContentAsync().ConfigureAwait(false);
 
             Expect(() => this.xmlReader.NodeType == XmlNodeType.Element);
 
-            return (xmlReader.Name, await this.xmlReader.GetAllAttributesAsync());
+            return (xmlReader.Name, await this.xmlReader.GetAllAttributesAsync().ConfigureAwait(false));
         }
 
         public Task<XElement> ReadElementAsync()
@@ -101,15 +110,15 @@ namespace YetAnotherXmppClient.Core
 
         private volatile bool ongoingOp = false;
         private TaskCompletionSource<XElement> readResult;
-        AsyncLock ongoingReadLock = new AsyncLock();
+        readonly AsyncLock ongoingReadLock = new AsyncLock();
         private async Task<XElement> InternalReadAndProcessElementAsync(CancellationToken ct = default)
         {
-            var disp = await this.ongoingReadLock.LockAsync();
+            var disp = await this.ongoingReadLock.LockAsync().ConfigureAwait(false);
             if (ongoingOp)
             {
                 var task = this.readResult.Task;
                 disp.Dispose();
-                return await task;
+                return await task.ConfigureAwait(false);
             }
             else
             {
@@ -117,13 +126,13 @@ namespace YetAnotherXmppClient.Core
                 this.readResult = new TaskCompletionSource<XElement>();
                 disp.Dispose();
 
-                using (await this.readerLock.LockAsync())
+                using (await this.readerLock.LockAsync().ConfigureAwait(false))
                 {
-                    var xElem = await this.xmlReader.ReadNextElementAsync(ct);
+                    var xElem = await this.xmlReader.ReadNextElementAsync(ct).ConfigureAwait(false);
 
                     Log.Logger.XmppStreamContent($"Read from stream: {xElem}");
 
-                    this.ProcessInboundElement(xElem);
+                    await this.ProcessInboundElementAsync(xElem).ConfigureAwait(false);
 
                     this.ongoingOp = false;
                     this.readResult.SetResult(xElem);
@@ -134,21 +143,21 @@ namespace YetAnotherXmppClient.Core
 
         public async Task WriteElementAsync(XElement elem)
         {
-            using (await this.writerLock.LockAsync())
+            using (await this.writerLock.LockAsync().ConfigureAwait(false))
             {
-                await this.textWriter.WriteAndFlushAsync(elem.ToString());
+                await this.textWriter.WriteAndFlushAsync(elem.ToString()).ConfigureAwait(false);
             }
         }
 
         public async Task WriteClosingTagAsync(string name)
         {
-            using (await this.writerLock.LockAsync())
+            using (await this.writerLock.LockAsync().ConfigureAwait(false))
             {
-                await this.textWriter.WriteAsync($"</ {name}>");
+                await this.textWriter.WriteAsync($"</ {name}>").ConfigureAwait(false);
             }
         }
 
-        private void ProcessInboundElement(XElement xElem)
+        private async Task ProcessInboundElementAsync(XElement xElem)
         {
             var hasMatch = false;
             for (var i = this.matchingCallbacks.Count-1; i >= 0; i--)
@@ -157,7 +166,7 @@ namespace YetAnotherXmppClient.Core
                 if (matchFunc(xElem))
                 {
                     hasMatch = true;
-                    callback(xElem);
+                    Task.Run(async () => await callback(xElem).ConfigureAwait(false));
                     if(isOneTime)
                         this.matchingCallbacks.RemoveAt(i);
                 }
@@ -178,7 +187,7 @@ namespace YetAnotherXmppClient.Core
             {
                 ct.ThrowIfCancellationRequested();
 
-                await this.InternalReadAndProcessElementAsync(ct);
+                await this.InternalReadAndProcessElementAsync(ct).ConfigureAwait(false);
             }
         }
 

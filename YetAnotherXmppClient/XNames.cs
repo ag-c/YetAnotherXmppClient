@@ -87,6 +87,16 @@ namespace YetAnotherXmppClient
         public static readonly XName time_time = "{urn:xmpp:time}time";
         public static readonly XName time_utc = "{urn:xmpp:time}utc";
         public static readonly XName time_tzo = "{urn:xmpp:time}tzo";
+
+        public static readonly XName last_query = "{jabber:iq:last}query";
+
+        public static readonly XName chatstates_active = "{http://jabber.org/protocol/chatstates}active";
+        public static readonly XName chatstates_composing = "{http://jabber.org/protocol/chatstates}composing";
+        public static readonly XName chatstates_paused = "{http://jabber.org/protocol/chatstates}paused";
+        public static readonly XName chatstates_inactive = "{http://jabber.org/protocol/chatstates}inactive";
+        public static readonly XName chatstates_gone = "{http://jabber.org/protocol/chatstates}gone";
+
+        public static readonly XName caps_c = "{http://jabber.org/protocol/caps}c";
     }
 
     public class XNamespaces

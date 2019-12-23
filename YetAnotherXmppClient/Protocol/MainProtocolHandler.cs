@@ -55,7 +55,9 @@ namespace YetAnotherXmppClient.Protocol
                                                                         typeof(PepProtocolHandler),
                                                                         typeof(VCardProtocolHandler),
                                                                         typeof(SoftwareVersionProtocolHandler),
-                                                                        typeof(BlockingProtocolHandler)
+                                                                        typeof(BlockingProtocolHandler),
+                                                                        typeof(LastActivityProtocolHandler),
+                                                                        typeof(ChatStateNotificationsProtocolHandler),
                                                                     };
         private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
 
@@ -72,6 +74,7 @@ namespace YetAnotherXmppClient.Protocol
                 var instance = (ProtocolHandlerBase)Activator.CreateInstance(type, this.xmppStream, this.runtimeParameters, this.mediator);
                 this.protocolHandlers.Add(type, instance);
             }
+            this.protocolHandlers.Add(typeof(EntityCapabilitiesProtocolHandler), new EntityCapabilitiesProtocolHandler(this.xmppStream, this.runtimeParameters, this.mediator, this.Get<ServiceDiscoveryProtocolHandler>()));
 
             this.featureNegotiators = new IFeatureProtocolNegotiator[]
             {
@@ -94,22 +97,22 @@ namespace YetAnotherXmppClient.Protocol
         {
             try
             {
-                await this.RestartStreamAsync(jid);
+                await this.RestartStreamAsync(jid).ConfigureAwait(false);
 
-                var features = await this.xmppStream.ReadStreamFeaturesAsync();
+                var features = await this.xmppStream.ReadStreamFeaturesAsync().ConfigureAwait(false);
 
                 Log.Logger.StreamNegotiationStatus(features);
 
-                if (await this.NegotiateFeaturesAsync(features, jid))
+                if (await this.NegotiateFeaturesAsync(features, jid).ConfigureAwait(false))
                 {
                     // stream needs to be restarted after these features have been negotiated
-                    await this.RunAsync(jid, ct);
+                    await this.RunAsync(jid, ct).ConfigureAwait(false);
                     return;
                 }
 
-                await this.OnStreamNegotiationCompletedAsync();
+                await this.OnStreamNegotiationCompletedAsync().ConfigureAwait(false);
 
-                await this.xmppStream.RunReadLoopAsync(ct);
+                await this.xmppStream.RunReadLoopAsync(ct).ConfigureAwait(false);
             }
             catch (Exception e)
             {
@@ -125,7 +128,7 @@ namespace YetAnotherXmppClient.Protocol
             {
                 feature = this.SelectFeatureToNegotiate(features);
 
-                await this.NegotiateFeatureAsync(feature);
+                await this.NegotiateFeatureAsync(feature).ConfigureAwait(false);
 
                 if (feature.IsStreamRestartRequired())
                 {   // stream needs to be restarted after these features have been negotiated
@@ -166,7 +169,7 @@ namespace YetAnotherXmppClient.Protocol
             Log.Debug($"Negotiating feature '{feature.Name}'..");
 
             var options = this.featureOptionsProvider.GetOptions(feature.Name);
-            var success = await handler.NegotiateAsync(feature, options);
+            var success = await handler.NegotiateAsync(feature, options).ConfigureAwait(false);
         }
 
         private async Task OnStreamNegotiationCompletedAsync()
@@ -174,17 +177,17 @@ namespace YetAnotherXmppClient.Protocol
             Log.Debug("Stream negotiation is complete");
 
             // initial roster get & presence set
-            var rosterItems = await this.Get<RosterProtocolHandler>().RequestRosterAsync();
+            var rosterItems = await this.Get<RosterProtocolHandler>().RequestRosterAsync().ConfigureAwait(false);
             await this.Get<PresenceProtocolHandler>().BroadcastPresenceAsync();
 
 
-            var b = await this.Get<PingProtocolHandler>().PingAsync();
+            var b = await this.Get<PingProtocolHandler>().PingAsync().ConfigureAwait(false);
 
             var omemoHandler = new OmemoProtocolHandler(this.Get<PepProtocolHandler>(), this.xmppStream, this.runtimeParameters);
-            await omemoHandler.InitializeAsync();
+            await omemoHandler.InitializeAsync().ConfigureAwait(false);
 
             this.IsNegotiationFinished = true;
-            await this.mediator.PublishAsync(new StreamNegotiationCompletedEvent { ConnectedJid = this.runtimeParameters["jid"] });
+            await this.mediator.PublishAsync(new StreamNegotiationCompletedEvent { ConnectedJid = this.runtimeParameters["jid"] }).ConfigureAwait(false);
         }
 
         //4.2.Opening a Stream
@@ -195,9 +198,9 @@ namespace YetAnotherXmppClient.Protocol
             //Streams neu aufsetzen, da der XmlReader sonst nicht mit ein evtuellen xml-deklaration klarkommen würde
             this.xmppStream.Reset();
 
-            await this.xmppStream.WriteInitialStreamHeaderAsync(fullJid, Version);
+            await this.xmppStream.WriteInitialStreamHeaderAsync(fullJid, Version).ConfigureAwait(false);
 
-            var attributes = await this.xmppStream.ReadResponseStreamHeaderAsync();
+            var attributes = await this.xmppStream.ReadResponseStreamHeaderAsync().ConfigureAwait(false);
 
 //            ValidateInitialStreamHeaderAttributes(attributes)
             Expect(() => attributes.ContainsKey("id"));
@@ -247,9 +250,9 @@ namespace YetAnotherXmppClient.Protocol
 
         public async Task TerminateSessionAsync()
         {
-            await this.Get<PresenceProtocolHandler>().SendUnavailableAsync();
+            await this.Get<PresenceProtocolHandler>().SendUnavailableAsync().ConfigureAwait(false);
 
-            await this.xmppStream.WriteClosingTagAsync("stream:stream");
+            await this.xmppStream.WriteClosingTagAsync("stream:stream").ConfigureAwait(false);
         }
 
         public void Dispose()

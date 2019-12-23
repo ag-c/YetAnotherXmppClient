@@ -59,27 +59,32 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.Mediator.RegisterHandler<QueryEntityInformationTreeQuery, EntityInfo>(this);
         }
 
-        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync()
+        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync(string jid)
         {
-            var server = this.RuntimeParameters["jid"].ToBareJid().Split('@')[1];//UNDONE unsafe
-            var rootInfo = await this.QueryEntityInformationAsync(server);
+            if (jid == null)
+            {
+                var _jid = new Jid(this.RuntimeParameters["jid"]);
+                jid = _jid.Server;
+            }
 
-            var items = await this.DiscoverItemsAsync(server);
+            var rootInfo = await this.QueryEntityInformationAsync(jid).ConfigureAwait(false);
+
+            var items = await this.DiscoverItemsAsync(jid).ConfigureAwait(false);
             //UNDONE recursive
-            rootInfo.Children = await Task.WhenAll(items.Select(item => this.QueryEntityInformationAsync(item.Jid)));
+            rootInfo.Children = await Task.WhenAll(items.Select(item => this.QueryEntityInformationAsync(item.Jid))).ConfigureAwait(false);
 
             return rootInfo;
         }
 
-        private async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationAsync(string jid)
+        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationAsync(string jid, string node = null)
         { 
-            var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query))
+            var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query, node == null ? null : new XAttribute("node", node)))
             {
                 From = this.RuntimeParameters["jid"],
                 To = jid
             };
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             var queryElem = iqResp.Element(XNames.discoinfo_query);
             return new ServiceDiscovery.EntityInfo
@@ -106,7 +111,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 To = entityId //this.RuntimeParameters["jid"].ToBareJid()
             };
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq);
+            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             Expect(IqType.result, iqResp.Type, iqResp);
 
@@ -118,7 +123,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             });
         }
 
-        async void IIqReceivedCallback.IqReceived(Iq iq)
+        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
         {
             Expect(() => iq.HasElement(XNames.discoinfo_query), iq);
             
@@ -128,16 +133,24 @@ namespace YetAnotherXmppClient.Protocol.Handler
                             new DiscoInfoFeature("http://jabber.org/protocol/disco#info"),
                             new DiscoInfoFeature("urn:xmpp:time"),
                             new DiscoInfoFeature("eu.siacs.conversations.axolotl.devicelist+notify"),
-                            new DiscoInfoFeature("jabber:iq:version")),
+                            new DiscoInfoFeature("jabber:iq:version"),
+                            new DiscoInfoFeature(Features.ChatStateNotifications)),
                 from: this.RuntimeParameters["jid"]);
 
-            await this.XmppStream.WriteElementAsync(response);
+            await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
 
         }
 
         Task<EntityInfo> IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>.HandleQueryAsync(QueryEntityInformationTreeQuery query)
         {
-            return this.QueryEntityInformationTreeAsync();
+            return this.QueryEntityInformationTreeAsync(query.Jid);
+        }
+
+        public async Task<bool> IsFeatureSupportedAsync(string name)
+        {
+            var jid = new Jid(this.RuntimeParameters["jid"]);
+            var rootInfo = await this.QueryEntityInformationAsync(jid.Server).ConfigureAwait(false);
+            return rootInfo.Features.Any(f => f.Var == name);
         }
     }
 }

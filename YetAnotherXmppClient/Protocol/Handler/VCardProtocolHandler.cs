@@ -42,7 +42,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                                                                               {
                                                                                   From = this.RuntimeParameters["jid"],
                                                                                   To = bareJid.ToBareJid()
-                                                                              });
+                                                                              }).ConfigureAwait(false);
 
             Expect(IqType.result, iqResp.Type, iqResp);
 
@@ -61,7 +61,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             Expect(XNames.vcard_temp_vcard, vCardElem.Name, vCardElem);
 
-            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(new Iq(IqType.set, vCardElem));
+            var iqResp = await this.xmppStream.WriteIqAndReadReponseAsync(new Iq(IqType.set, vCardElem)).ConfigureAwait(false);
 
             if (iqResp.Type == IqType.result)
             {
@@ -72,7 +72,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return false;
         }
 
-        async void IPresenceReceivedCallback.PresenceReceived(Core.Stanza.Presence presence)
+        async Task IPresenceReceivedCallback.PresenceReceivedAsync(Core.Stanza.Presence presence)
         {
             var xElem = presence.Element(XNames.vcard_temp_update_x);
             var sha1Hash = xElem.Element(XNames.vcard_temp_update_photo)?.Value;
@@ -82,7 +82,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             //UNDONE 3.2: Check per sha1 hash if image is cached
 
-            await this.RequestVCardAsync(presence.From.ToBareJid());
+            await this.RequestVCardAsync(presence.From.ToBareJid()).ConfigureAwait(false);
 
             Log.Verbose($"Received vCard for contact '{presence.From.ToBareJid()}'.");
         }

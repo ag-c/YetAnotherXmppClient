@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using ReactiveUI;
 using YetAnotherXmppClient.Protocol.Handler;
 
@@ -15,7 +17,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public string Thread => this.session.Thread;
         public string OtherJid => this.session.OtherJid;
-        public IEnumerable<string> Messages => this.session.Messages;
+        public ObservableCollection<ChatMessage> Messages { get; } = new ObservableCollection<ChatMessage>();
 
         private string textToSend;
         public string TextToSend
@@ -29,8 +31,14 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ChatSessionViewModel(ChatSession session)
         {
             this.session = session ?? throw new ArgumentNullException(nameof(session));
+            this.session.NewMessage += this.HandleNewMessage;
 
             this.SendCommand = ReactiveCommand.CreateFromTask(this.SendMessageAsync);
+        }
+
+        private void HandleNewMessage(object sender, ChatMessage message)
+        {
+            Dispatcher.UIThread.InvokeAsync(() => this.Messages.Add(message));
         }
 
         private async Task SendMessageAsync(CancellationToken ct)
