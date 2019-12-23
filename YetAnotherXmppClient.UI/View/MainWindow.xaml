@@ -5,9 +5,10 @@
         xmlns:vm="clr-namespace:YetAnotherXmppClient.UI.ViewModel"
         xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
         xmlns:a="https://github.com/avaloniaui"
-        xmlns:rxui2="clr-namespace:Avalonia;assembly=Avalonia.ReactiveUI"
+        xmlns:rxui2="clr-namespace:Avalonia.ReactiveUI;assembly=Avalonia.ReactiveUI"
         xmlns:rxui="http://reactiveui.net"
-        x:Name="RootObject" MinWidth="200" MinHeight="150">
+        x:Name="RootObject" MinWidth="200" MinHeight="150"
+        x:Class="YetAnotherXmppClient.UI.View.MainWindow">
      
   <Grid RowDefinitions="Auto,5,*">
         <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">

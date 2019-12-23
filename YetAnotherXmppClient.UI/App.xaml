@@ -1,6 +1,7 @@
 ﻿<Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:local="clr-namespace:YetAnotherXmppClient.UI">
+  xmlns:local="clr-namespace:YetAnotherXmppClient.UI"
+             x:Class="YetAnotherXmppClient.UI.App">
     <Application.Styles>
         <StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default"/>
         <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseDark.xaml?assembly=Avalonia.Themes.Default"/>

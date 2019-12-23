@@ -25,9 +25,21 @@
       <ScrollViewer Grid.Row="5" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Grid.Column="1">
         <StackPanel Orientation="Vertical">
           <TextBlock Text="Features" Margin="2"/>
-          <ListBox Items="{Binding #treeView.SelectedItem.Features}" MemberSelector="Var" Margin="6" />
+          <ListBox Items="{Binding #treeView.SelectedItem.Features}" Margin="6">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Var}"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
           <TextBlock Text="Identities" Margin="2,9,2,2"/>
-          <ListBox Items="{Binding #treeView.SelectedItem.Identities}" MemberSelector="Name" Margin="6" />
+          <ListBox Items="{Binding #treeView.SelectedItem.Identities}" Margin="6">
+            <ListBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Name}"/>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
         </StackPanel>
       </ScrollViewer>
       

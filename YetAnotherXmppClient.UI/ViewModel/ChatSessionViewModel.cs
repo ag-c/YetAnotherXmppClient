@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using ReactiveUI;
@@ -23,7 +24,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             set => this.RaiseAndSetIfChanged(ref this.textToSend, value);
         }
 
-        public ReactiveCommand SendCommand { get; }
+        public ReactiveCommand<Unit, Unit> SendCommand { get; }
 
         public ChatSessionViewModel(ChatSession session)
         {

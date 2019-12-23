@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using ReactiveUI;
@@ -15,7 +16,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         string IRoutableViewModel.UrlPathSegment { get; } = "login";
         IScreen IRoutableViewModel.HostScreen { get; }
 
-        public ReactiveCommand LoginCommand { get; }
+        public ReactiveCommand<Unit, Unit> LoginCommand { get; }
         //public ReactiveCommand CancelCommand { get; }
 
         public Action<LoginCredentials> CloseAction { get; set; }
@@ -38,6 +39,13 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.LoginCommand = ReactiveCommand.CreateFromTask(this.OnLogin, canExecute);
             this.LoginCommand.ThrownExceptions.Subscribe(async ex => await logWriter.WriteAndFlushAsync("Error occurred while starting xmpp client: " + ex));
             //this.CancelCommand = ReactiveCommand.Create(() => this.CloseAction(null));
+
+            //this.Jid = "yetanotherxmppuser@wiuwiu.de/uiuiui";
+            //this.Jid = "yetanotherxmppuser@chat.sum7.eu/uiuiui"; //gehe1m?
+            //this.Jid = "yetanotherxmppuser@xmpp.is/uiuiui"; //gehe1mgehe1m
+            this.Jid = "yetanotherxmppuser@jabber.de/uiuiui";
+            this.Password = "gehe1m";
+            this.RaisePropertyChanged(nameof(this.Password));
         }
 
         private async Task OnLogin(CancellationToken ct)

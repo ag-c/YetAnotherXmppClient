@@ -53,9 +53,9 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public RosterItemWithAvatar SelectedRosterItem { get; set; }
 
-        public ReactiveCommand StartChatCommand { get; }
-        public ReactiveCommand AddRosterItemCommand { get; }
-        public ReactiveCommand DeleteRosterItemCommand { get; }
+        public ReactiveCommand<Unit, Unit> StartChatCommand { get; }
+        public ReactiveCommand<Unit, Unit> AddRosterItemCommand { get; }
+        public ReactiveCommand<Unit, Unit> DeleteRosterItemCommand { get; }
 
         public Action<Jid> OnInitiateChatSession { get; set; }
 
