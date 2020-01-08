@@ -56,7 +56,7 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
-        public PresenceShow? Show => EnumHelper.Parse<PresenceShow>(this.Attribute("show")?.Value);
+        public PresenceShow? Show => EnumHelper.Parse<PresenceShow>(this.Element("show")?.Value);
 
         public IEnumerable<string> Stati => this.Elements("status")?.Select(xe => xe.Value);
 
