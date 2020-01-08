@@ -229,7 +229,7 @@ namespace YetAnotherXmppClient.Core
                     {
                         // "/>"
                         --depth;
-                        if (depth == -1)
+                        if (depth == 0)
                         {
                             return new XmlElement(null, sb.ToString());
                         }
