@@ -8,6 +8,7 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
 using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler
@@ -53,6 +54,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var bytes = Convert.FromBase64String(base64Str);
 
             this.AvatarReceived?.Invoke(this, (iqResp.From, bytes));
+            await this.Mediator.PublishAsync(new AvatarReceivedEvent
+                                                 {
+                                                     BareJid = bareJid,
+                                                     Bytes = bytes
+                                                 });
 
             return vCardElem;
         }
