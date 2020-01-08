@@ -74,27 +74,36 @@ namespace YetAnotherXmppClient.Infrastructure
 
         public void RegisterHandler<TQuery, TResult>(IQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
         {
+            if (this.queryHandlers.ContainsKey(typeof(TQuery)))
+                this.queryHandlers.Remove(typeof(TQuery));
             this.queryHandlers.Add(typeof(TQuery), handler);
         }
 
         public void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
         {
-            if(!this.asyncQueryHandlers.ContainsKey(typeof(TQuery))) //UNDONE bad design
-                this.asyncQueryHandlers.Add(typeof(TQuery), handler);
+            if (this.asyncQueryHandlers.ContainsKey(typeof(TQuery))) //UNDONE bad design
+                this.asyncQueryHandlers.Remove(typeof(TQuery));
+            this.asyncQueryHandlers.Add(typeof(TQuery), handler);
         }
 
         public void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery, Task<TResult>>> handler) where TQuery : IQuery<TResult>
         {
+            if (this.delQueryHandlers.ContainsKey(typeof(TQuery)))
+                this.delQueryHandlers.Remove(typeof(TQuery));
             this.delQueryHandlers.Add(typeof(TQuery), ((LambdaExpression)handler).Compile(false));
         }
 
         public void RegisterHandler<TCommand>(IAsyncCommandHandler<TCommand> handler) where TCommand : ICommand
         {
+            if (this.asyncCommandHandlers.ContainsKey(typeof(TCommand)))
+                this.asyncCommandHandlers.Remove(typeof(TCommand));
             this.asyncCommandHandlers.Add(typeof(TCommand), handler);
         }
 
         public void RegisterHandler<TEvent>(Expression<Func<TEvent, Task>> handler) where TEvent : IEvent
         {
+            if (this.delEventHandlers.ContainsKey(typeof(TEvent)))
+                this.delEventHandlers.Remove(typeof(TEvent));
             this.delEventHandlers.Add(typeof(TEvent), ((LambdaExpression)handler).Compile(false));
         }
 
