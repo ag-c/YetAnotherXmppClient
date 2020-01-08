@@ -7,9 +7,9 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
+using MessageBox.Avalonia.Enums;
 using Microsoft.EntityFrameworkCore.Internal;
 using ReactiveUI;
-using StarDebris.Avalonia.MessageBox;
 using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI.View
@@ -47,11 +47,12 @@ namespace YetAnotherXmppClient.UI.View
                             async interaction =>
                             {
                                 var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-                                await Dispatcher.UIThread.InvokeAsync(() =>
-                                    new MessageBox($"Allow {interaction.Input} to see your status?",
-                                        (dialogResult, e) => { tcs.SetResult(dialogResult.result == MessageBoxButtons.Yes); },
-                                        MessageBoxStyle.Info, MessageBoxButtons.Yes | MessageBoxButtons.No).Show()
-                                );
+                                await Dispatcher.UIThread.InvokeAsync(async () =>
+                                    {
+                                        var window = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Request", $"Allow {interaction.Input} to see your status?", ButtonEnum.YesNo);
+                                        var result = await window.Show();
+                                        tcs.SetResult(result == ButtonResult.Yes);
+                                    });
                                 interaction.SetOutput(await tcs.Task);
                             }));
                     d(Interactions

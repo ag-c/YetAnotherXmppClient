@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Reactive;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
+using MessageBox.Avalonia.Enums;
 using ReactiveUI;
-using StarDebris.Avalonia.MessageBox;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler;
 using YetAnotherXmppClient.UI.ViewModel;
@@ -14,7 +15,7 @@ namespace YetAnotherXmppClient.UI.View
 {
     public class RosterView : ReactiveUserControl<RosterViewModel>
     {
-        public Image Image => this.FindControl<Image>("image");
+        public Image Image => this.FindControl<Image>("image2");
 
         public RosterView()
         {
@@ -52,10 +53,13 @@ namespace YetAnotherXmppClient.UI.View
                                                                                                                                           {
                                                                                                                                               Jid = interaction.Input.Jid
                                                                                                                                           });
-                                    await Dispatcher.UIThread.InvokeAsync(() =>
-                                        new MessageBox($"Last activity was {lastActivityInfo.Seconds} seconds ({TimeSpan.FromSeconds(lastActivityInfo.Seconds)}) ago.",
-                                            MessageBoxStyle.Info, MessageBoxButtons.Ok).Show()
-                                    );
+                                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                                        {
+                                            var window = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Info", $"Last activity was {lastActivityInfo.Seconds} seconds ({TimeSpan.FromSeconds(lastActivityInfo.Seconds)}) ago.", ButtonEnum.Ok);
+                                            await window.Show();
+                                        });
+
+                                    interaction.SetOutput(Unit.Default);
                                 }));
                 });
         }
