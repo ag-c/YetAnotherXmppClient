@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Reactive;
 using System.Threading.Tasks;
 using ReactiveUI;
 using YetAnotherXmppClient.Infrastructure;
@@ -13,10 +14,15 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public ObservableCollection<EntityInfo> RootEntityInfo { get; set; } = new ObservableCollection<EntityInfo>();
 
+        public ReactiveCommand<Unit, Unit> RefreshCommand { get; }
+
 
         public ServiceDiscoveryViewModel(IMediator mediator, string jid)
         {
             this.mediator = mediator;
+
+            this.RefreshCommand = ReactiveCommand.CreateFromTask(() => this.RefreshAsync(jid));
+
             this.RefreshAsync(jid);
         }
 
