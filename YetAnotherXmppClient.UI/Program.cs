@@ -1,6 +1,7 @@
 ﻿using System;
 using Avalonia;
 using Avalonia.Logging.Serilog;
+using Avalonia.ReactiveUI;
 using Serilog;
 using Serilog.Filters;
 using YetAnotherXmppClient.Persistence;

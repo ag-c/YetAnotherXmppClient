@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using ReactiveUI;
 using YetAnotherXmppClient.UI.ViewModel;
 
@@ -11,6 +12,10 @@ namespace YetAnotherXmppClient.UI.View
         public Button BlockButton => this.FindControl<Button>("blockButton");
         public Button UnblockButton => this.FindControl<Button>("unblockButton");
         public Button UnblockAllButton => this.FindControl<Button>("unblockAllButton");
+
+        public BlockingWindow()
+        {
+        }
 
         public BlockingWindow(BlockingViewModel viewModel)
         {

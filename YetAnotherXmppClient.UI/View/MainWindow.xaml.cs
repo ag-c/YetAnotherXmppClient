@@ -5,6 +5,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using ReactiveUI;
 using StarDebris.Avalonia.MessageBox;

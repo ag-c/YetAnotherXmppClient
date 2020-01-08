@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using Avalonia.ReactiveUI;
 using ReactiveUI;
 using YetAnotherXmppClient.UI.ViewModel;
 

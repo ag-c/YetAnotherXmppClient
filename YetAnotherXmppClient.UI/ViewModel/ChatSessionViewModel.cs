@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -25,7 +26,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             set => this.RaiseAndSetIfChanged(ref this.textToSend, value);
         }
 
-        public ReactiveCommand SendCommand { get; }
+        public ReactiveCommand<Unit, Unit> SendCommand { get; }
 
         public ChatSessionViewModel(ChatSession session)
         {
