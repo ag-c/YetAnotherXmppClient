@@ -121,8 +121,6 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     thread => new ChatSession(message.Thread, sender, 
                         msg => this.SendMessageAsync(sender, msg, message.Thread)));
                 chatSession.OtherJid = sender; // take over full jid of sender
-                //chatSession.Messages.Add(text);
-                chatSession.AddIncomingMessage(text);
             }
             else
             {
@@ -134,6 +132,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                     msg => this.SendMessageAsync(sender, msg, message.Thread));
                 this.chatSessions.TryAdd(newThread, chatSession);
             }
+
+            chatSession.AddIncomingMessage(text);
 
             await this.Mediator.PublishAsync(new MessageReceivedEvent(chatSession, text)).ConfigureAwait(false);
         }

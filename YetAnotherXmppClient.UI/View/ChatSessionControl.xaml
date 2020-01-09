@@ -1,5 +1,6 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="YetAnotherXmppClient.UI.View.ChatSessionControl">
   <Border BorderThickness="1" BorderBrush="Black">
     <Grid RowDefinitions="*,Auto">
       <!--<ListBox Items="{Binding Messages}" Name="msgListBox"  MinHeight="100" Margin="3" />-->
@@ -25,7 +26,7 @@
         </ItemsControl>
       </ScrollViewer>
       <Grid ColumnDefinitions="*,Auto" Grid.Row="1">
-        <TextBox Text="{Binding TextToSend}"  HorizontalAlignment="Stretch" Grid.Column="0" Margin="3,0,3,3" />
+        <TextBox Text="{Binding TextToSend}"  HorizontalAlignment="Stretch" Grid.Column="0" Margin="3,0,3,3" Name="messageTextBox" />
         <Button Content="Send" Name="sendButton" IsDefault="True" Grid.Column="1" Margin="0,0,3,3" />
       </Grid>
     </Grid>

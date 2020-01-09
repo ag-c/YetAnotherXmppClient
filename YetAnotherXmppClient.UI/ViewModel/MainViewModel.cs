@@ -149,7 +149,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             {
                 //var chatSession = this.xmppClient.ProtocolHandler.Get<ImProtocolHandler>().StartChatSession(jid);
                 var chatSession = this.xmppClient.Query<StartChatSessionQuery, ChatSession>(new StartChatSessionQuery { Jid = jid });
-                viewModel = new ChatSessionViewModel(chatSession);
+                viewModel = new ChatSessionViewModel(chatSession, this.xmppClient);
                 this.ChatSessions.Add(viewModel);
             }
             this.SelectedChatSession = viewModel;
@@ -174,7 +174,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
                     var viewModel = this.ChatSessions.FirstOrDefault(vm => vm.Thread == evt.Session.Thread);
                     if (viewModel == null)
                     {
-                        this.ChatSessions.Add(new ChatSessionViewModel(evt.Session));
+                        this.ChatSessions.Add(new ChatSessionViewModel(evt.Session, this.xmppClient));
                     }
                     else
                     {
