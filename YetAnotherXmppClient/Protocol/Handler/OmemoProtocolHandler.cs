@@ -68,7 +68,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         private int ownDeviceId;
 
-        Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
+        Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
         {
             var listElem = message.Element(XNames.pubsubevent_event)?.Element(XNames.pubsubevent_items)?.Element(XNames.pubsubevent_item)?.Element(XNames.axolotl_list);
             if (listElem != null)

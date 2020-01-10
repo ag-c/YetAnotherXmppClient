@@ -122,7 +122,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             });
         }
 
-        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
+        async Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)
         {
             Expect(() => iq.HasElement(XNames.discoinfo_query), iq);
             

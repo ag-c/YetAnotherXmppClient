@@ -141,7 +141,7 @@ namespace YetAnotherXmppClient.Core
             }
         }
 
-        public async Task WriteElementAsync(XElement elem)
+        public virtual async Task WriteElementAsync(XElement elem)
         {
             using (await this.writerLock.LockAsync().ConfigureAwait(false))
             {

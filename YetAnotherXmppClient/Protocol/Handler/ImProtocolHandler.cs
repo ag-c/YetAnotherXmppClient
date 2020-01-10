@@ -100,7 +100,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
 
-        async Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
+        async Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
         {
             Expect("message", message.Name.LocalName, message);
 

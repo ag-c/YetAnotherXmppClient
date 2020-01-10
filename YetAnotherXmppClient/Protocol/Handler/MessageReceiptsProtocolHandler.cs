@@ -19,7 +19,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //XEP-0184/3. Protocol Format
-        async Task IMessageReceivedCallback.MessageReceivedAsync(Message message)
+        async Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
         {
             // does <message/> contain <request/> and id-attribute?
             if (message.HasElement(XNames.receipts_request)

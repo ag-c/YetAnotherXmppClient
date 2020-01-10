@@ -24,7 +24,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterPresenceContentCallback(XNames.caps_c, this);
         }
 
-        async Task IPresenceReceivedCallback.PresenceReceivedAsync(Core.Stanza.Presence presence)
+        async Task IPresenceReceivedCallback.HandlePresenceReceivedAsync(Core.Stanza.Presence presence)
         {
             var cElem = presence.Element(XNames.caps_c);
             var node = cElem.Attribute("node").Value;

@@ -60,6 +60,11 @@ namespace YetAnotherXmppClient.Core.Stanza
         {
         }
 
+        public Message CloneAndAddElement(XElement elem)
+        {
+            return new Message(this.ElementsAndAttributes().Concat(new[] { elem }));
+        }
+
         public static implicit operator string(Message iq)
         {
             return iq.ToString();

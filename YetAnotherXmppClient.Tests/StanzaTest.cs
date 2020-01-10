@@ -123,6 +123,21 @@ namespace YetAnotherXmppClient.Tests
         }
 
         [Fact]
+        public void Message_CloneAndAddElement()
+        {
+            var message = new Message
+                              {
+                                  From = "juliet@example.com/balcony",
+                                  To = "romeo@example.net",
+                                  Type = MessageType.chat,
+                              };
+
+            message = message.CloneAndAddElement(new XElement("test", "active"));
+            message.Element("test").Should().NotBeNull();
+            message.Element("test").Value.Should().Be("active");
+        }
+
+        [Fact]
         public void Presence_FromXElement()
         {
             var xml = @"<presence

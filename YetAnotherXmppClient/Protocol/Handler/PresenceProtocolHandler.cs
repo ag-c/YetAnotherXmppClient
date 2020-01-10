@@ -83,7 +83,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         }
 
         //UNDONE async
-        async Task IPresenceReceivedCallback.PresenceReceivedAsync(Core.Stanza.Presence presence)
+        async Task IPresenceReceivedCallback.HandlePresenceReceivedAsync(Core.Stanza.Presence presence)
         {
             Expect(XNames.presence, presence.Name, presence);
 

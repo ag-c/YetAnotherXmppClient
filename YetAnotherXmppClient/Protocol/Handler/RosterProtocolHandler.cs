@@ -139,7 +139,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return true;
         }
 
-        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
+        async Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)
         {
             Log.Verbose($"ImProtocolHandler handles roster iq sent by server: " + iq);
 

@@ -19,7 +19,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.version, this);
         }
 
-        async Task IIqReceivedCallback.IqReceivedAsync(Iq iq)
+        async Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)
         {
             if (!iq.HasElement(XNames.version_query))
             {

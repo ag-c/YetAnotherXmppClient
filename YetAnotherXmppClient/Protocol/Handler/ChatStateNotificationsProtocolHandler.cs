@@ -22,39 +22,32 @@ namespace YetAnotherXmppClient.Protocol.Handler
         paused,
     }
 
-    class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
+    class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IOutgoingMessageCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
     {
         public ChatStateNotificationsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterMessageCallback(this);
+            this.XmppStream.RegisterOutgoingMessageCallback(this);
             this.Mediator.RegisterHandler<SendChatStateNotificationCommand>(this);
         }
 
-        public Task MessageReceivedAsync(Message message)
+        void IOutgoingMessageCallback.HandleOutgoingMessage(ref Message message)
         {
-            ChatState? state = null;
+            // adding active chat state to chat message if it does not already contains a chat state
 
-            if (message.HasElement(XNames.chatstates_active))
+            if (ExtractChatState(message).HasValue)
+                return;
+
+            if (message.Type.HasValue && message.Type.Value == MessageType.chat)
             {
-                state = ChatState.active;
+                message = message.CloneAndAddElement(CreateXElementFromState(ChatState.active));
             }
-            else if (message.HasElement(XNames.chatstates_composing))
-            {
-                state = ChatState.composing;
-            }
-            else if (message.HasElement(XNames.chatstates_paused))
-            {
-                state = ChatState.paused;
-            }
-            else if (message.HasElement(XNames.chatstates_inactive))
-            {
-                state = ChatState.inactive;
-            }
-            else if (message.HasElement(XNames.chatstates_gone))
-            {
-                state = ChatState.gone;
-            }
+        }
+
+        Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
+        {
+            ChatState? state = ExtractChatState(message);
 
             if (state.HasValue)
             {
@@ -68,6 +61,32 @@ namespace YetAnotherXmppClient.Protocol.Handler
             }
 
             return Task.CompletedTask;
+        }
+
+        private static ChatState? ExtractChatState(Message message)
+        {
+            if (message.HasElement(XNames.chatstates_active))
+            {
+                return ChatState.active;
+            }
+            else if (message.HasElement(XNames.chatstates_composing))
+            {
+                return ChatState.composing;
+            }
+            else if (message.HasElement(XNames.chatstates_paused))
+            {
+                return ChatState.paused;
+            }
+            else if (message.HasElement(XNames.chatstates_inactive))
+            {
+                return ChatState.inactive;
+            }
+            else if (message.HasElement(XNames.chatstates_gone))
+            {
+                return ChatState.gone;
+            }
+
+            return null;
         }
 
         public Task SendStandaloneChatStateMessageAsync(string fullJid, ChatState state, string thread = null)

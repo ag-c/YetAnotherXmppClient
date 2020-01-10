@@ -15,23 +15,29 @@ namespace YetAnotherXmppClient.Core
 {
     public interface IIqReceivedCallback
     {
-        Task IqReceivedAsync(Iq iq);
+        Task HandleIqReceivedAsync(Iq iq);
     }
 
     public interface IMessageReceivedCallback
     {
-        Task MessageReceivedAsync(Message message);
+        Task HandleMessageReceivedAsync(Message message);
+    }
+
+    public interface IOutgoingMessageCallback
+    {
+        void HandleOutgoingMessage(ref Message message);
     }
 
     public interface IPresenceReceivedCallback
     {
-        Task PresenceReceivedAsync(Presence presence);
+        Task HandlePresenceReceivedAsync(Presence presence);
     }
 
     public class XmppStream : XmlStream
     {
         private static readonly XmlParserContext xmlParserContext;
 
+        private readonly List<IOutgoingMessageCallback> outoingMessageCallbacks = new List<IOutgoingMessageCallback>();
 
         static XmppStream()
         {
@@ -73,7 +79,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "iq" && xe.FirstElement().NamespaceEquals(iqContentNamespace),
-                xe => callback.IqReceivedAsync(Iq.FromXElement(xe))
+                xe => callback.HandleIqReceivedAsync(Iq.FromXElement(xe))
             );
         }
 
@@ -81,7 +87,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "presence",
-                xe => callback.PresenceReceivedAsync(Presence.FromXElement(xe))
+                xe => callback.HandlePresenceReceivedAsync(Presence.FromXElement(xe))
             );
         }
 
@@ -89,15 +95,20 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "message",
-                xe => callback.MessageReceivedAsync(Message.FromXElement(xe))
+                xe => callback.HandleMessageReceivedAsync(Message.FromXElement(xe))
             );
         }
-        
+
+        public void RegisterOutgoingMessageCallback(IOutgoingMessageCallback callback)
+        {
+            this.outoingMessageCallbacks.Add(callback);
+        }
+
         public void RegisterMessageContentCallback(XName contentName, IMessageReceivedCallback callback)
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "message" && xe.Elements().Any(e => e.Name == contentName),
-                xe => callback.MessageReceivedAsync(Message.FromXElement(xe))
+                xe => callback.HandleMessageReceivedAsync(Message.FromXElement(xe))
             );
         }
 
@@ -105,7 +116,7 @@ namespace YetAnotherXmppClient.Core
         {
             this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "presence" && xe.Elements().Any(e => e.Name == contentName),
-                xe => callback.PresenceReceivedAsync(Presence.FromXElement(xe))
+                xe => callback.HandlePresenceReceivedAsync(Presence.FromXElement(xe))
             );
         }
 
@@ -162,6 +173,17 @@ namespace YetAnotherXmppClient.Core
             var iqResponse = await readUntilMatchTask.ConfigureAwait(false);
 
             return Iq.FromXElement(iqResponse);
+        }
+
+        public override Task WriteElementAsync(XElement elem)
+        {
+            if (elem is Message message)
+            {
+                this.outoingMessageCallbacks.ForEach(callback => callback.HandleOutgoingMessage(ref message));
+                elem = message;
+            }
+
+            return base.WriteElementAsync(elem);
         }
     }
 }
