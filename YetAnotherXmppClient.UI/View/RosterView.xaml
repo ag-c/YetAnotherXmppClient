@@ -14,7 +14,7 @@
   
   <Grid RowDefinitions="Auto,*" >
     <TextBlock Text="Roster" Margin="3,0,0,0"/>
-    <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem, Mode=OneWayToSource}" MinHeight="150" Margin="3,0,3,3" Grid.Row="1">
+    <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem, Mode=OneWayToSource}" MinHeight="150" Margin="3,0,3,3" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
       <ListBox.ContextMenu>
         <ContextMenu>
           <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
