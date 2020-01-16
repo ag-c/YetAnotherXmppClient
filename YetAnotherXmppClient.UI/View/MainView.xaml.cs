@@ -16,9 +16,6 @@ namespace YetAnotherXmppClient.UI.View
 {
     public class MainView : ReactiveUserControl<MainViewModel>
     {
-        public Button LogoutButton => this.FindControl<Button>("logoutButton");
-        public Button ServiceDiscoveryButton => this.FindControl<Button>("serviceDiscoveryButton");
-        public Button BlockingButton => this.FindControl<Button>("blockingButton");
         public TabControl ChatSessionsTabControl => this.FindControl<TabControl>("chatSessionsTabControl");
 
         public MainView()
@@ -27,10 +24,6 @@ namespace YetAnotherXmppClient.UI.View
             this.WhenActivated(
                 d =>
                 {
-                    d(this.BindCommand(this.ViewModel, x => x.LogoutCommand, x => x.LogoutButton));
-                    d(this.BindCommand(this.ViewModel, x => x.ShowServiceDiscoveryCommand, x => x.ServiceDiscoveryButton));
-                    d(this.BindCommand(this.ViewModel, x => x.ShowBlockingCommand, x => x.BlockingButton));
-
                     //d(Interactions
                     //    .Login
                     //    .RegisterHandler(
@@ -70,6 +63,15 @@ namespace YetAnotherXmppClient.UI.View
                             async interaction =>
                                 {
                                     var window = new BlockingWindow(new BlockingViewModel(interaction.Input));
+                                    await window.ShowDialog(MainWindow.Instance);
+                                    interaction.SetOutput(Unit.Default);
+                                }));
+                    d(Interactions
+                        .ShowPreferences
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var window = new PreferencesWindow(new PreferencesViewModel(interaction.Input));
                                     await window.ShowDialog(MainWindow.Instance);
                                     interaction.SetOutput(Unit.Default);
                                 }));
