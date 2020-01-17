@@ -9,10 +9,12 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ReactiveUI;
+using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler;
@@ -33,7 +35,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
     public class MainViewModel : ReactiveObject, IRoutableViewModel, 
                                  IAsyncQueryHandler<SubscriptionRequestQuery, bool>, 
                                  IEventHandler<StreamNegotiationCompletedEvent>,
-                                 IEventHandler<MessageReceivedEvent>
+                                 IEventHandler<MessageReceivedEvent>,
+                                 IEventHandler<ChatStateNotificationReceivedEvent>
     {
         private XmppClient xmppClient;
 
@@ -42,6 +45,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         string IRoutableViewModel.UrlPathSegment { get; } = "main";
         IScreen IRoutableViewModel.HostScreen { get; }
 
+        public ReactiveCommand<Unit,Unit> ShowPreferencesCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowServiceDiscoveryCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowBlockingCommand { get; }
         public ReactiveCommand<Unit,Unit> LogoutCommand { get; }
@@ -90,6 +94,17 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public IEnumerable<string> PresenceShowValues => Enum.GetNames(typeof(PresenceShow));
 
+        public string SelectedPresenceShowValue
+        {
+            set
+            {
+                this.xmppClient.ExecuteAsync(new BroadcastPresenceCommand
+                                                 {
+                                                     Show = Enum.Parse<PresenceShow>(value)
+                                                 });
+            }
+        }
+
 
         public MainViewModel(XmppClient xmppClient, TextWriter logWriter)
         {
@@ -103,6 +118,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.LogoutCommand = ReactiveCommand.CreateFromTask(() => this.OnLogoutRequested?.Invoke());
             this.LogoutCommand.ThrownExceptions.Subscribe(ex => PrintException("MainViewModel.LogoutAsync", ex));
 
+            this.ShowPreferencesCommand = ReactiveCommand.CreateFromTask(this.ShowPreferencesAsync);
             this.ShowServiceDiscoveryCommand = ReactiveCommand.CreateFromTask(this.ShowServiceDiscoveryAsync);
             this.ShowBlockingCommand = ReactiveCommand.CreateFromTask(this.ShowBlockingAsync);
 
@@ -111,6 +127,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
             this.xmppClient.RegisterHandler<StreamNegotiationCompletedEvent>(this, publishLatestEventToNewHandler: true);
             this.xmppClient.RegisterHandler<MessageReceivedEvent>(this);
+            this.xmppClient.RegisterHandler<ChatStateNotificationReceivedEvent>(this);
             this.xmppClient.RegisterHandler<SubscriptionRequestQuery, bool>(this);
 
 
@@ -118,6 +135,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
             {
                 await this.logWriter.WriteAndFlushAsync(location + ": " + exception);
             }
+        }
+
+        private async Task ShowPreferencesAsync(CancellationToken ct)
+        {
+            await Interactions.ShowPreferences.Handle(this.xmppClient);
         }
 
         private async Task ShowServiceDiscoveryAsync(CancellationToken ct)
@@ -191,6 +213,22 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                                  Thread = chatSessionViewModel.Thread,
                                                  State = activated ? ChatState.active : ChatState.inactive
                                              });
+        }
+
+        Task IEventHandler<ChatStateNotificationReceivedEvent>.HandleEventAsync(ChatStateNotificationReceivedEvent evt)
+        {
+            return Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var viewModel = this.ChatSessions.FirstOrDefault(vm => vm.OtherJid == evt.FullJid);
+                    if (viewModel == null)
+                    {
+                        Log.Debug($"Received chat state notification for full jid '{evt.FullJid}' without open chat session view model");
+                    }
+                    else
+                    {
+                        viewModel.OtherChatState = evt.State.ToString();
+                    }
+                });
         }
     }
 }

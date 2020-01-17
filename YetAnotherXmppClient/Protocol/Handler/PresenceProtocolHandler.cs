@@ -9,6 +9,7 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using static YetAnotherXmppClient.Expectation;
@@ -25,7 +26,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
     }
 
     //RFC 6121 
-    public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback
+    public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, IAsyncCommandHandler<BroadcastPresenceCommand>
     {
         // <full-jid, presence>
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
@@ -35,6 +36,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             : base(xmppStream, null, mediator)
         {
             this.XmppStream.RegisterPresenceCallback(this);
+            this.Mediator.RegisterHandler<BroadcastPresenceCommand>(this);
         }
 
         public IEnumerable<Presence> GetAllPresencesForBareJid(string bareJid)
@@ -134,6 +136,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public Task SendUnavailableAsync()
         {
             return this.XmppStream.WriteElementAsync(new Core.Stanza.Presence(PresenceType.unavailable));
+        }
+
+        Task IAsyncCommandHandler<BroadcastPresenceCommand>.HandleCommandAsync(BroadcastPresenceCommand command)
+        {
+            return this.BroadcastPresenceAsync(command.Show, command.Status);
         }
     }
 }
