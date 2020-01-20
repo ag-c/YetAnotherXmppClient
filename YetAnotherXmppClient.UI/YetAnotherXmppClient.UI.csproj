@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">
@@ -15,13 +15,14 @@
     <None Remove="AddRosterItemWindow.xaml" />
     <None Remove="ChatSessionControl.xaml" />
     <None Remove="LoginWindow.xaml" />
+    <None Remove="View\PreferencesWindow.xaml" />
     <None Remove="View\RosterView.xaml" />
     <None Remove="View\ServiceDiscoveryWindow.xaml" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.9.1" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.9.1" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.1" />
+    <PackageReference Include="Avalonia" Version="0.9.999-cibuild0005383-beta" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.9.999-cibuild0005383-beta" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.999-cibuild0005383-beta" />
     <PackageReference Include="MessageBox.Avalonia" Version="0.9.0" />
     <PackageReference Include="Serilog.Sinks.TextWriter" Version="2.1.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="4.1.0" />
@@ -37,6 +38,9 @@
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\LoginWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="View\PreferencesWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\RosterView.xaml">

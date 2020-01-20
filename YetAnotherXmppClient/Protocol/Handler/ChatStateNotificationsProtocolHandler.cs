@@ -34,15 +34,19 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         void IOutgoingMessageCallback.HandleOutgoingMessage(ref Message message)
         {
-            // adding active chat state to chat message if it does not already contains a chat state
+            // do not add chat state to messages of other type than 'chat'
+            if (!message.Type.HasValue || message.Type.Value != MessageType.chat)
+                return;
 
+            // do not add chat state if the user does not wish so
+            if (!(bool)this.Mediator.Query<GetPreferenceValueQuery, object>(new GetPreferenceValueQuery("SendChatStateNotifications", true)))
+                return;
+
+            // adding active chat state to chat message if it does not already contains a chat state
             if (ExtractChatState(message).HasValue)
                 return;
 
-            if (message.Type.HasValue && message.Type.Value == MessageType.chat)
-            {
-                message = message.CloneAndAddElement(CreateXElementFromState(ChatState.active));
-            }
+            message = message.CloneAndAddElement(CreateXElementFromState(ChatState.active));
         }
 
         Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
@@ -91,6 +95,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         public Task SendStandaloneChatStateMessageAsync(string fullJid, ChatState state, string thread = null)
         {
+            if (!(bool)this.Mediator.Query<GetPreferenceValueQuery, object>(new GetPreferenceValueQuery("SendChatStateNotifications", true)))
+                return Task.CompletedTask;
+
             var message = new Message(CreateXElementFromState(state), thread == null ? null : new XElement("thread", thread))
                               {
                                   From = this.RuntimeParameters["jid"],

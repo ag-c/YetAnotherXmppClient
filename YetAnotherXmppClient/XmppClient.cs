@@ -7,12 +7,14 @@ using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
+using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol;
 using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient
 {
-    public class XmppClient : Mediator, IFeatureOptionsProvider
+    public class XmppClient : Mediator, IFeatureOptionsProvider, IQueryHandler<GetPreferenceValueQuery, object>, ICommandHandler<SetPreferenceValueCommand>
     {
         public static readonly int DefaultPort = 5222;
 
@@ -26,6 +28,12 @@ namespace YetAnotherXmppClient
 
         public event EventHandler Disconnected;
 
+
+        public XmppClient()
+        {
+            this.RegisterHandler<GetPreferenceValueQuery, object>(this);
+            this.RegisterHandler<SetPreferenceValueCommand>(this);
+        }
 
         public async Task StartAsync(Jid jid, string password)
         {
@@ -92,6 +100,9 @@ namespace YetAnotherXmppClient
         {
             Log.Information($"The protocol handler stopped working for unknown reason");
 
+            this.ProtocolHandler?.Dispose();
+            this.ProtocolHandler = null;
+
             this.Disconnected?.Invoke(this, EventArgs.Empty);
         }
 
@@ -122,13 +133,22 @@ namespace YetAnotherXmppClient
 
             return null;
         }
-    }
 
-//    static class TaskExtensions
-//    {
-//        public static void async Forget(this Task task)
-//        {
-//            await
-//        }
-//    }
+        private Dictionary<string, object> preferences = new Dictionary<string, object>
+                                                             {
+                                                                 ["SendChatStateNotifications"] = true
+                                                             };
+        object IQueryHandler<GetPreferenceValueQuery, object>.HandleQuery(GetPreferenceValueQuery query)
+        {
+            if (this.preferences.ContainsKey(query.PreferenceName))
+                return this.preferences[query.PreferenceName];
+
+            return query.DefaultValue;
+        }
+
+        void ICommandHandler<SetPreferenceValueCommand>.HandleCommand(SetPreferenceValueCommand command)
+        {
+            this.preferences[command.PreferenceName] = command.Value;
+        }
+    }
 }
