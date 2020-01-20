@@ -186,7 +186,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         {
             this.ConnectedJid = evt.ConnectedJid;
             this.IsProtocolNegotiationComplete = true;
-            this.IsBlockingFeatureSupported = await this.xmppClient.IsFeatureSupportedAsync(Features.Blocking);
+            this.IsBlockingFeatureSupported = await this.xmppClient.IsFeatureSupportedAsync(ProtocolNamespaces.Blocking);
         }
 
         Task IEventHandler<MessageReceivedEvent>.HandleEventAsync(MessageReceivedEvent evt)

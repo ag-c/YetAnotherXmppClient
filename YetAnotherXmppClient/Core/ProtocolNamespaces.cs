@@ -1,7 +1,7 @@
 ﻿namespace YetAnotherXmppClient.Core
 {
     // subset of https://xmpp.org/registrar/namespaces.html
-    internal static class ProtocolNamespaces
+    public static class ProtocolNamespaces
     {
         public const string LastActivity = "jabber:iq:last";
         public const string SoftwareVersion = "jabber:iq:version";
