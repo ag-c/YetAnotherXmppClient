@@ -7,16 +7,18 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
     //XEP-0092
-    internal class SoftwareVersionProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
+    internal sealed class SoftwareVersionProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
         public SoftwareVersionProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.version, this);
+            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.SoftwareVersion));
         }
 
         async Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)

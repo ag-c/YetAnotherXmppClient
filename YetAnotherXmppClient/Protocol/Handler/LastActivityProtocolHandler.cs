@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
 
 //XEP-0012: Last Activity
@@ -16,12 +18,19 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public string Status { get; set; }
     }
 
-    public class LastActivityProtocolHandler : ProtocolHandlerBase, IAsyncQueryHandler<LastActivityQuery, LastActivityInfo>
+    internal sealed class LastActivityProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
+                                               IAsyncQueryHandler<LastActivityQuery, LastActivityInfo>, 
+                                               ICommandHandler<AttestActivityCommand>
     {
+        private DateTime lastActivity = DateTime.Now;
+
         public LastActivityProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
+            this.XmppStream.RegisterIqContentCallback(XNames.last_query, this);
             this.Mediator.RegisterHandler<LastActivityQuery, LastActivityInfo>(this);
+            this.Mediator.RegisterHandler<AttestActivityCommand>(this);
+            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.LastActivity));
         }
 
         public async Task<LastActivityInfo> QueryAsync(string jid)
@@ -43,9 +52,21 @@ namespace YetAnotherXmppClient.Protocol.Handler
                        };
         }
 
-        public Task<LastActivityInfo> HandleQueryAsync(LastActivityQuery query)
+        Task<LastActivityInfo> IAsyncQueryHandler<LastActivityQuery, LastActivityInfo>.HandleQueryAsync(LastActivityQuery query)
         {
             return this.QueryAsync(query.Jid);
+        }
+
+        Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)
+        {
+            var secondsSinceLastActivity = (DateTime.Now - this.lastActivity).TotalSeconds;
+            var iqResponse = new Iq(IqType.result, new XElement(XNames.last_query, new XAttribute("seconds", secondsSinceLastActivity)));
+            return this.XmppStream.WriteElementAsync(iqResponse);
+        }
+
+        void ICommandHandler<AttestActivityCommand>.HandleCommand(AttestActivityCommand command)
+        {
+            this.lastActivity = DateTime.Now;
         }
     }
 }

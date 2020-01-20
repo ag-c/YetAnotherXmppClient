@@ -6,17 +6,19 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 
 // XEP-0202: Entity Time
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
-    class EntityTimeProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
+    internal sealed class EntityTimeProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback
     {
         public EntityTimeProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator) 
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.time, this);
+            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.EntityTime));
         }
 
         async Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)

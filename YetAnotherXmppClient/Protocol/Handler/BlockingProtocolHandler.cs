@@ -8,6 +8,7 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
 
 //XEP-0191: Blocking Command
@@ -33,7 +34,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         //}
     }
 
-    public class BlockingProtocolHandler : ProtocolHandlerBase, 
+    internal sealed class BlockingProtocolHandler : ProtocolHandlerBase, 
         IAsyncQueryHandler<RetrieveBlockListQuery, IEnumerable<string>>,
         IAsyncQueryHandler<BlockQuery, bool>,
         IAsyncQueryHandler<UnblockQuery, bool>,
@@ -46,6 +47,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.Mediator.RegisterHandler<BlockQuery, bool>(this);
             this.Mediator.RegisterHandler<UnblockQuery, bool>(this);
             this.Mediator.RegisterHandler<UnblockAllQuery, bool>(this);
+            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.Blocking));
         }
 
         public async Task<IEnumerable<string>> RetrieveBlockListAsync()

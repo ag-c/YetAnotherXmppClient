@@ -7,6 +7,7 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 using static YetAnotherXmppClient.Expectation;
@@ -49,13 +50,18 @@ namespace YetAnotherXmppClient.Protocol.Handler
     }
 
     
-    public class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>
+    internal sealed class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
+                                                   IAsyncQueryHandler<QueryEntityInformationTreeQuery, EntityInfo>,
+                                                   ICommandHandler<RegisterFeatureCommand>
     {
+        private readonly List<string> registeredFeatureProtocolNamespaces = new List<string>();
+
         public ServiceDiscoveryProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator) 
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.discoinfo, this);
             this.Mediator.RegisterHandler<QueryEntityInformationTreeQuery, EntityInfo>(this);
+            this.Mediator.RegisterHandler<RegisterFeatureCommand>(this);
         }
 
         public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync(string jid)
@@ -130,10 +136,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 content: new XElement(XNames.discoinfo_query,
                             new DiscoInfoIdentity("client", "pc", "YetAnotherXmppClient"),
                             new DiscoInfoFeature("http://jabber.org/protocol/disco#info"),
-                            new DiscoInfoFeature("urn:xmpp:time"),
-                            new DiscoInfoFeature("eu.siacs.conversations.axolotl.devicelist+notify"),
-                            new DiscoInfoFeature("jabber:iq:version"),
-                            new DiscoInfoFeature(Features.ChatStateNotifications)),
+                            //new DiscoInfoFeature("eu.siacs.conversations.axolotl.devicelist+notify"),
+                            this.registeredFeatureProtocolNamespaces.Select(name => new DiscoInfoFeature(name))),
                 from: this.RuntimeParameters["jid"]);
 
             await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
@@ -150,6 +154,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var jid = new Jid(this.RuntimeParameters["jid"]);
             var rootInfo = await this.QueryEntityInformationAsync(jid.Server).ConfigureAwait(false);
             return rootInfo.Features.Any(f => f.Var == name);
+        }
+
+        void ICommandHandler<RegisterFeatureCommand>.HandleCommand(RegisterFeatureCommand command)
+        {
+            this.registeredFeatureProtocolNamespaces.Add(command.ProtocolNamespace);
         }
     }
 }

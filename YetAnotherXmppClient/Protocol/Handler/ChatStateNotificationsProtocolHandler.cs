@@ -6,6 +6,7 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
 
@@ -22,7 +23,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         paused,
     }
 
-    class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IOutgoingMessageCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
+    internal sealed class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IOutgoingMessageCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
     {
         public ChatStateNotificationsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
@@ -30,6 +31,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterMessageCallback(this);
             this.XmppStream.RegisterOutgoingMessageCallback(this);
             this.Mediator.RegisterHandler<SendChatStateNotificationCommand>(this);
+            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.ChatStateNotifications));
         }
 
         void IOutgoingMessageCallback.HandleOutgoingMessage(ref Message message)

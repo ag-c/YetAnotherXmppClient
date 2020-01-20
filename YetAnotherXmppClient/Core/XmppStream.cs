@@ -83,6 +83,14 @@ namespace YetAnotherXmppClient.Core
             );
         }
 
+        public void RegisterIqContentCallback(XName iqContentName, IIqReceivedCallback callback)
+        {
+            this.RegisterElementCallback(
+                xe => xe.Name.LocalName == "iq" && xe.Element(iqContentName) != null,
+                xe => callback.HandleIqReceivedAsync(Iq.FromXElement(xe))
+            );
+        }
+
         public void RegisterPresenceCallback(IPresenceReceivedCallback callback)
         {
             this.RegisterElementCallback(
