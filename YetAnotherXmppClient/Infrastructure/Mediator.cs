@@ -37,6 +37,12 @@ namespace YetAnotherXmppClient.Infrastructure
         Task HandleCommandAsync(TCommand command);
     }
 
+    public interface ICommandHandler { }
+    public interface ICommandHandler<TCommand> : ICommandHandler
+    {
+        void HandleCommand(TCommand command);
+    }
+
     public interface IMediator
     {
         void RegisterHandler<TEvent>(IEventHandler<TEvent> handler, bool publishLatestEventToNewHandler = false) where TEvent : IEvent;
@@ -44,11 +50,14 @@ namespace YetAnotherXmppClient.Infrastructure
         void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>;
         void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery,Task<TResult>>> handler) where TQuery : IQuery<TResult>;
         void RegisterHandler<TCommand>(IAsyncCommandHandler<TCommand> handler) where TCommand : ICommand;
+        void RegisterHandler<TCommand>(ICommandHandler<TCommand> handler) where TCommand : ICommand;
         void RegisterHandler<TEvent>(Expression<Func<TEvent, Task>> handler) where TEvent : IEvent;
 
         Task PublishAsync<TEvent>(TEvent evt) where TEvent : IEvent;
+        TResult Query<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>;
         Task<TResult> QueryAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>;
         Task ExecuteAsync<TCommand>(TCommand command) where TCommand : ICommand;
+        void Execute<TCommand>(TCommand command) where TCommand : ICommand;
     }
 
     public class Mediator : IMediator
@@ -58,6 +67,7 @@ namespace YetAnotherXmppClient.Infrastructure
         private readonly Dictionary<Type, IQueryHandler> queryHandlers = new Dictionary<Type, IQueryHandler>();
         private readonly Dictionary<Type, IAsyncQueryHandler> asyncQueryHandlers = new Dictionary<Type, IAsyncQueryHandler>();
         private readonly Dictionary<Type, IAsyncCommandHandler> asyncCommandHandlers = new Dictionary<Type, IAsyncCommandHandler>();
+        private readonly Dictionary<Type, ICommandHandler> commandHandlers = new Dictionary<Type, ICommandHandler>();
         private readonly Dictionary<Type, Delegate> delQueryHandlers = new Dictionary<Type, Delegate>();
         private readonly Dictionary<Type, Delegate> delEventHandlers = new Dictionary<Type, Delegate>();
 
@@ -74,37 +84,32 @@ namespace YetAnotherXmppClient.Infrastructure
 
         public void RegisterHandler<TQuery, TResult>(IQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
         {
-            if (this.queryHandlers.ContainsKey(typeof(TQuery)))
-                this.queryHandlers.Remove(typeof(TQuery));
-            this.queryHandlers.Add(typeof(TQuery), handler);
+            this.queryHandlers[typeof(TQuery)] = handler;
         }
 
         public void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
         {
-            if (this.asyncQueryHandlers.ContainsKey(typeof(TQuery))) //UNDONE bad design
-                this.asyncQueryHandlers.Remove(typeof(TQuery));
-            this.asyncQueryHandlers.Add(typeof(TQuery), handler);
+            this.asyncQueryHandlers[typeof(TQuery)] = handler;
         }
 
         public void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery, Task<TResult>>> handler) where TQuery : IQuery<TResult>
         {
-            if (this.delQueryHandlers.ContainsKey(typeof(TQuery)))
-                this.delQueryHandlers.Remove(typeof(TQuery));
-            this.delQueryHandlers.Add(typeof(TQuery), ((LambdaExpression)handler).Compile(false));
+            this.delQueryHandlers[typeof(TQuery)] = ((LambdaExpression)handler).Compile(false);
         }
 
         public void RegisterHandler<TCommand>(IAsyncCommandHandler<TCommand> handler) where TCommand : ICommand
         {
-            if (this.asyncCommandHandlers.ContainsKey(typeof(TCommand)))
-                this.asyncCommandHandlers.Remove(typeof(TCommand));
-            this.asyncCommandHandlers.Add(typeof(TCommand), handler);
+            this.asyncCommandHandlers[typeof(TCommand)] = handler;
+        }
+
+        public void RegisterHandler<TCommand>(ICommandHandler<TCommand> handler) where TCommand : ICommand
+        {
+            this.commandHandlers[typeof(TCommand)] = handler;
         }
 
         public void RegisterHandler<TEvent>(Expression<Func<TEvent, Task>> handler) where TEvent : IEvent
         {
-            if (this.delEventHandlers.ContainsKey(typeof(TEvent)))
-                this.delEventHandlers.Remove(typeof(TEvent));
-            this.delEventHandlers.Add(typeof(TEvent), ((LambdaExpression)handler).Compile(false));
+            this.delEventHandlers[typeof(TEvent)] = ((LambdaExpression)handler).Compile(false);
         }
 
         public TResult Query<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>
@@ -133,6 +138,12 @@ namespace YetAnotherXmppClient.Infrastructure
         {
             var handler = this.asyncCommandHandlers[typeof(TCommand)];
             return ((IAsyncCommandHandler<TCommand>)handler).HandleCommandAsync(command);
+        }
+
+        public void Execute<TCommand>(TCommand command) where TCommand : ICommand
+        {
+            var handler = this.commandHandlers[typeof(TCommand)];
+            ((ICommandHandler<TCommand>)handler).HandleCommand(command);
         }
 
         public async Task PublishAsync<TEvent>(TEvent evt) where TEvent : IEvent
