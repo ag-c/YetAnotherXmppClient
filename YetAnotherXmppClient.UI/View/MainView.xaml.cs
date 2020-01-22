@@ -4,6 +4,7 @@ using System.Reactive;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
 using Avalonia.Threading;
@@ -89,7 +90,13 @@ namespace YetAnotherXmppClient.UI.View
                                 this.ViewModel.HandleSessionActivation((ChatSessionViewModel)args.RemovedItems[0], false);
                             }
                         };
+                    this.GotFocus += this.HandleGotFocus;
                 });
+        }
+
+        private void HandleGotFocus(object sender, GotFocusEventArgs e)
+        {
+            this.ViewModel.AttestActivity();
         }
 
         private void InitializeComponent()

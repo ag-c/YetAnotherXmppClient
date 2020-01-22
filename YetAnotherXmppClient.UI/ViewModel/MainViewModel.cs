@@ -230,5 +230,10 @@ namespace YetAnotherXmppClient.UI.ViewModel
                     }
                 });
         }
+
+        public void AttestActivity()
+        {
+            this.xmppClient.Execute(new AttestActivityCommand());
+        }
     }
 }
