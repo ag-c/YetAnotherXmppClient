@@ -37,7 +37,7 @@ namespace YetAnotherXmppClient.UI.View
                     //        }));
                     d(Interactions
                         .SubscriptionRequest
-                        .RegisterHandler(
+                        .RegisterHandlerAndNotify(
                             async interaction =>
                             {
                                 var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
