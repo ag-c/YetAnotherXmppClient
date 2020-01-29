@@ -71,6 +71,9 @@ namespace YetAnotherXmppClient.Infrastructure
         private readonly Dictionary<Type, Delegate> delQueryHandlers = new Dictionary<Type, Delegate>();
         private readonly Dictionary<Type, Delegate> delEventHandlers = new Dictionary<Type, Delegate>();
 
+        private readonly Dictionary<Type, IAsyncQueryContext> waitingAsyncQueries = new Dictionary<Type, IAsyncQueryContext>();
+
+
         public void RegisterHandler<TEvent>(IEventHandler<TEvent> handler, bool publishLatestEventToNewHandler = false) where TEvent : IEvent
         {
             if(!this.eventHandlers.ContainsKey(typeof(TEvent)))
@@ -90,6 +93,15 @@ namespace YetAnotherXmppClient.Infrastructure
         public void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>
         {
             this.asyncQueryHandlers[typeof(TQuery)] = handler;
+            if (this.waitingAsyncQueries.TryGetValue(typeof(TQuery), out var queryContext))
+            {
+                this.waitingAsyncQueries.Remove((typeof(TQuery)));
+                Task.Run(async () =>
+                    {
+                        var result = await handler.HandleQueryAsync((TQuery)queryContext.Query).ConfigureAwait(false);
+                        queryContext.Fulfill(result);
+                    });
+            }
         }
 
         public void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery, Task<TResult>>> handler) where TQuery : IQuery<TResult>
@@ -130,6 +142,13 @@ namespace YetAnotherXmppClient.Infrastructure
                 return (Task<TResult>)this.delQueryHandlers[typeof(TQuery)].DynamicInvoke(query);
             }
 
+            if (!this.asyncQueryHandlers.ContainsKey(typeof(TQuery)))
+            {
+                var fq = new AsyncQueryContext<TResult>(query);
+                this.waitingAsyncQueries.Add(typeof(TQuery), fq);
+                return fq.ResultTask;
+            }
+
             var handler = this.asyncQueryHandlers[typeof(TQuery)];
             return ((IAsyncQueryHandler<TQuery, TResult>)handler).HandleQueryAsync(query);
         }
@@ -160,6 +179,30 @@ namespace YetAnotherXmppClient.Infrastructure
 
             var handlerList = this.eventHandlers[evt.GetType()];
             await Task.WhenAll(handlerList.Select(handler => ((IEventHandler<TEvent>)handler).HandleEventAsync(evt))).ConfigureAwait(false);
+        }
+
+
+        private interface IAsyncQueryContext
+        {
+            object Query { get; }
+            void Fulfill(object result);
+        }
+
+        private class AsyncQueryContext<TResult> : IAsyncQueryContext
+        {
+            private readonly TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
+
+            public Task<TResult> ResultTask => this.tcs.Task;
+            public object Query { get; }
+
+            public AsyncQueryContext(object query)
+            {
+                this.Query = query;
+            }
+            public void Fulfill(object result)
+            {
+                this.tcs.TrySetResult((TResult)result);
+            }
         }
     }
 }
