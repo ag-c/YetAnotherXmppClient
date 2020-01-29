@@ -37,7 +37,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 this.capabilitiesByVer.Add(ver, entityInfo);
             }
 
-            this.capabilitiesByFullJid.Add(presence.From, this.capabilitiesByVer[ver]);
+            this.capabilitiesByFullJid[presence.From] = this.capabilitiesByVer[ver];
 
             //UNDONE publish event
         }
