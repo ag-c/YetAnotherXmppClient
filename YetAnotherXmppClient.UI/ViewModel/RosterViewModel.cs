@@ -58,13 +58,19 @@ namespace YetAnotherXmppClient.UI.ViewModel
         private readonly AsyncLock rosterItemsLock = new AsyncLock();
 
         private RosterItemWithAvatarViewModel[] rosterItems = new RosterItemWithAvatarViewModel[0];
+
         public RosterItemWithAvatarViewModel[] RosterItems
         {
             get => this.rosterItems;
             set => this.RaiseAndSetIfChanged(ref this.rosterItems, value);
         }
 
-        public RosterItemWithAvatarViewModel SelectedRosterItem { get; set; }
+        private RosterItemWithAvatarViewModel selectedRosterItem;
+        public RosterItemWithAvatarViewModel SelectedRosterItem
+        {
+            get => this.selectedRosterItem;
+            set => this.RaiseAndSetIfChanged(ref this.selectedRosterItem, value);
+        }
 
         public ReactiveCommand<Unit, Unit> StartChatCommand { get; }
         public ReactiveCommand<Unit, Unit> AddRosterItemCommand { get; }
@@ -122,7 +128,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
                 var b1 = await this.xmppClient.QueryAsync<AddRosterItemQuery, bool>(new AddRosterItemQuery
                 {
                     BareJid = rosterItemInfo.Jid,
-                    Name = rosterItemInfo.Name,
+                    Name = string.IsNullOrEmpty(rosterItemInfo.Name) ? rosterItemInfo.Jid : rosterItemInfo.Name,
                     Groups = null
                 });
                 var b2 = await this.xmppClient.QueryAsync<RequestSubscriptionQuery, bool>(new RequestSubscriptionQuery
@@ -173,7 +179,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                                                           Subscription = x.Subscription,
                                                                           Groups = x.Groups,
                                                                           IsSubscriptionPending = x.IsSubscriptionPending,
-                                                                          IsOnline = this.latestPresenceEvents.TryGetValue(x.Jid, out var evt) ? evt.IsAvailable : false
+                                                                          IsOnline = this.latestPresenceEvents.TryGetValue(x.Jid, out var evt) && evt.IsAvailable
                                                                       }).ToArray();
             }
         }
