@@ -110,6 +110,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 return;
             }
 
+            if (message.Body == null)
+            { // we're not interested in messages without body here
+                return;
+            }
+
             var xml = message.ToString();
             var sender = message.From;
             var text = message.Body;
