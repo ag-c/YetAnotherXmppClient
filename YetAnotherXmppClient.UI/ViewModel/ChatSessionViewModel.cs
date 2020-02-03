@@ -66,7 +66,6 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         public void SendComposingChatStateNotification()
         {
-            this.goInactiveCancellationTokenSource?.Cancel(false);
             this.mediator.ExecuteAsync(new SendChatStateNotificationCommand
                                            {
                                                FullJid = this.OtherJid,
@@ -75,9 +74,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                            });
         }
 
-        private CancellationTokenSource goInactiveCancellationTokenSource;
-
-        public async void SendPausedChatStateNotification()
+        public void SendPausedChatStateNotification()
         {
             this.mediator.ExecuteAsync(new SendChatStateNotificationCommand
                                            {
@@ -85,27 +82,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                                Thread = this.Thread,
                                                State = ChatState.paused
                                            });
-            this.goInactiveCancellationTokenSource = new CancellationTokenSource();
-            try
-            {
-                await Task.Delay(TimeSpan.FromMinutes(1), this.goInactiveCancellationTokenSource.Token);
 
-                this.mediator.ExecuteAsync(new SendChatStateNotificationCommand
-                                               {
-                                                   FullJid = this.OtherJid,
-                                                   Thread = this.Thread,
-                                                   State = ChatState.inactive
-                                               });
-            }
-            catch
-            {
-                // going inactive has been canceled
-            }
-            finally
-            {
-                this.goInactiveCancellationTokenSource.Dispose();
-                this.goInactiveCancellationTokenSource = null;
-            }
         }
 
         public bool Equals(ChatSessionViewModel other)

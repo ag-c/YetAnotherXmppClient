@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
@@ -25,6 +27,10 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
     internal sealed class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IOutgoingMessageCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
     {
+        private static readonly TimeSpan GoInactiveDelay = TimeSpan.FromSeconds(30);
+
+        private ConcurrentDictionary<string, CancellationTokenSource> goInactiveCancellationTokenSources = new ConcurrentDictionary<string, CancellationTokenSource>();
+
         public ChatStateNotificationsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
@@ -40,13 +46,16 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (!message.Type.HasValue || message.Type.Value != MessageType.chat)
                 return;
 
-            // do not add chat state if the user does not wish so
+            // do not add chat state if the user does not wish to
             if (!(bool)this.Mediator.Query<GetPreferenceValueQuery, object>(new GetPreferenceValueQuery("SendChatStateNotifications", true)))
                 return;
 
             // adding active chat state to chat message if it does not already contains a chat state
             if (ExtractChatState(message).HasValue)
                 return;
+
+            // cancel the go-inactive-task
+            this.CancelInactiveTransistion(message.To);
 
             message = message.CloneAndAddElement(CreateXElementFromState(ChatState.active));
         }
@@ -100,6 +109,37 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (!(bool)this.Mediator.Query<GetPreferenceValueQuery, object>(new GetPreferenceValueQuery("SendChatStateNotifications", true)))
                 return Task.CompletedTask;
 
+            if (state == ChatState.paused)
+            {   // if pausing then go into inactive state after some time
+                var cts = this.goInactiveCancellationTokenSources.AddOrUpdate(fullJid, _ => new CancellationTokenSource(), (_, existingCts) =>
+                    {
+                        existingCts.Cancel(false);
+                        return new CancellationTokenSource();
+                    });
+                Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Task.Delay(GoInactiveDelay, cts.Token).ConfigureAwait(false);
+
+                            await this.SendStandaloneChatStateMessageAsync(fullJid, ChatState.inactive, thread).ConfigureAwait(false);
+                        }
+                        catch
+                        {
+                            // going inactive has been canceled
+                        }
+                        finally
+                        {
+                            cts.Dispose();
+                            this.goInactiveCancellationTokenSources.TryRemove(fullJid, out _);
+                        }
+                    });
+            }
+            else if (state != ChatState.inactive)
+            { // going to any chat state other than inactive should cancel the go-inactive-task
+                this.CancelInactiveTransistion(fullJid);
+            }
+
             var message = new Message(CreateXElementFromState(state), thread == null ? null : new XElement("thread", thread))
                               {
                                   From = this.RuntimeParameters["jid"],
@@ -131,6 +171,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
         Task IAsyncCommandHandler<SendChatStateNotificationCommand>.HandleCommandAsync(SendChatStateNotificationCommand command)
         {
             return this.SendStandaloneChatStateMessageAsync(command.FullJid, command.State, command.Thread);
+        }
+
+        private void CancelInactiveTransistion(string fullJid)
+        {
+            if (this.goInactiveCancellationTokenSources.TryRemove(fullJid, out var cts))
+            {
+                cts.Cancel(false);
+            }
         }
     }
 }
