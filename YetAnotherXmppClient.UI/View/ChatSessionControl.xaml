@@ -2,9 +2,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="YetAnotherXmppClient.UI.View.ChatSessionControl">
   <Border BorderThickness="1" BorderBrush="Black">
-    <Grid RowDefinitions="*,Auto">
+    <Grid RowDefinitions="Auto,*,Auto">
+      <Grid ColumnDefinitions="Auto,*" Grid.Row="0">
+        <TextBlock Text="Other users chat state: " Grid.Column="0" Margin="3,0,3,3" />
+        <TextBlock Text="{Binding OtherChatState}" Grid.Column="1" Margin="0,0,3,3" />
+      </Grid>
       <!--<ListBox Items="{Binding Messages}" Name="msgListBox"  MinHeight="100" Margin="3" />-->
-      <ScrollViewer>
+      <ScrollViewer Grid.Row="1">
         <ItemsControl Items="{Binding Messages}" x:Name="tStack">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
@@ -25,7 +29,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </ScrollViewer>
-      <Grid ColumnDefinitions="*,Auto" Grid.Row="1">
+      <Grid ColumnDefinitions="*,Auto" Grid.Row="2">
         <TextBox Text="{Binding TextToSend}"  HorizontalAlignment="Stretch" Grid.Column="0" Margin="3,0,3,3" Name="messageTextBox" />
         <Button Content="Send" Name="sendButton" IsDefault="True" Grid.Column="1" Margin="0,0,3,3" />
       </Grid>

@@ -25,8 +25,15 @@ namespace YetAnotherXmppClient.UI.ViewModel
         private string textToSend;
         public string TextToSend
         {
-            get => textToSend;
+            get => this.textToSend;
             set => this.RaiseAndSetIfChanged(ref this.textToSend, value);
+        }
+
+        private string otherChatState;
+        public string OtherChatState
+        {
+            get => this.otherChatState;
+            set => this.RaiseAndSetIfChanged(ref this.otherChatState, value);
         }
 
         public ReactiveCommand<Unit, Unit> SendCommand { get; }
