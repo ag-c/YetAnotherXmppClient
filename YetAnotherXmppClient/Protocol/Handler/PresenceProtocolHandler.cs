@@ -26,7 +26,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
     }
 
     //RFC 6121 
-    public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, IAsyncCommandHandler<BroadcastPresenceCommand>
+    public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, 
+                                           IAsyncCommandHandler<BroadcastPresenceCommand>,
+                                           IAsyncQueryHandler<RequestSubscriptionQuery, bool>
     {
         // <full-jid, presence>
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
@@ -37,6 +39,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             this.XmppStream.RegisterPresenceCallback(this);
             this.Mediator.RegisterHandler<BroadcastPresenceCommand>(this);
+            this.Mediator.RegisterHandler<RequestSubscriptionQuery, bool>(this);
         }
 
         public IEnumerable<Presence> GetAllPresencesForBareJid(string bareJid)
@@ -141,6 +144,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         Task IAsyncCommandHandler<BroadcastPresenceCommand>.HandleCommandAsync(BroadcastPresenceCommand command)
         {
             return this.BroadcastPresenceAsync(command.Show, command.Status);
+        }
+
+        Task<bool> IAsyncQueryHandler<RequestSubscriptionQuery, bool>.HandleQueryAsync(RequestSubscriptionQuery query)
+        {
+            return this.RequestSubscriptionAsync(query.Jid);
         }
     }
 }
