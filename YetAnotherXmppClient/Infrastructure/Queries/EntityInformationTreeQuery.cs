@@ -2,7 +2,7 @@
 
 namespace YetAnotherXmppClient.Infrastructure.Queries
 {
-    public class QueryEntityInformationTreeQuery : IQuery<EntityInfo>
+    public class EntityInformationTreeQuery : IQuery<EntityInfo>
     {
         public string Jid { get; set; } //null: use server jid
     }
