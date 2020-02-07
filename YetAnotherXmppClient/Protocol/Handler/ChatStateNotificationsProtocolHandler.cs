@@ -28,8 +28,10 @@ namespace YetAnotherXmppClient.Protocol.Handler
     internal sealed class ChatStateNotificationsProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IOutgoingMessageCallback, IAsyncCommandHandler<SendChatStateNotificationCommand>
     {
         private static readonly TimeSpan GoInactiveDelay = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan GoGoneDelay = TimeSpan.FromMinutes(10);
 
-        private ConcurrentDictionary<string, CancellationTokenSource> goInactiveCancellationTokenSources = new ConcurrentDictionary<string, CancellationTokenSource>();
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> goInactiveCancellationTokenSources = new ConcurrentDictionary<string, CancellationTokenSource>();
+        private CancellationTokenSource goGoneCancellationTokenSource = new CancellationTokenSource();
 
         public ChatStateNotificationsProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
@@ -38,6 +40,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterOutgoingMessageCallback(this);
             this.Mediator.RegisterHandler<SendChatStateNotificationCommand>(this);
             this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.ChatStateNotifications));
+
+            this.ResetGoneTransitionTask();
         }
 
         void IOutgoingMessageCallback.HandleOutgoingMessage(ref Message message)
@@ -56,6 +60,9 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             // cancel the go-inactive-task
             this.CancelInactiveTransistion(message.To);
+
+            //user is active -> reset go-gone-task
+            this.ResetGoneTransitionTask();
 
             message = message.CloneAndAddElement(CreateXElementFromState(ChatState.active));
         }
@@ -108,6 +115,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
         {
             if (!(bool)this.Mediator.Query<GetPreferenceValueQuery, object>(new GetPreferenceValueQuery("SendChatStateNotifications", true)))
                 return Task.CompletedTask;
+
+            if (state != ChatState.gone)
+            {
+                //user shows any kind of (last) activity -> reset go-gone-task
+                this.ResetGoneTransitionTask();
+            }
 
             if (state == ChatState.paused)
             {   // if pausing then go into inactive state after some time
@@ -179,6 +192,29 @@ namespace YetAnotherXmppClient.Protocol.Handler
             {
                 cts.Cancel(false);
             }
+        }
+
+        private void ResetGoneTransitionTask()
+        {
+            this.goGoneCancellationTokenSource?.Cancel();
+            this.goGoneCancellationTokenSource = new CancellationTokenSource();
+            Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Task.Delay(GoGoneDelay, this.goGoneCancellationTokenSource.Token).ConfigureAwait(false);
+
+                        //UNDONE send to any active chat sessions?
+                        foreach (var jid in this.goInactiveCancellationTokenSources.Keys)
+                        {
+                            await this.SendStandaloneChatStateMessageAsync(jid, ChatState.gone).ConfigureAwait(false);
+                        }
+                    }
+                    catch
+                    {
+                        // going gone has been canceled
+                    }
+                });
         }
     }
 }
