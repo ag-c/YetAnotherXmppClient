@@ -28,7 +28,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private async Task RefreshAsync(string jid)
         {
-            var info = await this.mediator.QueryAsync<QueryEntityInformationTreeQuery, EntityInfo>(new QueryEntityInformationTreeQuery { Jid = jid});
+            var info = await this.mediator.QueryAsync<EntityInformationTreeQuery, EntityInfo>(new EntityInformationTreeQuery { Jid = jid});
             this.RootEntityInfo.Clear();
             this.RootEntityInfo.Add(info);
         }
