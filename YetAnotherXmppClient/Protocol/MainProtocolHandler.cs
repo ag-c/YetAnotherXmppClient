@@ -57,6 +57,7 @@ namespace YetAnotherXmppClient.Protocol
                                                                         typeof(BlockingProtocolHandler),
                                                                         typeof(LastActivityProtocolHandler),
                                                                         typeof(ChatStateNotificationsProtocolHandler),
+                                                                        typeof(UserMoodProtocolHandler)
                                                                     };
         private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
 
