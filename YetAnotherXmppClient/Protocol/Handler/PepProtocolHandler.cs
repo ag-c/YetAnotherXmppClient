@@ -8,33 +8,46 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Events;
+using YetAnotherXmppClient.Infrastructure.Queries;
+using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
+
+// XEP-0163: Personal Eventing Protocol
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
-    class PepProtocolHandler : ProtocolHandlerBase
+    internal class PepProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
     {
         public PepProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
+            this.XmppStream.RegisterMessageContentCallback(XNames.pubsubevent_event, this);
+        }
+
+        async Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
+        {
+            var eventXElem = message.Element(XNames.pubsubevent_event);
+            var itemsXElem = eventXElem.Element(XNames.pubsubevent_items);
+            var items = new PubSubItems(itemsXElem.Attribute("node").Value);
+
+            foreach (var itemXElem in itemsXElem.Elements(XNames.pubsubevent_item))
+            {
+                items.Add(PubSubItem.FromXElement(itemXElem));
+            }
+
+            await this.Mediator.PublishAsync(new PublishedEvent
+                                                 {
+                                                     Items = items
+                                                 }).ConfigureAwait(false);
         }
 
         //XEP-0163/6.1
         public async Task<bool> DetermineSupportAsync()
         {
-            //UNDONE use ServiceDiscoveryProtoHandler
-            var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query))
-            {
-                From = this.RuntimeParameters["jid"],
-                To = this.RuntimeParameters["jid"].ToBareJid()
-            };
+            var ownBareJid = this.RuntimeParameters["jid"].ToBareJid();
+            var entityInfo = await this.Mediator.QueryAsync<EntityInformationQuery, EntityInfo>(new EntityInformationQuery(ownBareJid)).ConfigureAwait(false);
 
-            var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
-
-            var pepSupported = iqResp.Element(XNames.discoinfo_query).Elements(XNames.discoinfo_identity)
-                .Any(idt => idt.Attribute("category")?.Value == "pubsub" &&
-                            idt.Attribute("type")?.Value == "pep");
-
-            return pepSupported;
+            return entityInfo.Identities.Any(id => id.Category == "pubsub" && id.Type == "pep");
         }
 
         public async Task PublishEventAsync(string node, string itemId, XElement content)
