@@ -198,7 +198,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var command = new PublishEventCommand
                               {
                                   Node = "http://jabber.org/protocol/mood",
-                                  Content = new XElement(XNames.mood_mood, mood.ToXElement(), text != null ? new XElement("text", text) : null)
+                                  Content = new XElement(XNames.mood_mood, mood.ToXElement(), string.IsNullOrEmpty(text) ? null : new XElement("text", text))
                               };
 
             return this.Mediator.ExecuteAsync(command);

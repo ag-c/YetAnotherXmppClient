@@ -9,7 +9,8 @@
     <Menu DockPanel.Dock="Top" Margin="0,3,3,3">
       <MenuItem Header="XMPP">
         <MenuItem Header="Service Discovery.." Command="{Binding ShowServiceDiscoveryCommand}" />
-         <MenuItem Header="Blocking.." IsEnabled="{Binding IsBlockingFeatureSupported}" Command="{Binding ShowBlockingCommand}" />
+        <MenuItem Header="Blocking.." IsEnabled="{Binding IsBlockingFeatureSupported}" Command="{Binding ShowBlockingCommand}" />
+        <MenuItem Header="Set mood.." Command="{Binding ShowMoodCommand}" />
         <Separator/>
         <MenuItem Header="Options.." Command="{Binding ShowPreferencesCommand}" />
         <MenuItem Header="Log out" Command="{Binding LogoutCommand}" />

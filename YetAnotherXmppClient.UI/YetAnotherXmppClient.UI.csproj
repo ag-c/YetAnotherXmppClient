@@ -15,6 +15,7 @@
     <None Remove="AddRosterItemWindow.xaml" />
     <None Remove="ChatSessionControl.xaml" />
     <None Remove="LoginWindow.xaml" />
+    <None Remove="View\MoodWindow.xaml" />
     <None Remove="View\PreferencesWindow.xaml" />
     <None Remove="View\RosterView.xaml" />
     <None Remove="View\ServiceDiscoveryWindow.xaml" />
@@ -38,6 +39,9 @@
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\LoginWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="View\MoodWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\PreferencesWindow.xaml">

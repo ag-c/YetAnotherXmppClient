@@ -11,6 +11,7 @@ using Avalonia.Threading;
 using MessageBox.Avalonia.Enums;
 using Microsoft.EntityFrameworkCore.Internal;
 using ReactiveUI;
+using YetAnotherXmppClient.Protocol.Handler;
 using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI.View
@@ -66,6 +67,15 @@ namespace YetAnotherXmppClient.UI.View
                                     var window = new BlockingWindow(new BlockingViewModel(interaction.Input));
                                     await window.ShowDialog(MainWindow.Instance);
                                     interaction.SetOutput(Unit.Default);
+                                }));
+                    d(Interactions
+                        .ShowMood
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var window = new MoodWindow(new MoodViewModel());
+                                    var moodAndText = await window.ShowDialog<(Mood?,string)>(MainWindow.Instance);
+                                    interaction.SetOutput(moodAndText);
                                 }));
                     d(Interactions
                         .ShowPreferences
