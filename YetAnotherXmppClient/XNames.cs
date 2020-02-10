@@ -97,6 +97,8 @@ namespace YetAnotherXmppClient
         public static readonly XName chatstates_gone = "{http://jabber.org/protocol/chatstates}gone";
 
         public static readonly XName caps_c = "{http://jabber.org/protocol/caps}c";
+
+        public static readonly XName mood_mood = "{http://jabber.org/protocol/mood}mood";
     }
 
     public class XNamespaces
