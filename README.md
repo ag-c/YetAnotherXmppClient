@@ -6,6 +6,7 @@ More or less implemented XMPP client functionality:
 * XEP-0054: vcard-temp
 * XEP-0085: Chat State Notifications
 * XEP-0092: Software Version
+* XEP-0107: User Mood
 * XEP-0115: Entity Capabilities
 * XEP-0153: vCard-Based Avatars
 * XEP-0163: Personal Eventing Protocol
