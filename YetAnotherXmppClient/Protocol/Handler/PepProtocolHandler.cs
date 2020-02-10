@@ -8,6 +8,7 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
@@ -16,12 +17,13 @@ using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.Protocol.Handler
 {
-    internal class PepProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback
+    internal class PepProtocolHandler : ProtocolHandlerBase, IMessageReceivedCallback, IAsyncCommandHandler<PublishEventCommand>
     {
         public PepProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterMessageContentCallback(XNames.pubsubevent_event, this);
+            this.Mediator.RegisterHandler<PublishEventCommand>(this);
         }
 
         async Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
@@ -66,6 +68,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             };
 
             var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
+        }
+
+        Task IAsyncCommandHandler<PublishEventCommand>.HandleCommandAsync(PublishEventCommand command)
+        {
+            return this.PublishEventAsync(command.Node, null, command.Content);
         }
     }
 }
