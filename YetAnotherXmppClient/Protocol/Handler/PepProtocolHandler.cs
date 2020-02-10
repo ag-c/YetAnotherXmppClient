@@ -52,11 +52,12 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return entityInfo.Identities.Any(id => id.Category == "pubsub" && id.Type == "pep");
         }
 
-        public async Task PublishEventAsync(string node, string itemId, XElement content)
+        public Task PublishEventAsync(string node, string itemId, XElement content)
         {
             //var nodeId = Guid.NewGuid().ToString();
             //var itemId = (string)null;
             var iq = new Iq(IqType.set, new PubSubPublish(node, itemId, content));
+            return this.XmppStream.WriteElementAsync(iq);
         }
 
         public async Task SubscribeToNodeAsync(string nodeId)
