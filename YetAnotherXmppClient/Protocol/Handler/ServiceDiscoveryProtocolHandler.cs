@@ -188,21 +188,25 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
         async Task<bool> IAsyncQueryHandler<EntitySupportsFeatureQuery, bool>.HandleQueryAsync(EntitySupportsFeatureQuery query)
         {
-            if (string.IsNullOrWhiteSpace(query.FullJid) || string.IsNullOrWhiteSpace(query.ProtocolNamespace))
+            if (string.IsNullOrWhiteSpace(query.ProtocolNamespace))
                 return false;
 
-            if (this.entityInformations.TryGetValue(query.FullJid, out var entityInfo))
+            var fullJid = query.FullJid;
+            if (string.IsNullOrWhiteSpace(fullJid))
+                fullJid = new Jid(this.RuntimeParameters["jid"]).Server;
+
+            if (this.entityInformations.TryGetValue(fullJid, out var entityInfo))
             {
                 return entityInfo.Features.Any(f => f.Var == query.ProtocolNamespace);
             }
-            else if (this.entityInformationTrees.TryGetValue(query.FullJid, out var entityInfoTree))
+            else if (this.entityInformationTrees.TryGetValue(fullJid, out var entityInfoTree))
             {
                 //UNDONE checking features of Children also?
                 return entityInfoTree.Features.Any(f => f.Var == query.ProtocolNamespace);
             }
 
             //UNDONE is it enough without checking the Children too?
-            var info = await this.QueryEntityInformationAsync(query.FullJid).ConfigureAwait(false);
+            var info = await this.QueryEntityInformationAsync(fullJid).ConfigureAwait(false);
             return info.Features.Any(f => f.Var == query.ProtocolNamespace);
         }
     }

@@ -6,6 +6,9 @@ namespace YetAnotherXmppClient.Infrastructure.Queries
 {
     internal class EntitySupportsFeatureQuery : IQuery<bool>
     {
+        /// <summary>
+        /// If null, then the server is queried
+        /// </summary>
         public string FullJid { get; }
         public string ProtocolNamespace { get; }
 
