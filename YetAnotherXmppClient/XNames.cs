@@ -1,5 +1,4 @@
 using System.Xml.Linq;
-using YetAnotherXmppClient.Core;
 
 namespace YetAnotherXmppClient
 {
@@ -99,6 +98,8 @@ namespace YetAnotherXmppClient
         public static readonly XName caps_c = "{http://jabber.org/protocol/caps}c";
 
         public static readonly XName mood_mood = "{http://jabber.org/protocol/mood}mood";
+
+        public static readonly XName private_query = "{jabber:iq:private}query";
     }
 
     public class XNamespaces

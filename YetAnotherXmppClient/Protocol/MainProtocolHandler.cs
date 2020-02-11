@@ -57,7 +57,8 @@ namespace YetAnotherXmppClient.Protocol
                                                                         typeof(BlockingProtocolHandler),
                                                                         typeof(LastActivityProtocolHandler),
                                                                         typeof(ChatStateNotificationsProtocolHandler),
-                                                                        typeof(UserMoodProtocolHandler)
+                                                                        typeof(UserMoodProtocolHandler),
+                                                                        typeof(PrivateXmlStorageProtocolHandler)
                                                                     };
         private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
 
@@ -85,6 +86,9 @@ namespace YetAnotherXmppClient.Protocol
             };
         }
 
+        /// <summary>
+        /// Returns a protocol handler or feature negotiator of type T.
+        /// </summary>
         public T Get<T>() where T : class
         {
             if(this.protocolHandlers.TryGetValue(typeof(T), out var protoHandler))
