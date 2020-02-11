@@ -14,3 +14,8 @@ More or less implemented XMPP client functionality:
 * XEP-0191: Blocking Command
 * XEP-0199: XMPP Ping
 * XEP-0202: Entity Time
+
+
+Screenshots:<br/>
+![Alt text](https://raw.githubusercontent.com/jfechn/YetAnotherXmppClient/master/login.png "Login view")
+![Alt text](https://raw.githubusercontent.com/jfechn/YetAnotherXmppClient/master/main.png "Main view")
