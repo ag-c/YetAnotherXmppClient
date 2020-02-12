@@ -191,9 +191,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             if (string.IsNullOrWhiteSpace(query.ProtocolNamespace))
                 return false;
 
-            var fullJid = query.FullJid;
-            if (string.IsNullOrWhiteSpace(fullJid))
-                fullJid = new Jid(this.RuntimeParameters["jid"]).Server;
+            var fullJid = query.FullJid ?? new Jid(this.RuntimeParameters["jid"]).Server;
 
             if (this.entityInformations.TryGetValue(fullJid, out var entityInfo))
             {
