@@ -3,6 +3,7 @@ More or less implemented XMPP client functionality:
 * RFC 6121
 * XEP-0012: Last Activity
 * XEP-0030: Service Discovery
+* XEP-0049: Private XML Storage
 * XEP-0054: vcard-temp
 * XEP-0085: Chat State Notifications
 * XEP-0092: Software Version
@@ -14,3 +15,8 @@ More or less implemented XMPP client functionality:
 * XEP-0191: Blocking Command
 * XEP-0199: XMPP Ping
 * XEP-0202: Entity Time
+
+
+Screenshots:<br/>
+![Alt text](https://raw.githubusercontent.com/jfechn/YetAnotherXmppClient/master/login.png "Login view")
+![Alt text](https://raw.githubusercontent.com/jfechn/YetAnotherXmppClient/master/main.png "Main view")
