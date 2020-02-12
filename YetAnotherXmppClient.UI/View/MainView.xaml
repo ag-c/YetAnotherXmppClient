@@ -10,6 +10,7 @@
       <MenuItem Header="XMPP">
         <MenuItem Header="Service Discovery.." Command="{Binding ShowServiceDiscoveryCommand}" />
         <MenuItem Header="Blocking.." IsEnabled="{Binding IsBlockingFeatureSupported}" Command="{Binding ShowBlockingCommand}" />
+        <MenuItem Header="Private XML Storage.." IsEnabled="{Binding IsPrivateXmlStorageFeatureSupported}" Command="{Binding ShowPrivateXmlStorageCommand}" />
         <MenuItem Header="Set mood.." Command="{Binding ShowMoodCommand}" />
         <Separator/>
         <MenuItem Header="Options.." Command="{Binding ShowPreferencesCommand}" />

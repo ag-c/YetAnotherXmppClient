@@ -48,6 +48,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ReactiveCommand<Unit,Unit> ShowPreferencesCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowServiceDiscoveryCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowBlockingCommand { get; }
+        public ReactiveCommand<Unit,Unit> ShowPrivateXmlStorageCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowMoodCommand { get; }
         public ReactiveCommand<Unit,Unit> LogoutCommand { get; }
         public Func<Task> OnLogoutRequested { get; set; }
@@ -79,6 +80,13 @@ namespace YetAnotherXmppClient.UI.ViewModel
         {
             get => this.isBlockingFeatureSupported;
             set => this.RaiseAndSetIfChanged(ref this.isBlockingFeatureSupported, value);
+        }        
+        
+        private bool isPrivateXmlStorageFeatureSupported;
+        public bool IsPrivateXmlStorageFeatureSupported
+        {
+            get => this.isPrivateXmlStorageFeatureSupported;
+            set => this.RaiseAndSetIfChanged(ref this.isPrivateXmlStorageFeatureSupported, value);
         }
 
         public ObservableCollection<ChatSessionViewModel> ChatSessions { get; } = new ObservableCollection<ChatSessionViewModel>();
@@ -122,6 +130,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.ShowPreferencesCommand = ReactiveCommand.CreateFromTask(this.ShowPreferencesAsync);
             this.ShowServiceDiscoveryCommand = ReactiveCommand.CreateFromTask(this.ShowServiceDiscoveryAsync);
             this.ShowBlockingCommand = ReactiveCommand.CreateFromTask(this.ShowBlockingAsync);
+            this.ShowPrivateXmlStorageCommand = ReactiveCommand.CreateFromTask(this.ShowPrivateXmlStorageAsync);
             this.ShowMoodCommand = ReactiveCommand.CreateFromTask(this.ShowMoodAsync);
 
 
@@ -152,6 +161,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
         private async Task ShowBlockingAsync(CancellationToken ct)
         {
             await Interactions.ShowBlocking.Handle(this.xmppClient);
+        }        
+        
+        private async Task ShowPrivateXmlStorageAsync(CancellationToken ct)
+        {
+            await Interactions.ShowPrivateXmlStorage.Handle(this.xmppClient);
         }
 
         private async Task ShowMoodAsync(CancellationToken ct)
@@ -199,6 +213,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.ConnectedJid = evt.ConnectedJid;
             this.IsProtocolNegotiationComplete = true;
             this.IsBlockingFeatureSupported = await this.xmppClient.IsFeatureSupportedAsync(ProtocolNamespaces.Blocking);
+            this.IsPrivateXmlStorageFeatureSupported = await this.xmppClient.IsFeatureSupportedAsync(ProtocolNamespaces.PrivateXmlStorage);
         }
 
         Task IEventHandler<MessageReceivedEvent>.HandleEventAsync(MessageReceivedEvent evt)

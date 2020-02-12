@@ -67,6 +67,15 @@ namespace YetAnotherXmppClient.UI.View
                                     var window = new BlockingWindow(new BlockingViewModel(interaction.Input));
                                     await window.ShowDialog(MainWindow.Instance);
                                     interaction.SetOutput(Unit.Default);
+                                }));                    
+                    d(Interactions
+                        .ShowPrivateXmlStorage
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var window = new PrivateXmlStorageWindow(new PrivateXmlStorageViewModel(interaction.Input));
+                                    await window.ShowDialog(MainWindow.Instance);
+                                    interaction.SetOutput(Unit.Default);
                                 }));
                     d(Interactions
                         .ShowMood

@@ -8,5 +8,6 @@
         public const string EntityTime = "urn:xmpp:time";
         public const string Blocking = "urn:xmpp:blocking";
         public const string ChatStateNotifications = "http://jabber.org/protocol/chatstates";
+        public const string PrivateXmlStorage = "jabber:iq:private";
     }
 }

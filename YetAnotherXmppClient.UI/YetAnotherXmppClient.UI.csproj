@@ -17,6 +17,7 @@
     <None Remove="LoginWindow.xaml" />
     <None Remove="View\MoodWindow.xaml" />
     <None Remove="View\PreferencesWindow.xaml" />
+    <None Remove="View\PrivateXmlStorageWindow.xaml" />
     <None Remove="View\RosterView.xaml" />
     <None Remove="View\ServiceDiscoveryWindow.xaml" />
   </ItemGroup>
@@ -45,6 +46,9 @@
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\PreferencesWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="View\PrivateXmlStorageWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\RosterView.xaml">
