@@ -1,7 +1,12 @@
-﻿using Avalonia;
+﻿using System.Reactive;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.ReactiveUI;
+using Avalonia.Threading;
+using MessageBox.Avalonia.Enums;
+using ReactiveUI;
 using YetAnotherXmppClient.UI.ViewModel;
 
 namespace YetAnotherXmppClient.UI.View
@@ -19,6 +24,19 @@ namespace YetAnotherXmppClient.UI.View
 #if DEBUG
             this.AttachDevTools();
 #endif
+            this.WhenActivated(d =>
+                {
+                    d(Interactions.ShowStorePrivateXmlStorageResponse.RegisterHandler(async interaction =>
+                        {
+                            //var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                            await Dispatcher.UIThread.InvokeAsync(async () =>
+                                {
+                                    var window = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Reponse", interaction.Input, ButtonEnum.Ok);
+                                    var result = await window.Show();
+                                });
+                            interaction.SetOutput(Unit.Default);
+                        }));
+                });
         }
 
         private void InitializeComponent()

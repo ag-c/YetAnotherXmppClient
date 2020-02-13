@@ -7,8 +7,8 @@
         Title="Private XML Storage" Width="500" Height="500">
   <DockPanel LastChildFill="True">
     <Grid ColumnDefinitions="*,Auto" DockPanel.Dock="Top">
-      <TextBox Text="{Binding XName}" Watermark="namespace+localname" Margin="3" />
-      <Button Content="Retrieve" Command="{Binding RetrieveCommand}" Grid.Column="1" Margin="3" Padding="3"/>
+      <TextBox Text="{Binding ExpandedXName}" Watermark="{}{namespace}localname" Margin="3" />
+      <Button Content="Retrieve" Command="{Binding RetrieveCommand}" IsEnabled="{Binding IsValidXName}" Grid.Column="1" Margin="3" Padding="3"/>
     </Grid>
 
     <Grid ColumnDefinitions="*,Auto" DockPanel.Dock="Bottom">
