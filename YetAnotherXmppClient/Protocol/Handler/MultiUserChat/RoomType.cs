@@ -1,6 +1,6 @@
 ﻿namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    internal enum RoomType
+    public enum RoomType
     {
         Hidden,
         MembersOnly,

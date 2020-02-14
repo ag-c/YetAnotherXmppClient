@@ -1,6 +1,6 @@
 ﻿namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    internal enum Role
+    public enum Role
     {
         None,
         Moderator,

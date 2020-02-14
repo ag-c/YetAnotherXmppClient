@@ -1,6 +1,6 @@
 ﻿namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    internal enum Affiliation
+    public enum Affiliation
     {
         None,
         Owner,
