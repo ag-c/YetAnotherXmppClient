@@ -2,6 +2,7 @@
 
 // XEP-0045: Multi-User Chat
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -49,7 +50,6 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         /// <summary>
         /// An implementation MAY return a list of existing occupants if that information is publicly available, or return no list at all if this information is kept private.
         /// </summary>
-        /// <param name="roomJid"></param>
         public async Task<IEnumerable<Item>> QueryRoomItemsAsync(string roomJid)
         {
             var _jid = new Jid(roomJid);
@@ -60,6 +60,14 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
 
             return await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(roomJid)).ConfigureAwait(false);
+        }
+
+        public async Task<bool> DiscoverClientSupportAsync(Jid contactJid)
+        {
+            if(!contactJid.IsFull)
+                throw new ArgumentException("Full jid expected!");
+
+            return await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(contactJid, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
         }
     }
 }
