@@ -100,6 +100,11 @@ namespace YetAnotherXmppClient.Core.Stanza
             this.Type = type;
         }
 
+        public Presence(object content) : base("presence", content)
+        {
+            this.Id = Guid.NewGuid().ToString();
+        }
+
 
         public static implicit operator string(Presence presence)
         {
