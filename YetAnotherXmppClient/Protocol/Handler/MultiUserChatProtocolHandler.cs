@@ -49,6 +49,22 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
     {
         public string Jid { get; set; }
         public string Name { get; set; }
+
+        public Room(string jid, string name)
+        {
+            this.Jid = jid;
+            this.Name = name;
+        }
+    }
+
+    public class RoomInfo : EntityInfo
+    {
+        internal RoomInfo(EntityInfo entityInfo)
+        {
+            this.Jid = entityInfo.Jid;
+            this.Identities = entityInfo.Identities;
+            this.Features = entityInfo.Features;
+        }
     }
 
     internal class MultiUserChatProtocolHandler : ProtocolHandlerBase
@@ -68,11 +84,21 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             var items = await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(jid)).ConfigureAwait(false);
 
-            return items.Select(itm => new Room
-                                           {
-                                               Jid = itm.Jid,
-                                               Name = itm.Name
-                                           });
+            return items.Select(itm => new Room(itm.Jid, itm.Name));
+        }
+
+        public async Task<RoomInfo> QueryRoomInformationAsync(string roomJid)
+        {
+            var _jid = new Jid(roomJid);
+            var serverSupportsMuc = await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(_jid.Server, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
+            if (!serverSupportsMuc)
+            {
+                return null;
+            }
+
+            var entityInfo = await this.Mediator.QueryAsync<EntityInformationQuery, EntityInfo>(new EntityInformationQuery(roomJid)).ConfigureAwait(false);
+
+            return new RoomInfo(entityInfo);
         }
     }
 }
