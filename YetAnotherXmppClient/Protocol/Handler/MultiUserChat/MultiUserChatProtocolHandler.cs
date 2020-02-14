@@ -181,6 +181,13 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             if (this.rooms.TryGetValue(fromJid.Bare, out var room))
             {
+                var subjectElem = message.Element("subject");
+                if (subjectElem != null)
+                {
+                    room.Subject = subjectElem.Value;
+                    return Task.CompletedTask;
+                }
+
                 var delayElem = message.Element(XNames.delay_delay);
                 if (delayElem != null)
                 {

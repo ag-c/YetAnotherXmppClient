@@ -36,6 +36,17 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public string Jid { get; }
         public string Name { get; } //UNDONE 
 
+        private string subject;
+        public string Subject
+        {
+            get => this.subject;
+            set
+            {
+                this.subject = value;
+                this.SubjectChanged?.Invoke(this, value);
+            }
+        }
+
         public RoomType Type { get; internal set; }
 
         public bool IsLogging { get; internal set; }
@@ -47,6 +58,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         public event EventHandler<Occupant> SelfUpdated;
         public event EventHandler<(Occupant Occupant, OccupantUpdateCause Cause)> OccupantsUpdated;
+
+        public event EventHandler<string> SubjectChanged; 
 
         private event EventHandler<string> errorOccurred;
         public event EventHandler<string> ErrorOccurred
