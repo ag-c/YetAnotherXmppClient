@@ -2,6 +2,7 @@
 
 // XEP-0045: Multi-User Chat
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,6 +61,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
 
             return await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(roomJid)).ConfigureAwait(false);
+        }
+
+
+        public async Task<bool> DiscoverClientSupportAsync(Jid contactJid)
+        {
+            if (!contactJid.IsFull)
+                throw new ArgumentException("Full jid expected!");
+
+            return await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(contactJid, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
         }
     }
 }
