@@ -72,12 +72,13 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(contactJid, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Item>> QueryContactsCurrentRoomsAsync(Jid contactJid)
+        public async Task<IEnumerable<string>> QueryContactsCurrentRoomsAsync(Jid contactJid)
         {
             if (!contactJid.IsFull)
                 throw new ArgumentException("Full jid expected!");
 
-            return await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(contactJid, "http://jabber.org/protocol/muc#rooms")).ConfigureAwait(false);
+            var items = await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(contactJid, "http://jabber.org/protocol/muc#rooms")).ConfigureAwait(false);
+            return items.Select(itm => itm.Jid);
         }
     }
 }
