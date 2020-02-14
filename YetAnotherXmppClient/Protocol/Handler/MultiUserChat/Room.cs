@@ -38,6 +38,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         public RoomType Type { get; internal set; }
 
+        public bool IsLogging { get; internal set; }
+
         public Occupant Self { get; private set; }
         public IEnumerable<Occupant> Occupants => this.occupants.Values;
 

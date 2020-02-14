@@ -55,5 +55,10 @@ namespace YetAnotherXmppClient.Extensions
         {
             return xElem.Elements().FirstOrDefault(xe => xe.Name.LocalName == localName);
         }
+
+        public static bool AnyWithAttributeValue(this IEnumerable<XElement> xElems, string attributeName, string attributeValue)
+        {
+            return xElems?.Any(xe => xe.Attribute(attributeName)?.Value == attributeValue) ?? false;
+        }
     }
 }

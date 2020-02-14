@@ -137,7 +137,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             var statusElems = xElem.Elements(XNames.mucuser_status);
 
             //"the "self-presence" sent by the room to the new user MUST include a status code of 110"
-            if (statusElems?.Any(xe => xe.Attribute("code")?.Value == "110") ?? false)
+            if (statusElems.AnyWithAttributeValue("code", StatusCodes.SelfPresence))
             {
                 //UNDONE what to do with the "self-presence"?
                 //"This self-presence MUST NOT be sent to the new occupant until the room has sent the presence of all other occupants
@@ -146,14 +146,25 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 room.SetSelf(occupantJid.Resource, presence.To, affiliation, role);
                 return Task.CompletedTask;
             }
-            if (statusElems?.Any(xe => xe.Attribute("code")?.Value == "100") ?? false)
+            if (statusElems.AnyWithAttributeValue("code", StatusCodes.NonAnonymous))
             {
                 room.Type = RoomType.NonAnonymous;
+            }
+            if (statusElems.AnyWithAttributeValue("code", StatusCodes.Logging))
+            {
+                room.IsLogging = true;
             }
 
             room.AddOrUpdateOccupant(occupantJid.Resource, fullJid, affiliation, role);
 
             return Task.CompletedTask;
+        }
+
+        private static class StatusCodes
+        {
+            public const string NonAnonymous = "100";
+            public const string SelfPresence = "100";
+            public const string Logging = "170";
         }
     }
 }
