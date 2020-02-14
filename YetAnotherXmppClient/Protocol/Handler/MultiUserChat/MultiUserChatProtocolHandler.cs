@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Queries;
@@ -16,12 +17,13 @@ using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    internal class MultiUserChatProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback
+    internal class MultiUserChatProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, IMessageReceivedCallback
     {
         public MultiUserChatProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterPresenceContentCallback(XNames.mucuser_x, this);
+            this.XmppStream.RegisterMessageCallback(this);
         }
 
         public async Task<IEnumerable<(string Jid, string Name)>> DiscoverRoomsAsync(string serviceUrl)
@@ -88,7 +90,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         // <bare-jid, room>
         private readonly Dictionary<string, Room> rooms = new Dictionary<string, Room>();
 
-        public async Task<Room> EnterRoomAsync(string roomname, string server, string nickname, string password = null)
+        public async Task<Room> EnterRoomAsync(string roomname, string server, string nickname, string password = null, HistoryLimits historyLimits = null)
         {
             var jid = new Jid(roomname, server, nickname);
             if (!jid.IsFull)
@@ -100,7 +102,17 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 this.rooms.Add(jid.Bare, room);
             }
 
-            var presence = new Core.Stanza.Presence(new XElement(XNames.muc_x, password == null ? null : new XElement(XNames.muc_password, password)))
+            if (historyLimits?.Since.HasValue ?? false) //TEMP
+            {
+                Log.Error("historyLimits.Since has value handling is not implemented!");
+            }
+
+            var historyElem = historyLimits == null ? null : new XElement(XNames.muc_history,
+                                  historyLimits.MaxChars.HasValue ? new XAttribute("maxchars", historyLimits.MaxChars.Value.ToString()) : null,
+                                  historyLimits.MaxStanzas.HasValue ? new XAttribute("maxstanzas", historyLimits.MaxStanzas.Value.ToString()) : null,
+                                  historyLimits.Seconds.HasValue ? new XAttribute("seconds", historyLimits.Seconds.Value.ToString()) : null);
+
+            var presence = new Core.Stanza.Presence(new XElement(XNames.muc_x, password == null ? null : new XElement(XNames.muc_password, password), historyElem))
                                {
                                    From = this.RuntimeParameters["jid"],
                                    To = jid
@@ -156,6 +168,30 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
 
             room.AddOrUpdateOccupant(occupantJid.Resource, fullJid, affiliation, role);
+
+            return Task.CompletedTask;
+        }
+
+        Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
+        {
+            if (message.Type != MessageType.groupchat)
+                return Task.CompletedTask;
+
+            var fromJid = new Jid(message.From);
+
+            if (this.rooms.TryGetValue(fromJid.Bare, out var room))
+            {
+                var delayElem = message.Element(XNames.delay_delay);
+                if (delayElem != null)
+                {
+                    //"Discussion history messages MUST be stamped with Delayed Delivery (XEP-0203) [14] information qualified by
+                    // the 'urn:xmpp:delay' namespace to indicate that they are sent with delayed delivery and to specify the times
+                    // at which they were originally sent. The 'from' attribute MUST be set to the JID of the room itself."
+
+                    //TODO
+                }
+                room.AddMessage(..);
+            }
 
             return Task.CompletedTask;
         }

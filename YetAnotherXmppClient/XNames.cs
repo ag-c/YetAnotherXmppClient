@@ -103,9 +103,12 @@ namespace YetAnotherXmppClient
 
         public static readonly XName muc_x = "{http://jabber.org/protocol/muc}x";
         public static readonly XName muc_password = "{http://jabber.org/protocol/muc}password";
+        public static readonly XName muc_history = "{http://jabber.org/protocol/muc}history";
         public static readonly XName mucuser_x = "{http://jabber.org/protocol/muc#user}x";
         public static readonly XName mucuser_item = "{http://jabber.org/protocol/muc#user}item";
         public static readonly XName mucuser_status = "{http://jabber.org/protocol/muc#user}status";
+
+        public static readonly XName delay_delay = "{urn:xmpp:delay}delay";
     }
 
     public class XNamespaces
