@@ -163,7 +163,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         private static class StatusCodes
         {
             public const string NonAnonymous = "100";
-            public const string SelfPresence = "100";
+            public const string SelfPresence = "110";
             public const string Logging = "170";
         }
     }
