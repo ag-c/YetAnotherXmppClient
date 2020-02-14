@@ -13,6 +13,11 @@ namespace YetAnotherXmppClient.Core
 
         public bool IsFull => !(new[] { this.Local, this.Server, this.Resource }.Any(string.IsNullOrWhiteSpace));
 
+        public Jid(string local, string server, string resource)
+            : this($"{local}@{server}/{resource}")
+        {
+        }
+
         public Jid(string jid)
         {
             var parts = jid.Split('@');
