@@ -9,52 +9,18 @@ using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
-using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 using static YetAnotherXmppClient.Expectation;
 
 //XEP-0030
 
-namespace YetAnotherXmppClient.Protocol.Handler
+namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
 {
-    namespace ServiceDiscovery
-    {
-        public class Feature
-        {
-            public string Var { get; set; }
-        }
-
-        public class Identity
-        {
-            public string Category { get; set; }
-            public string Type { get; set; }
-            public string Name { get; set; }
-        }
-
-        //UNDONE move to other namespace
-        public class EntityInfo
-        {
-            public string Jid { get; set; }
-
-            public IEnumerable<Identity> Identities { get; set; }
-            public IEnumerable<Feature> Features { get; set; }
-
-            public IEnumerable<EntityInfo> Children { get; set; }
-        }
-
-        public class Item
-        {
-            public string Jid { get; set; }
-            public string Name { get; set; }
-            public string Node { get; set; }
-        }
-    }
-
-    
     internal sealed class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
-                                                   IAsyncQueryHandler<EntityInformationTreeQuery, EntityInfo>,
-                                                   IAsyncQueryHandler<EntityInformationQuery, EntityInfo>,
-                                                   IAsyncQueryHandler<EntitySupportsFeatureQuery, bool>,
-                                                   ICommandHandler<RegisterFeatureCommand>
+                                                            IAsyncQueryHandler<EntityInformationTreeQuery, EntityInfo>,
+                                                            IAsyncQueryHandler<EntityInformationQuery, EntityInfo>,
+                                                            IAsyncQueryHandler<EntityItemsQuery, IEnumerable<Item>>,
+                                                            IAsyncQueryHandler<EntitySupportsFeatureQuery, bool>,
+                                                            ICommandHandler<RegisterFeatureCommand>
     {
         private readonly List<string> registeredFeatureProtocolNamespaces = new List<string>();
 
@@ -72,7 +38,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.Mediator.RegisterHandler<RegisterFeatureCommand>(this);
         }
 
-        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationTreeAsync(string jid)
+        public async Task<EntityInfo> QueryEntityInformationTreeAsync(string jid)
         {
             //if given jid equals null, use the currently logged in users server
             if (jid == null)
@@ -97,7 +63,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return rootInfo;
         }
 
-        public async Task<ServiceDiscovery.EntityInfo> QueryEntityInformationAsync(string jid, string node = null)
+        public async Task<EntityInfo> QueryEntityInformationAsync(string jid, string node = null)
         { 
             var iq = new Iq(IqType.get, new XElement(XNames.discoinfo_query, node == null ? null : new XAttribute("node", node)))
             {
@@ -108,10 +74,10 @@ namespace YetAnotherXmppClient.Protocol.Handler
             var iqResp = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
             var queryElem = iqResp.Element(XNames.discoinfo_query);
-            var entityInfo = new ServiceDiscovery.EntityInfo
+            var entityInfo = new EntityInfo
             {
                 Jid = iqResp.From,
-                Identities = queryElem.Elements(XNames.discoinfo_identity).Select(xe => new ServiceDiscovery.Identity
+                Identities = queryElem.Elements(XNames.discoinfo_identity).Select(xe => new Identity
                 {
                     Category = xe.Attribute("category").Value,
                     Type = xe.Attribute("type").Value,
@@ -128,7 +94,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             return entityInfo;
         }
 
-        public async Task<IEnumerable<ServiceDiscovery.Item>> DiscoverItemsAsync(string entityId)
+        public async Task<IEnumerable<Item>> DiscoverItemsAsync(string entityId)
         {
             var iq = new Iq(IqType.get, new XElement(XNames.discoitems_query))
             {
@@ -140,7 +106,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
             Expect(IqType.result, iqResp.Type, iqResp);
 
-            return iqResp.Element(XNames.discoitems_query).Elements(XNames.discoitems_item).Select(xe => new ServiceDiscovery.Item
+            return iqResp.Element(XNames.discoitems_query).Elements(XNames.discoitems_item).Select(xe => new Item
             {
                 Jid = xe.Attribute("jid").Value,
                 Name = xe.Attribute("name")?.Value,
@@ -158,7 +124,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
                             new DiscoInfoFeature("http://jabber.org/protocol/disco#info"),
                             //new DiscoInfoFeature("eu.siacs.conversations.axolotl.devicelist+notify"),
                             this.registeredFeatureProtocolNamespaces.Select(name => new DiscoInfoFeature(name))),
-                from: this.RuntimeParameters["jid"]);
+                @from: this.RuntimeParameters["jid"]);
 
             await this.XmppStream.WriteElementAsync(response).ConfigureAwait(false);
 
@@ -197,7 +163,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
             {
                 return entityInfo.Features.Any(f => f.Var == query.ProtocolNamespace);
             }
-            else if (this.entityInformationTrees.TryGetValue(fullJid, out var entityInfoTree))
+            
+            if (this.entityInformationTrees.TryGetValue(fullJid, out var entityInfoTree))
             {
                 //UNDONE checking features of Children also?
                 return entityInfoTree.Features.Any(f => f.Var == query.ProtocolNamespace);
@@ -206,6 +173,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
             //UNDONE is it enough without checking the Children too?
             var info = await this.QueryEntityInformationAsync(fullJid).ConfigureAwait(false);
             return info.Features.Any(f => f.Var == query.ProtocolNamespace);
+        }
+
+        Task<IEnumerable<Item>> IAsyncQueryHandler<EntityItemsQuery, IEnumerable<Item>>.HandleQueryAsync(EntityItemsQuery query)
+        {
+            return this.DiscoverItemsAsync(query.Jid);
         }
     }
 }

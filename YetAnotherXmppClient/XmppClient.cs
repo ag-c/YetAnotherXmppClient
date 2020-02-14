@@ -11,6 +11,7 @@ using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol;
 using YetAnotherXmppClient.Protocol.Handler;
+using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient
 {

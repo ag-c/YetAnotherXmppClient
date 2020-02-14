@@ -13,6 +13,7 @@ using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Protocol.Handler;
+using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 using YetAnotherXmppClient.Protocol.Negotiator;
 using static YetAnotherXmppClient.Expectation;
 
