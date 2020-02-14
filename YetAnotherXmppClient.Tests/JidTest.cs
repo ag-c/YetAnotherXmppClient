@@ -30,5 +30,17 @@ namespace YetAnotherXmppClient.Tests
             jid.Resource.Should().BeNull();
             jid.ToString().Should().Be("user@server");
         }
+
+        [Fact]
+        public void IsFull()
+        {
+            var bareJid = new Jid("user@server");
+
+            bareJid.IsFull.Should().BeFalse();
+
+            var fullJid = new Jid("user@server/res");
+
+            fullJid.IsFull.Should().BeTrue();
+        }
     }
 }

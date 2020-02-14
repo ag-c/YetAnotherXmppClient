@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace YetAnotherXmppClient.Core
 {
@@ -8,6 +10,8 @@ namespace YetAnotherXmppClient.Core
         public string Server { get; }
         public string Resource { get; }
         public string Bare => this.Local + "@" + this.Server;
+
+        public bool IsFull => !(new[] { this.Local, this.Server, this.Resource }.Any(string.IsNullOrWhiteSpace));
 
         public Jid(string jid)
         {
