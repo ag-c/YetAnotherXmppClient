@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
-using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.Infrastructure.Queries
 {
