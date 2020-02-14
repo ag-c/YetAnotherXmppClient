@@ -94,9 +94,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
             return entityInfo;
         }
 
-        public async Task<IEnumerable<Item>> DiscoverItemsAsync(string entityId)
+        public async Task<IEnumerable<Item>> DiscoverItemsAsync(string entityId, string node = null)
         {
-            var iq = new Iq(IqType.get, new XElement(XNames.discoitems_query))
+            var iq = new Iq(IqType.get, new XElement(XNames.discoitems_query, node == null ? null : new XAttribute("node", node)))
             {
                 From = this.RuntimeParameters["jid"],
                 To = entityId //this.RuntimeParameters["jid"].ToBareJid()
