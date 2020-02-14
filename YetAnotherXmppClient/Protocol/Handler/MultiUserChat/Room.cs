@@ -36,7 +36,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public string Jid { get; }
         public string Name { get; } //UNDONE 
 
-        public RoomType Type { get; private set; }
+        public RoomType Type { get; internal set; }
 
         public Occupant Self { get; private set; }
         public IEnumerable<Occupant> Occupants => this.occupants.Values;
@@ -73,7 +73,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 });
             this.OccupantsUpdated?.Invoke(this, (occupant, cause));
 
-            if (fullJid != null)
+            if (fullJid != null) //UNDONE not really needed as advertised with status-code-100?!
             {
                 this.Type = RoomType.NonAnonymous;
             }

@@ -88,11 +88,11 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         // <bare-jid, room>
         private readonly Dictionary<string, Room> rooms = new Dictionary<string, Room>();
 
-        public async Task<Room> EnterRoomAsync(string roomname, string server, string nickname)
+        public async Task<Room> EnterRoomAsync(string roomname, string server, string nickname, string password = null)
         {
             var jid = new Jid(roomname, server, nickname);
             if (!jid.IsFull)
-                throw new ArgumentException("Couldn't construct full jid with given parameters!");
+                throw new ArgumentException("Couldn't construct full jid 'roomname@server/nickname' with given parameters!");
 
             if (!this.rooms.TryGetValue(jid.Bare, out var room))
             {
@@ -100,7 +100,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 this.rooms.Add(jid.Bare, room);
             }
 
-            var presence = new Core.Stanza.Presence(new XElement(XNames.muc_x))
+            var presence = new Core.Stanza.Presence(new XElement(XNames.muc_x, password == null ? null : new XElement(XNames.muc_password, password)))
                                {
                                    From = this.RuntimeParameters["jid"],
                                    To = jid
@@ -134,8 +134,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             var role = Enum.Parse<Role>(itemElem.Attribute("role").Value, ignoreCase: true);
             var fullJid = itemElem.Attribute("jid")?.Value;
 
+            var statusElems = xElem.Elements(XNames.mucuser_status);
+
             //"the "self-presence" sent by the room to the new user MUST include a status code of 110"
-            if (xElem.Element(XNames.mucuser_status)?.Attribute("code")?.Value == "110")
+            if (statusElems?.Any(xe => xe.Attribute("code")?.Value == "110") ?? false)
             {
                 //UNDONE what to do with the "self-presence"?
                 //"This self-presence MUST NOT be sent to the new occupant until the room has sent the presence of all other occupants
@@ -143,6 +145,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 //"The service MAY rewrite the new occupant's roomnick (e.g., if roomnicks are locked down or based on some other policy)."
                 room.SetSelf(occupantJid.Resource, presence.To, affiliation, role);
                 return Task.CompletedTask;
+            }
+            if (statusElems?.Any(xe => xe.Attribute("code")?.Value == "100") ?? false)
+            {
+                room.Type = RoomType.NonAnonymous;
             }
 
             room.AddOrUpdateOccupant(occupantJid.Resource, fullJid, affiliation, role);
