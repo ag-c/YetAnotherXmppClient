@@ -12,61 +12,6 @@ using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    internal enum Role
-    {
-        None,
-        Moderator,
-        Participant,
-        Visitor
-    }
-
-    internal enum Affiliation
-    {
-        None,
-        Owner,
-        Admin,
-        Member,
-        Outcast
-    }
-
-    internal enum RoomType
-    {
-        Hidden,
-        MembersOnly,
-        Moderated,
-        NonAnonymous,
-        Open,
-        PasswordProtected,
-        Persistent,
-        Public,
-        SemiAnonymous,
-        Temporary,
-        Unmoderated,
-        Unsecured
-    }
-
-    public class Room
-    {
-        public string Jid { get; set; }
-        public string Name { get; set; }
-
-        public Room(string jid, string name)
-        {
-            this.Jid = jid;
-            this.Name = name;
-        }
-    }
-
-    public class RoomInfo : EntityInfo
-    {
-        internal RoomInfo(EntityInfo entityInfo)
-        {
-            this.Jid = entityInfo.Jid;
-            this.Identities = entityInfo.Identities;
-            this.Features = entityInfo.Features;
-        }
-    }
-
     internal class MultiUserChatProtocolHandler : ProtocolHandlerBase
     {
         public MultiUserChatProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
