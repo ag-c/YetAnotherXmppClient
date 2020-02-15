@@ -11,5 +11,15 @@
 
             return jid;
         }
+
+        public static bool IsBareJid(this string jid)
+        {
+            if (jid?.Contains('/') ?? true)
+                return false;
+
+            var parts = jid?.Split('@');
+            
+            return parts?.Length == 2 && !string.IsNullOrWhiteSpace(parts[0]) && !string.IsNullOrWhiteSpace(parts[1]);
+        }
     }
 }
