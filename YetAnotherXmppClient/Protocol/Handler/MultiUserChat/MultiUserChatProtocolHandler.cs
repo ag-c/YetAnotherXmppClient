@@ -122,6 +122,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return room;
         }
 
+        private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
+        {
+            if(!roomJid.IsBareJid())
+                throw new ArgumentException("Expected bare jid as room parameter!");
+
+            if(!this.rooms.ContainsKey(roomJid))
+                throw new InvalidOperationException("Not entered in room!");
+        }
+
         Task IPresenceReceivedCallback.HandlePresenceReceivedAsync(Core.Stanza.Presence presence)
         {
             var occupantJid = new Jid(presence.From);
@@ -198,7 +207,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
                     //TODO
                 }
-                room.AddMessage(..);
+                //UNDONE room.AddMessage(..);
             }
 
             return Task.CompletedTask;
