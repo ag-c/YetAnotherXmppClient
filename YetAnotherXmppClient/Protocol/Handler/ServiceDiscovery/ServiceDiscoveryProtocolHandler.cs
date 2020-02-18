@@ -35,6 +35,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.discoinfo, this);
             this.Mediator.RegisterHandler<EntityInformationTreeQuery, EntityInfo>(this);
+            this.Mediator.RegisterHandler<EntityInformationQuery, EntityInfo>(this);
+            this.Mediator.RegisterHandler<EntitySupportsFeatureQuery, bool>(this);
+            this.Mediator.RegisterHandler<EntityItemsQuery, IEnumerable<Item>>(this);
             this.Mediator.RegisterHandler<RegisterFeatureCommand>(this);
         }
 
