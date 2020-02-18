@@ -47,7 +47,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
         public async Task<bool> DetermineSupportAsync()
         {
             var ownBareJid = this.RuntimeParameters["jid"].ToBareJid();
-            var entityInfo = await this.Mediator.QueryAsync<EntityInformationQuery, EntityInfo>(new EntityInformationQuery(ownBareJid)).ConfigureAwait(false);
+            var entityInfo = await this.Mediator.QueryEntityInformationAsync(ownBareJid).ConfigureAwait(false);
 
             return entityInfo.Identities.Any(id => id.Category == "pubsub" && id.Type == "pep");
         }

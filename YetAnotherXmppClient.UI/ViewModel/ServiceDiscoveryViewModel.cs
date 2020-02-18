@@ -2,6 +2,7 @@
 using System.Reactive;
 using System.Threading.Tasks;
 using ReactiveUI;
+using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
@@ -28,7 +29,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private async Task RefreshAsync(string jid)
         {
-            var info = await this.mediator.QueryAsync<EntityInformationTreeQuery, EntityInfo>(new EntityInformationTreeQuery { Jid = jid});
+            var info = await this.mediator.QueryEntityInformationTreeAsync(jid);
             this.RootEntityInfo.Clear();
             this.RootEntityInfo.Add(info);
         }

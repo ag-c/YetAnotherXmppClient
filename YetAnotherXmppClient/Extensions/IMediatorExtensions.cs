@@ -22,5 +22,10 @@ namespace YetAnotherXmppClient.Extensions
         {
             return mediator.QueryAsync<EntityInformationQuery, EntityInfo>(new EntityInformationQuery(jid));
         }
+
+        public static Task<EntityInfo> QueryEntityInformationTreeAsync(this IMediator mediator, string jid = null)
+        {
+            return mediator.QueryAsync<EntityInformationTreeQuery, EntityInfo>(new EntityInformationTreeQuery(jid));
+        }
     }
 }

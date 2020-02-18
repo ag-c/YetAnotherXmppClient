@@ -28,7 +28,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         public async Task<IEnumerable<string>> DiscoverServersAsync()
         {
-            var entityInfo = await this.Mediator.QueryAsync<EntityInformationTreeQuery, EntityInfo>(new EntityInformationTreeQuery());
+            var entityInfo = await this.Mediator.QueryEntityInformationTreeAsync();
             return new[] { entityInfo }.Concat(entityInfo.Children).Where(entInfo => entInfo.Features.Any(f => f.Var == ProtocolNamespaces.MultiUserChat)).Select(entInfo => entityInfo.Jid);
         }
 
