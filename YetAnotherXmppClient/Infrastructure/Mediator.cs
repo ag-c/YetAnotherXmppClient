@@ -136,6 +136,11 @@ namespace YetAnotherXmppClient.Infrastructure
             return ((IQueryHandler<TQuery, TResult>)handler).HandleQuery(query);
         }
 
+        public Task<TResult> QueryAsync<TQuery, TResult>() where TQuery : IQuery<TResult>, new()
+        {
+            return this.QueryAsync<TQuery, TResult>(new TQuery());
+        }
+
         public Task<TResult> QueryAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>
         {
             if (this.delQueryHandlers.ContainsKey(typeof(TQuery)))
