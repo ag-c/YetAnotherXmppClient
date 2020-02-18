@@ -45,7 +45,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
 
     public class RosterProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
         IAsyncQueryHandler<AddRosterItemQuery, bool>,
-        IAsyncQueryHandler<DeleteRosterItemQuery, bool>
+        IAsyncQueryHandler<DeleteRosterItemQuery, bool>,
+        IAsyncQueryHandler<RosterItemsQuery, IEnumerable<RosterItem>>
     {
         private readonly ConcurrentDictionary<string, RosterItem> currentRosterItems = new ConcurrentDictionary<string, RosterItem>();
         private readonly IIqFactory iqFactory;
@@ -58,6 +59,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.roster, this);
             this.Mediator.RegisterHandler<AddRosterItemQuery, bool>(this);
             this.Mediator.RegisterHandler<DeleteRosterItemQuery, bool>(this);
+            this.Mediator.RegisterHandler<RosterItemsQuery, IEnumerable<RosterItem>>(this);
         }
         
         public async Task<IEnumerable<RosterItem>> RequestRosterAsync()
@@ -191,6 +193,11 @@ namespace YetAnotherXmppClient.Protocol.Handler
         Task<bool> IAsyncQueryHandler<DeleteRosterItemQuery, bool>.HandleQueryAsync(DeleteRosterItemQuery query)
         {
             return this.DeleteRosterItemAsync(query.BareJid);
+        }
+
+        Task<IEnumerable<RosterItem>> IAsyncQueryHandler<RosterItemsQuery, IEnumerable<RosterItem>>.HandleQueryAsync(RosterItemsQuery query)
+        {
+            return Task.FromResult<IEnumerable<RosterItem>>(this.currentRosterItems.Values);
         }
     }
 }
