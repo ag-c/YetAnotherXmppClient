@@ -56,7 +56,10 @@ namespace YetAnotherXmppClient.Infrastructure
 
         Task PublishAsync<TEvent>(TEvent evt) where TEvent : IEvent;
         TResult Query<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>;
+        TResult Query<TQuery, TResult>(params object[] parameters) where TQuery : IQuery<TResult>;
         Task<TResult> QueryAsync<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>;
+        Task<TResult> QueryAsync<TQuery, TResult>() where TQuery : IQuery<TResult>, new();
+        Task<TResult> QueryAsync<TQuery, TResult>(params object[] parameters) where TQuery : IQuery<TResult>;
         Task ExecuteAsync<TCommand>(TCommand command) where TCommand : ICommand;
         void Execute<TCommand>(TCommand command) where TCommand : ICommand;
     }
@@ -125,6 +128,12 @@ namespace YetAnotherXmppClient.Infrastructure
             this.delEventHandlers[typeof(TEvent)] = ((LambdaExpression)handler).Compile(false);
         }
 
+        public TResult Query<TQuery, TResult>(params object[] parameters) where TQuery : IQuery<TResult>
+        {
+            var ctorInfo = typeof(TQuery).GetConstructor(parameters.Select(obj => obj.GetType()).ToArray());
+            return this.Query<TQuery, TResult>((TQuery)ctorInfo.Invoke(parameters));
+        }
+
         public TResult Query<TQuery, TResult>(TQuery query) where TQuery : IQuery<TResult>
         {
             if (this.delQueryHandlers.ContainsKey(typeof(TQuery)))
@@ -134,6 +143,12 @@ namespace YetAnotherXmppClient.Infrastructure
 
             var handler = this.queryHandlers[typeof(TQuery)];
             return ((IQueryHandler<TQuery, TResult>)handler).HandleQuery(query);
+        }
+
+        public Task<TResult> QueryAsync<TQuery, TResult>(params object[] parameters) where TQuery : IQuery<TResult>
+        {
+            var ctorInfo = typeof(TQuery).GetConstructor(parameters.Select(obj => obj.GetType()).ToArray());
+            return this.QueryAsync<TQuery, TResult>((TQuery)ctorInfo.Invoke(parameters));
         }
 
         public Task<TResult> QueryAsync<TQuery, TResult>() where TQuery : IQuery<TResult>, new()

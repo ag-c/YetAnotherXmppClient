@@ -143,7 +143,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (this.SelectedRosterItem == null)
                 return;
 
-            await this.xmppClient.QueryAsync<DeleteRosterItemQuery, bool>(new DeleteRosterItemQuery {BareJid = this.SelectedRosterItem.Jid});
+            await this.xmppClient.QueryAsync<DeleteRosterItemQuery, bool>(this.SelectedRosterItem.Jid);
         }
 
         private async Task ShowServiceDiscoveryAsync(CancellationToken ct)

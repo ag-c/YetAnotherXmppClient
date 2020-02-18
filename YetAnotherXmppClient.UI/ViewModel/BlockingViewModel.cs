@@ -37,16 +37,16 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.UnblockCommand = ReactiveCommand.CreateFromTask(this.OnUnblockAsync);
             this.UnblockAllCommand = ReactiveCommand.CreateFromTask(this.OnUnblockAllAsync);
 
-            this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>(new RetrieveBlockListQuery()).ContinueWith(t => this.BlockedJids = t.Result);
+            this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>().ContinueWith(t => this.BlockedJids = t.Result);
         }
 
         private async Task OnBlockAsync()
         {
-            var success = await this.mediator.QueryAsync<BlockQuery, bool>(new BlockQuery { BareJid = this.BareJid });
+            var success = await this.mediator.QueryAsync<BlockQuery, bool>(this.BareJid);
             if (success)
                 this.BareJid = string.Empty;
 
-            this.BlockedJids = await this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>(new RetrieveBlockListQuery());
+            this.BlockedJids = await this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>();
         }
 
         private async Task OnUnblockAsync()
@@ -54,16 +54,16 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (this.SelectedBlockedJid == null)
                 return;
 
-            var success = await this.mediator.QueryAsync<UnblockQuery, bool>(new UnblockQuery { BareJid = this.SelectedBlockedJid }).ConfigureAwait(false);
+            var success = await this.mediator.QueryAsync<UnblockQuery, bool>(this.SelectedBlockedJid).ConfigureAwait(false);
 
-            this.BlockedJids = await this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>(new RetrieveBlockListQuery()).ConfigureAwait(false);
+            this.BlockedJids = await this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>().ConfigureAwait(false);
         }
 
         private async Task OnUnblockAllAsync()
         {
-            var success = await this.mediator.QueryAsync<UnblockAllQuery, bool>(new UnblockAllQuery()).ConfigureAwait(false);
+            var success = await this.mediator.QueryAsync<UnblockAllQuery, bool>().ConfigureAwait(false);
 
-            this.BlockedJids = await this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>(new RetrieveBlockListQuery()).ConfigureAwait(false);
+            this.BlockedJids = await this.mediator.QueryAsync<RetrieveBlockListQuery, IEnumerable<string>>().ConfigureAwait(false);
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using ReactiveUI;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
-using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.UI.ViewModel

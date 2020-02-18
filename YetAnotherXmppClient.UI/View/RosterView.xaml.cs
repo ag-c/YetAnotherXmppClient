@@ -49,10 +49,7 @@ namespace YetAnotherXmppClient.UI.View
                         .RegisterHandler(
                             async interaction =>
                                 {
-                                    var lastActivityInfo = await interaction.Input.Mediator.QueryAsync<LastActivityQuery, LastActivityInfo>(new LastActivityQuery
-                                                                                                                                          {
-                                                                                                                                              Jid = interaction.Input.Jid
-                                                                                                                                          });
+                                    var lastActivityInfo = await interaction.Input.Mediator.QueryAsync<LastActivityQuery, LastActivityInfo>(interaction.Input.Jid);
                                     await Dispatcher.UIThread.InvokeAsync(async () =>
                                         {
                                             var window = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Info", $"Last activity was {lastActivityInfo.Seconds} seconds ({TimeSpan.FromSeconds(lastActivityInfo.Seconds)}) ago.", ButtonEnum.Ok);

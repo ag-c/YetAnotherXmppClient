@@ -196,7 +196,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             if (viewModel == null)
             {
                 //var chatSession = this.xmppClient.ProtocolHandler.Get<ImProtocolHandler>().StartChatSession(jid);
-                var chatSession = this.xmppClient.Query<StartChatSessionQuery, ChatSession>(new StartChatSessionQuery { Jid = jid });
+                var chatSession = this.xmppClient.Query<StartChatSessionQuery, ChatSession>(jid);
                 viewModel = new ChatSessionViewModel(chatSession, this.xmppClient);
                 this.ChatSessions.Add(viewModel);
             }

@@ -2,6 +2,11 @@
 {
     public class UnblockQuery : IQuery<bool>
     {
-        public string BareJid { get; set; }
+        public string BareJid { get; }
+
+        public UnblockQuery(string bareJid)
+        {
+            this.BareJid = bareJid;
+        }
     }
 }
