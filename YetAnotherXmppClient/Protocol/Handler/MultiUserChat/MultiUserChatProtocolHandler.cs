@@ -26,15 +26,21 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             this.XmppStream.RegisterMessageCallback(this);
         }
 
+        public async Task<IEnumerable<string>> DiscoverServersAsync()
+        {
+            var entityInfo = await this.Mediator.QueryAsync<EntityInformationTreeQuery, EntityInfo>(new EntityInformationTreeQuery());
+            return new[] { entityInfo }.Concat(entityInfo.Children).Where(entInfo => entInfo.Features.Any(f => f.Var == ProtocolNamespaces.MultiUserChat)).Select(entInfo => entityInfo.Jid);
+        }
+
         public async Task<IEnumerable<(string Jid, string Name)>> DiscoverRoomsAsync(string serviceUrl)
         {
-            var supportsMuc = await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(serviceUrl, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
+            var supportsMuc = await this.Mediator.QueryEntitySupportsFeatureAsync(serviceUrl, ProtocolNamespaces.MultiUserChat).ConfigureAwait(false);
             if (!supportsMuc)
             {
                 return null;
             }
 
-            var items = await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(serviceUrl)).ConfigureAwait(false);
+            var items = await this.Mediator.QueryEntityItemsAsync(serviceUrl).ConfigureAwait(false);
 
             return items.Select(itm => (itm.Jid, itm.Name));
         }
@@ -42,13 +48,13 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public async Task<RoomInfo> QueryRoomInformationAsync(string roomJid)
         {
             var _jid = new Jid(roomJid);
-            var serverSupportsMuc = await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(_jid.Server, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
+            var serverSupportsMuc = await this.Mediator.QueryEntitySupportsFeatureAsync(_jid.Server, ProtocolNamespaces.MultiUserChat).ConfigureAwait(false);
             if (!serverSupportsMuc)
             {
                 return null;
             }
 
-            var entityInfo = await this.Mediator.QueryAsync<EntityInformationQuery, EntityInfo>(new EntityInformationQuery(roomJid)).ConfigureAwait(false);
+            var entityInfo = await this.Mediator.QueryEntityInformationAsync(roomJid).ConfigureAwait(false);
 
             return new RoomInfo(entityInfo);
         }
@@ -60,13 +66,13 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public async Task<IEnumerable<Item>> QueryRoomItemsAsync(string roomJid)
         {
             var _jid = new Jid(roomJid);
-            var serverSupportsMuc = await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(_jid.Server, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
+            var serverSupportsMuc = await this.Mediator.QueryEntitySupportsFeatureAsync(_jid.Server, ProtocolNamespaces.MultiUserChat).ConfigureAwait(false);
             if (!serverSupportsMuc)
             {
                 return null;
             }
 
-            return await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(roomJid)).ConfigureAwait(false);
+            return await this.Mediator.QueryEntityItemsAsync(roomJid).ConfigureAwait(false);
         }
 
 
@@ -75,7 +81,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             if (!contactJid.IsFull)
                 throw new ArgumentException("Full jid expected!");
 
-            return await this.Mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(contactJid, ProtocolNamespaces.MultiUserChat)).ConfigureAwait(false);
+            return await this.Mediator.QueryEntitySupportsFeatureAsync(contactJid, ProtocolNamespaces.MultiUserChat).ConfigureAwait(false);
         }
 
         public async Task<IEnumerable<string>> QueryContactsCurrentRoomsAsync(Jid contactJid)
@@ -83,7 +89,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             if (!contactJid.IsFull)
                 throw new ArgumentException("Full jid expected!");
 
-            var items = await this.Mediator.QueryAsync<EntityItemsQuery, IEnumerable<Item>>(new EntityItemsQuery(contactJid, "http://jabber.org/protocol/muc#rooms")).ConfigureAwait(false);
+            var items = await this.Mediator.QueryEntityItemsAsync(contactJid, "http://jabber.org/protocol/muc#rooms").ConfigureAwait(false);
             return items.Select(itm => itm.Jid);
         }
 
@@ -122,6 +128,23 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return room;
         }
 
+        internal async Task ChangeNickName(string roomJid, string nickname)
+        {
+            if(string.IsNullOrWhiteSpace(nickname))
+                throw new ArgumentException("Nickname cannot be null or whitespace");
+
+            if(!this.rooms.ContainsKey(roomJid))
+                throw new InvalidOperationException($"Not an occupant of room {roomJid}");
+
+            var presence = new Core.Stanza.Presence
+                               {
+                                   From = this.RuntimeParameters["jid"],
+                                   To = roomJid + "/" + nickname
+                               };
+            await this.XmppStream.WriteElementAsync(presence);
+            //UNDONE response
+        }
+
         private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
         {
             if(!roomJid.IsBareJid())
@@ -129,6 +152,19 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             if(!this.rooms.ContainsKey(roomJid))
                 throw new InvalidOperationException("Not entered in room!");
+
+            var message = new Message(text, null)
+                              {
+                                  From = this.RuntimeParameters["jid"],
+                                  To = roomJid,
+                                  Type = MessageType.groupchat,
+                                  Id = Guid.NewGuid().ToString()
+                              };
+            await this.XmppStream.WriteElementAsync(message).ConfigureAwait(false);
+            //UNDONE error response handling
+            //"If the sender is a visitor (i.e., does not have voice in a moderated room), the service MUST return a <forbidden/> error
+            // to the sender and MUST NOT reflect the message to all occupants. If the sender is not an occupant of the room, the
+            // service SHOULD return a <not-acceptable/> error"
         }
 
         Task IPresenceReceivedCallback.HandlePresenceReceivedAsync(Core.Stanza.Presence presence)
