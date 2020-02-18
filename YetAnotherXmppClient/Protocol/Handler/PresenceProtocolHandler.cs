@@ -28,7 +28,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
     //RFC 6121 
     public class PresenceProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, 
                                            IAsyncCommandHandler<BroadcastPresenceCommand>,
-                                           IAsyncQueryHandler<RequestSubscriptionQuery, bool>
+                                           IAsyncQueryHandler<RequestSubscriptionQuery, bool>,
+                                           IQueryHandler<PresencesQuery, IEnumerable<Presence>>
     {
         // <full-jid, presence>
         public ConcurrentDictionary<string, Presence> PresenceByJid { get; } = new ConcurrentDictionary<string, Presence>();
@@ -40,6 +41,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterPresenceCallback(this);
             this.Mediator.RegisterHandler<BroadcastPresenceCommand>(this);
             this.Mediator.RegisterHandler<RequestSubscriptionQuery, bool>(this);
+            this.Mediator.RegisterHandler<PresencesQuery, IEnumerable<Presence>>(this);
         }
 
         public IEnumerable<Presence> GetAllPresencesForBareJid(string bareJid)
@@ -107,7 +109,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             else if (presence.Type == PresenceType.subscribe)
             {
                 var requestGranted =
-                    await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(new SubscriptionRequestQuery(bareJid: presence.From))
+                    await this.Mediator.QueryAsync<SubscriptionRequestQuery, bool>(presence.From)
                         .ConfigureAwait(false); //UNDONE why generic types not inferred
                 var responseType = requestGranted ? PresenceType.subscribed : PresenceType.unsubscribed;
 
@@ -149,6 +151,14 @@ namespace YetAnotherXmppClient.Protocol.Handler
         Task<bool> IAsyncQueryHandler<RequestSubscriptionQuery, bool>.HandleQueryAsync(RequestSubscriptionQuery query)
         {
             return this.RequestSubscriptionAsync(query.Jid);
+        }
+
+        IEnumerable<Presence> IQueryHandler<PresencesQuery, IEnumerable<Presence>>.HandleQuery(PresencesQuery query)
+        {
+            if(!query.BareJid.IsBareJid())
+                throw new ArgumentException("Expected bare jid!");
+
+            return this.GetAllPresencesForBareJid(query.BareJid);
         }
     }
 }
