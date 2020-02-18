@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace YetAnotherXmppClient.Infrastructure
 {
@@ -144,6 +145,7 @@ namespace YetAnotherXmppClient.Infrastructure
 
             if (!this.asyncQueryHandlers.ContainsKey(typeof(TQuery)))
             {
+                Log.Information($"Querying query ({typeof(TQuery).Name}) asynchronously without a handler being registered yet..");
                 var fq = new AsyncQueryContext<TResult>(query);
                 this.waitingAsyncQueries.Add(typeof(TQuery), fq);
                 return fq.ResultTask;
