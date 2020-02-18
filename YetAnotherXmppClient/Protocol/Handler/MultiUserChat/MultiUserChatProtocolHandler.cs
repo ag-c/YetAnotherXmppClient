@@ -29,7 +29,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public async Task<IEnumerable<string>> DiscoverServersAsync()
         {
             var entityInfo = await this.Mediator.QueryEntityInformationTreeAsync();
-            return new[] { entityInfo }.Concat(entityInfo.Children).Where(entInfo => entInfo.Features.Any(f => f.Var == ProtocolNamespaces.MultiUserChat)).Select(entInfo => entityInfo.Jid);
+            return new[] { entityInfo }.Concat(entityInfo.Children).Where(ei => ei.Features.Any(f => f.Var == ProtocolNamespaces.MultiUserChat)).Select(ei => ei.Jid);
         }
 
         public async Task<IEnumerable<(string Jid, string Name)>> DiscoverRoomsAsync(string serviceUrl)
