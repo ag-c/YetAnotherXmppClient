@@ -15,7 +15,7 @@ using static YetAnotherXmppClient.Expectation;
 
 namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
 {
-    internal sealed class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
+    public sealed class ServiceDiscoveryProtocolHandler : ProtocolHandlerBase, IIqReceivedCallback, 
                                                             IAsyncQueryHandler<EntityInformationTreeQuery, EntityInfo>,
                                                             IAsyncQueryHandler<EntityInformationQuery, EntityInfo>,
                                                             IAsyncQueryHandler<EntityItemsQuery, IEnumerable<Item>>,
@@ -38,13 +38,12 @@ namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
             this.Mediator.RegisterHandler<RegisterFeatureCommand>(this);
         }
 
-        public async Task<EntityInfo> QueryEntityInformationTreeAsync(string jid)
+        public async Task<EntityInfo> QueryEntityInformationTreeAsync(string jid = null)
         {
             //if given jid equals null, use the currently logged in users server
             if (jid == null)
             {
-                var _jid = new Jid(this.RuntimeParameters["jid"]);
-                jid = _jid.Server;
+                jid = new Jid(this.RuntimeParameters["jid"]).Server;
             }
 
             if (this.entityInformationTrees.TryGetValue(jid, out var existingEntityInfoTree))
@@ -149,7 +148,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
 
         Task<EntityInfo> IAsyncQueryHandler<EntityInformationQuery, EntityInfo>.HandleQueryAsync(EntityInformationQuery query)
         {
-            return this.QueryEntityInformationAsync(query.FullJid);
+            return this.QueryEntityInformationAsync(query.Jid);
         }
 
         async Task<bool> IAsyncQueryHandler<EntitySupportsFeatureQuery, bool>.HandleQueryAsync(EntitySupportsFeatureQuery query)
@@ -157,7 +156,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery
             if (string.IsNullOrWhiteSpace(query.ProtocolNamespace))
                 return false;
 
-            var fullJid = query.FullJid ?? new Jid(this.RuntimeParameters["jid"]).Server;
+            var fullJid = query.Jid ?? new Jid(this.RuntimeParameters["jid"]).Server;
 
             if (this.entityInformations.TryGetValue(fullJid, out var entityInfo))
             {

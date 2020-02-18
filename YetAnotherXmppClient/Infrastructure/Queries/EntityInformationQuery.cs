@@ -4,11 +4,11 @@ namespace YetAnotherXmppClient.Infrastructure.Queries
 {
     internal class EntityInformationQuery : IQuery<EntityInfo>
     {
-        public string FullJid { get; }
+        public string Jid { get; }
 
-        public EntityInformationQuery(string fullJid)
+        public EntityInformationQuery(string jid)
         {
-            this.FullJid = fullJid;
+            this.Jid = jid;
         }
     }
 }
