@@ -13,6 +13,7 @@ using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Protocol.Handler;
+using YetAnotherXmppClient.Protocol.Handler.MultiUserChat;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 using YetAnotherXmppClient.Protocol.Negotiator;
 using static YetAnotherXmppClient.Expectation;
@@ -59,7 +60,8 @@ namespace YetAnotherXmppClient.Protocol
                                                                         typeof(LastActivityProtocolHandler),
                                                                         typeof(ChatStateNotificationsProtocolHandler),
                                                                         typeof(UserMoodProtocolHandler),
-                                                                        typeof(PrivateXmlStorageProtocolHandler)
+                                                                        typeof(PrivateXmlStorageProtocolHandler),
+                                                                        typeof(MultiUserChatProtocolHandler)
                                                                     };
         private readonly Dictionary<Type, ProtocolHandlerBase> protocolHandlers = new Dictionary<Type, ProtocolHandlerBase>();
 
