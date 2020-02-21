@@ -47,6 +47,8 @@ namespace YetAnotherXmppClient.Infrastructure
     public interface IMediator
     {
         void RegisterHandler<TEvent>(IEventHandler<TEvent> handler, bool publishLatestEventToNewHandler = false) where TEvent : IEvent;
+        void RegisterHandler<TEvent>(Action<TEvent> action, bool publishLatestEventToNewHandler = false) where TEvent : IEvent;
+        void RegisterHandler<TEvent>(Func<TEvent, Task> asyncFunc, bool publishLatestEventToNewHandler = false) where TEvent : IEvent;
         void RegisterHandler<TQuery, TResult>(IQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>;
         void RegisterHandler<TQuery, TResult>(IAsyncQueryHandler<TQuery, TResult> handler) where TQuery : IQuery<TResult>;
         void RegisterHandler<TQuery, TResult>(Expression<Func<TQuery,Task<TResult>>> handler) where TQuery : IQuery<TResult>;
@@ -77,6 +79,16 @@ namespace YetAnotherXmppClient.Infrastructure
 
         private readonly Dictionary<Type, IAsyncQueryContext> waitingAsyncQueries = new Dictionary<Type, IAsyncQueryContext>();
 
+
+        public void RegisterHandler<TEvent>(Action<TEvent> action, bool publishLatestEventToNewHandler = false) where TEvent : IEvent
+        {
+            this.RegisterHandler<TEvent>(new ActionEventHandler<TEvent>(action), publishLatestEventToNewHandler);
+        }
+
+        public void RegisterHandler<TEvent>(Func<TEvent, Task> asyncFunc, bool publishLatestEventToNewHandler = false) where TEvent : IEvent
+        {
+            this.RegisterHandler<TEvent>(new ActionEventHandler<TEvent>(asyncFunc), publishLatestEventToNewHandler);
+        }
 
         public void RegisterHandler<TEvent>(IEventHandler<TEvent> handler, bool publishLatestEventToNewHandler = false) where TEvent : IEvent
         {
