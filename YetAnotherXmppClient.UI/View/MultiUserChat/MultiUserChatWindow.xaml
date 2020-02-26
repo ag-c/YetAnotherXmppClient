@@ -1,0 +1,28 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="YetAnotherXmppClient.UI.View.MultiUserChat.MultiUserChatWindow"
+        Title="Multi User Chat" Width="600" Height="500">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" Margin="0,3,3,3">
+      <MenuItem Header="Menu">
+        <MenuItem Header="Join room.." Command="{Binding JoinRoomCommand}" />
+      </MenuItem>
+    </Menu>
+
+    <TabControl Name="chatSessionsTabControl" Items="{Binding MucChatSessions}" SelectedItem="{Binding SelectedMucChatSession}" Margin="3">
+      <TabControl.ItemTemplate>
+        <DataTemplate>
+          <TextBlock Text="{Binding Path=RoomJid}" ToolTip.Tip="{Binding RoomJid}" MaxWidth="100"/>
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+      <!--<TabControl.ContentTemplate>
+        <DataTemplate>
+          <view:MultiUserChatSessionControl />
+        </DataTemplate>
+      </TabControl.ContentTemplate>-->
+    </TabControl>
+  </DockPanel>
+</Window>

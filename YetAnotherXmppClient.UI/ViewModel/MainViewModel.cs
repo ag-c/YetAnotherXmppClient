@@ -50,6 +50,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public ReactiveCommand<Unit,Unit> ShowBlockingCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowPrivateXmlStorageCommand { get; }
         public ReactiveCommand<Unit,Unit> ShowMoodCommand { get; }
+        public ReactiveCommand<Unit,Unit> ShowMucCommand { get; }
         public ReactiveCommand<Unit,Unit> LogoutCommand { get; }
         public Func<Task> OnLogoutRequested { get; set; }
 
@@ -132,6 +133,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.ShowBlockingCommand = ReactiveCommand.CreateFromTask(this.ShowBlockingAsync);
             this.ShowPrivateXmlStorageCommand = ReactiveCommand.CreateFromTask(this.ShowPrivateXmlStorageAsync);
             this.ShowMoodCommand = ReactiveCommand.CreateFromTask(this.ShowMoodAsync);
+            this.ShowMucCommand = ReactiveCommand.CreateFromTask(this.ShowMucAsync);
 
 
             this.xmppClient.Disconnected += this.HandleDisconnected;
@@ -176,6 +178,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                                        Mood = mood,
                                                        Text = text
                                                    });
+        }
+
+        private async Task ShowMucAsync(CancellationToken ct)
+        {
+            await Interactions.ShowMuc.Handle(Unit.Default);
         }
 
         private void HandleDisconnected(object sender, EventArgs e)

@@ -12,6 +12,7 @@
         <MenuItem Header="Blocking.." IsEnabled="{Binding IsBlockingFeatureSupported}" Command="{Binding ShowBlockingCommand}" />
         <MenuItem Header="Private XML Storage.." IsEnabled="{Binding IsPrivateXmlStorageFeatureSupported}" Command="{Binding ShowPrivateXmlStorageCommand}" />
         <MenuItem Header="Set mood.." Command="{Binding ShowMoodCommand}" />
+        <MenuItem Header="Multi user chat.." Command="{Binding ShowMucCommand}" />
         <Separator/>
         <MenuItem Header="Options.." Command="{Binding ShowPreferencesCommand}" />
         <MenuItem Header="Log out" Command="{Binding LogoutCommand}" />

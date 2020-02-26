@@ -12,7 +12,9 @@ using MessageBox.Avalonia.Enums;
 using Microsoft.EntityFrameworkCore.Internal;
 using ReactiveUI;
 using YetAnotherXmppClient.Protocol.Handler;
+using YetAnotherXmppClient.UI.View.MultiUserChat;
 using YetAnotherXmppClient.UI.ViewModel;
+using YetAnotherXmppClient.UI.ViewModel.MultiUserChat;
 
 namespace YetAnotherXmppClient.UI.View
 {
@@ -85,6 +87,15 @@ namespace YetAnotherXmppClient.UI.View
                                     var window = new MoodWindow(new MoodViewModel());
                                     var moodAndText = await window.ShowDialog<(Mood?,string)>(MainWindow.Instance);
                                     interaction.SetOutput(moodAndText);
+                                }));
+                    d(Interactions
+                        .ShowMuc
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var window = new MultiUserChatWindow(new MultiUserChatViewModel());
+                                    window.Show();
+                                    interaction.SetOutput(Unit.Default);
                                 }));
                     d(Interactions
                         .ShowPreferences
