@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
@@ -30,7 +31,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterIqContentCallback(XNames.last_query, this);
             this.Mediator.RegisterHandler<LastActivityQuery, LastActivityInfo>(this);
             this.Mediator.RegisterHandler<AttestActivityCommand>(this);
-            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.LastActivity));
+            this.Mediator.RegisterFeature(ProtocolNamespaces.LastActivity);
         }
 
         public async Task<LastActivityInfo> QueryAsync(string jid)

@@ -18,7 +18,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterIqNamespaceCallback(XNamespaces.version, this);
-            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.SoftwareVersion));
+            this.Mediator.RegisterFeature(ProtocolNamespaces.SoftwareVersion);
         }
 
         async Task IIqReceivedCallback.HandleIqReceivedAsync(Iq iq)

@@ -39,7 +39,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.XmppStream.RegisterMessageCallback(this);
             this.XmppStream.RegisterOutgoingMessageCallback(this);
             this.Mediator.RegisterHandler<SendChatStateNotificationCommand>(this);
-            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.ChatStateNotifications));
+            this.Mediator.RegisterFeature(ProtocolNamespaces.ChatStateNotifications);
 
             this.ResetGoneTransitionTask();
         }

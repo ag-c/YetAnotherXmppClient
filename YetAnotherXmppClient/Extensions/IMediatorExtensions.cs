@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using YetAnotherXmppClient.Infrastructure;
+using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
@@ -8,6 +9,11 @@ namespace YetAnotherXmppClient.Extensions
 {
     public static class IMediatorExtensions
     {
+        internal static void RegisterFeature(this IMediator mediator, string protocolNamespace)
+        {
+            mediator.Execute(new RegisterFeatureCommand(protocolNamespace));
+        }       
+        
         public static Task<bool> QueryEntitySupportsFeatureAsync(this IMediator mediator, string jid, string protocolNamespace)
         {
             return mediator.QueryAsync<EntitySupportsFeatureQuery, bool>(new EntitySupportsFeatureQuery(jid, protocolNamespace));

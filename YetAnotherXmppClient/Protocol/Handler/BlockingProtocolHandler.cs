@@ -47,7 +47,7 @@ namespace YetAnotherXmppClient.Protocol.Handler
             this.Mediator.RegisterHandler<BlockQuery, bool>(this);
             this.Mediator.RegisterHandler<UnblockQuery, bool>(this);
             this.Mediator.RegisterHandler<UnblockAllQuery, bool>(this);
-            this.Mediator.Execute(new RegisterFeatureCommand(ProtocolNamespaces.Blocking));
+            this.Mediator.RegisterFeature(ProtocolNamespaces.Blocking);
         }
 
         public async Task<IEnumerable<string>> RetrieveBlockListAsync()
