@@ -23,5 +23,6 @@ namespace YetAnotherXmppClient.UI
 
         // MultiUserChat
         public static Interaction<Unit, (string RoomJid, string Nickname)> JoinRoom { get; } = new Interaction<Unit, (string RoomJid, string Nickname)>();
+        public static Interaction<(string RoomJid, string Reason), bool> RoomInvitation { get; } = new Interaction<(string RoomJid, string Reason), bool>();
     }
 }

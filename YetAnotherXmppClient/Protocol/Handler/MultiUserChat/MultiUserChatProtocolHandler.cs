@@ -1,8 +1,4 @@
-﻿
-
-// XEP-0045: Multi-User Chat
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,9 +8,11 @@ using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
-using YetAnotherXmppClient.Infrastructure.Queries;
 using YetAnotherXmppClient.Infrastructure.Queries.MultiUserChat;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
+
+// XEP-0045: Multi-User Chat
+// XEP-0249: Direct MUC Invitations
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
@@ -28,7 +26,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             this.XmppStream.RegisterPresenceContentCallback(XNames.mucuser_x, this);
             this.XmppStream.RegisterMessageCallback(this);
+            this.XmppStream.RegisterExclusiveMessageContentCallback(XNames.conference_x, this);
             this.Mediator.RegisterHandler<EnterRoomQuery, Room>(this);
+            this.Mediator.RegisterFeature(ProtocolNamespaces.Conference);
         }
 
         public async Task<IEnumerable<string>> DiscoverServersAsync()
@@ -226,10 +226,24 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return Task.CompletedTask;
         }
 
-        Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
+        async Task IMessageReceivedCallback.HandleMessageReceivedAsync(Message message)
         {
+            // Handle direct invitation as specified in XEP-0249
+            var xElem = message.Element(XNames.conference_x);
+            if (xElem != null)
+            {
+                var roomJid = xElem.Element(XNames.conference_jid).Value;
+                var reason = xElem.Element(XNames.conference_reason)?.Value;
+                var doEnter = await this.Mediator.QueryAsync<DirectRoomInvitationQuery, bool>(new DirectRoomInvitationQuery(roomJid, reason));
+                if (doEnter)
+                {
+                    Log.Error("//UNDONE show nickname input window to user -> join room");
+                }
+                return;
+            }
+
             if (message.Type != MessageType.groupchat)
-                return Task.CompletedTask;
+                return;
 
             var fromJid = new Jid(message.From);
 
@@ -240,7 +254,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 {
                     //"only a message that contains a <subject/> but no <body/> element shall be considered a subject change for MUC purposes."
                     room.Subject = subjectElem.Value;
-                    return Task.CompletedTask;
+                    return;
                 }
 
                 var delayElem = message.Element(XNames.delay_delay);
@@ -254,8 +268,6 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 }
                 //UNDONE room.AddMessage(..);
             }
-
-            return Task.CompletedTask;
         }
 
         Task<Room> IAsyncQueryHandler<EnterRoomQuery, Room>.HandleQueryAsync(EnterRoomQuery query)

@@ -106,6 +106,20 @@ namespace YetAnotherXmppClient.UI.View
                                     await window.ShowDialog(MainWindow.Instance);
                                     interaction.SetOutput(Unit.Default);
                                 }));
+                    d(Interactions
+                        .RoomInvitation
+                        .RegisterHandler(
+                            async interaction =>
+                                {
+                                    var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                                        {
+                                            var window = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Direct Room Invitation", $"Do you want to be invited to room {interaction.Input.RoomJid}?\nReason: {interaction.Input.Reason}", ButtonEnum.YesNo);
+                                            var result = await window.Show();
+                                            tcs.SetResult(result == ButtonResult.Yes);
+                                        });
+                                    interaction.SetOutput(await tcs.Task);
+                                }));
 
                     //this.ViewModel.WhenAnyValue(vm => vm.LogText).Subscribe(_ => this.Image.InvalidateVisual());
 

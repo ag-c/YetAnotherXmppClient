@@ -120,6 +120,14 @@ namespace YetAnotherXmppClient.Core
             );
         }
 
+        public void RegisterExclusiveMessageContentCallback(XName contentName, IMessageReceivedCallback callback)
+        {
+            this.RegisterExclusiveElementCallback(
+                xe => xe.Name.LocalName == "message" && xe.Elements().Any(e => e.Name == contentName),
+                xe => callback.HandleMessageReceivedAsync(Message.FromXElement(xe))
+            );
+        }
+
         public void RegisterPresenceContentCallback(XName contentName, IPresenceReceivedCallback callback)
         {
             this.RegisterElementCallback(

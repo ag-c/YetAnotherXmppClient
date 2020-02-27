@@ -17,6 +17,7 @@ using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Commands;
 using YetAnotherXmppClient.Infrastructure.Events;
 using YetAnotherXmppClient.Infrastructure.Queries;
+using YetAnotherXmppClient.Infrastructure.Queries.MultiUserChat;
 using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.UI.ViewModel
@@ -36,7 +37,8 @@ namespace YetAnotherXmppClient.UI.ViewModel
                                  IAsyncQueryHandler<SubscriptionRequestQuery, bool>, 
                                  IEventHandler<StreamNegotiationCompletedEvent>,
                                  IEventHandler<MessageReceivedEvent>,
-                                 IEventHandler<ChatStateNotificationReceivedEvent>
+                                 IEventHandler<ChatStateNotificationReceivedEvent>,
+                                 IAsyncQueryHandler<DirectRoomInvitationQuery, bool>
     {
         private XmppClient xmppClient;
 
@@ -142,6 +144,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
             this.xmppClient.RegisterHandler<MessageReceivedEvent>(this);
             this.xmppClient.RegisterHandler<ChatStateNotificationReceivedEvent>(this);
             this.xmppClient.RegisterHandler<SubscriptionRequestQuery, bool>(this);
+            this.xmppClient.RegisterHandler<DirectRoomInvitationQuery, bool>(this);
 
 
             async Task PrintException(string location, Exception exception)
@@ -268,6 +271,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
         public void AttestActivity()
         {
             this.xmppClient.Execute(new AttestActivityCommand());
+        }
+
+        async Task<bool> IAsyncQueryHandler<DirectRoomInvitationQuery, bool>.HandleQueryAsync(DirectRoomInvitationQuery query)
+        {
+            return await Interactions.RoomInvitation.Handle((query.RoomJid, query.Reason));
         }
     }
 }

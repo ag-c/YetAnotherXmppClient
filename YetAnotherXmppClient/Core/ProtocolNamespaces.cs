@@ -10,5 +10,6 @@
         public const string ChatStateNotifications = "http://jabber.org/protocol/chatstates";
         public const string PrivateXmlStorage = "jabber:iq:private";
         public const string MultiUserChat = "http://jabber.org/protocol/muc";
+        public const string Conference = "jabber:x:conference";
     }
 }
