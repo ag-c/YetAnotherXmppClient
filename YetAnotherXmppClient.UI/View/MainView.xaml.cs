@@ -93,7 +93,7 @@ namespace YetAnotherXmppClient.UI.View
                         .RegisterHandler(
                             async interaction =>
                                 {
-                                    var window = new MultiUserChatWindow(new MultiUserChatViewModel());
+                                    var window = new MultiUserChatWindow(new MultiUserChatViewModel(interaction.Input));
                                     window.Show();
                                     interaction.SetOutput(Unit.Default);
                                 }));

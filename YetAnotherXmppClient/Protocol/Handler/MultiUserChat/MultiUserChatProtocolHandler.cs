@@ -13,17 +13,22 @@ using YetAnotherXmppClient.Core.Stanza;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Queries;
+using YetAnotherXmppClient.Infrastructure.Queries.MultiUserChat;
 using YetAnotherXmppClient.Protocol.Handler.ServiceDiscovery;
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    internal class MultiUserChatProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, IMessageReceivedCallback
+    internal class MultiUserChatProtocolHandler : ProtocolHandlerBase, IPresenceReceivedCallback, IMessageReceivedCallback, IAsyncQueryHandler<EnterRoomQuery, Room>
     {
+        // <room-jid, room>
+        private readonly Dictionary<string, Room> rooms = new Dictionary<string, Room>();
+
         public MultiUserChatProtocolHandler(XmppStream xmppStream, Dictionary<string, string> runtimeParameters, IMediator mediator)
             : base(xmppStream, runtimeParameters, mediator)
         {
             this.XmppStream.RegisterPresenceContentCallback(XNames.mucuser_x, this);
             this.XmppStream.RegisterMessageCallback(this);
+            this.Mediator.RegisterHandler<EnterRoomQuery, Room>(this);
         }
 
         public async Task<IEnumerable<string>> DiscoverServersAsync()
@@ -93,12 +98,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return items.Select(itm => itm.Jid);
         }
 
-        // <bare-jid, room>
-        private readonly Dictionary<string, Room> rooms = new Dictionary<string, Room>();
-
-        public async Task<Room> EnterRoomAsync(string roomname, string server, string nickname, string password = null, HistoryLimits historyLimits = null)
+        public Task<Room> EnterRoomAsync(string roomname, string server, string nickname, string password = null, HistoryLimits historyLimits = null)
         {
-            var jid = new Jid(roomname, server, nickname);
+            return this.EnterRoomAsync($"{roomname}@{server}", nickname, password, historyLimits);
+        }
+
+        public async Task<Room> EnterRoomAsync(string roomJid, string nickname, string password = null, HistoryLimits historyLimits = null)
+
+    {
+        var jid = new Jid(roomJid, nickname);
             if (!jid.IsFull)
                 throw new ArgumentException("Couldn't construct full jid 'roomname@server/nickname' with given parameters!");
 
@@ -107,6 +115,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 room = new Room(jid.Bare);
                 this.rooms.Add(jid.Bare, room);
             }
+            //UNDONE already entered room with a different nickname?
 
             if (historyLimits?.Since.HasValue ?? false) //TEMP
             {
@@ -247,6 +256,11 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
 
             return Task.CompletedTask;
+        }
+
+        Task<Room> IAsyncQueryHandler<EnterRoomQuery, Room>.HandleQueryAsync(EnterRoomQuery query)
+        {
+            return this.EnterRoomAsync(query.RoomJid, query.Nickname);
         }
 
         private static class StatusCodes

@@ -182,7 +182,7 @@ namespace YetAnotherXmppClient.UI.ViewModel
 
         private async Task ShowMucAsync(CancellationToken ct)
         {
-            await Interactions.ShowMuc.Handle(Unit.Default);
+            await Interactions.ShowMuc.Handle(this.xmppClient);
         }
 
         private void HandleDisconnected(object sender, EventArgs e)

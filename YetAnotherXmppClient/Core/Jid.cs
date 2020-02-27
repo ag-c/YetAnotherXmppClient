@@ -18,6 +18,11 @@ namespace YetAnotherXmppClient.Core
         {
         }
 
+        public Jid(string bareJid, string resource)
+            : this($"{bareJid}/{resource}")
+        {
+        }
+
         public Jid(string jid)
         {
             var parts = jid.Split('@');
