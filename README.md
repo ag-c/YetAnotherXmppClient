@@ -3,6 +3,7 @@ More or less implemented XMPP client functionality:
 * RFC 6121
 * XEP-0012: Last Activity
 * XEP-0030: Service Discovery
+* XEP-0045: Multi-User Chat
 * XEP-0049: Private XML Storage
 * XEP-0054: vcard-temp
 * XEP-0085: Chat State Notifications
