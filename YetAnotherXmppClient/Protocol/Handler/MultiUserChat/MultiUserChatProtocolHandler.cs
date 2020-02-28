@@ -209,6 +209,25 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.XmppStream.WriteElementAsync(message);
         }
 
+        public async Task<bool> KickRoomOccupantAsync(string roomJid, string nickname, string reason)
+        {
+            if (!roomJid.IsBareJid())
+                throw new ArgumentException("Expected bare jid as room parameter!");
+
+            if (!this.rooms.ContainsKey(roomJid))
+                throw new InvalidOperationException("Not entered in room!");
+
+            //UNDONE check role?
+
+            var iq = new Iq(IqType.set, new XElement(XNames.mucadmin_query, 
+                                                new XElement(XNames.mucadmin_item, new XAttribute("nick", nickname), new XAttribute("role", "none"),
+                                                    reason == null ? null : new XElement(XNames.mucadmin_reason, reason))));
+
+            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
+
+            return responseIq.Type == IqType.result;
+        }
+
         private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
         {
             if(!roomJid.IsBareJid())

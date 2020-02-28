@@ -107,6 +107,9 @@ namespace YetAnotherXmppClient
         public static readonly XName mucuser_x = "{http://jabber.org/protocol/muc#user}x";
         public static readonly XName mucuser_item = "{http://jabber.org/protocol/muc#user}item";
         public static readonly XName mucuser_status = "{http://jabber.org/protocol/muc#user}status";
+        public static readonly XName mucadmin_query = "{http://jabber.org/protocol/muc#admin}query";
+        public static readonly XName mucadmin_item = "{http://jabber.org/protocol/muc#admin}item";
+        public static readonly XName mucadmin_reason = "{http://jabber.org/protocol/muc#admin}reason";
 
         public static readonly XName delay_delay = "{urn:xmpp:delay}delay";
 

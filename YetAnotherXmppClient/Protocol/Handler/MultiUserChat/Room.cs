@@ -154,5 +154,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             return this.protocolHandler.ChangeRoomSubjectAsync(this.Jid, subject);
         }
+
+        public Task<bool> KickOccupantAsync(string nickname, string reason = null)
+        {
+            return this.protocolHandler.KickRoomOccupantAsync(this.Jid, nickname, reason);
+        }
     }
 }
