@@ -109,17 +109,19 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         internal void UpdateOccupantsShow(string nickname, PresenceShow show)
         {
-            if (this.occupants.TryGetValue(nickname, out var occupant))
-            {
-                occupant.Show = show;
-            }
+            this.UpdateOccupant(nickname, occupant => occupant.Show = show);
         }
 
         internal void UpdateOccupantsStatus(string nickname, string status)
         {
+            this.UpdateOccupant(nickname, occupant => occupant.Status = status);
+        }
+
+        private void UpdateOccupant(string nickname, Action<Occupant> updateAction)
+        {
             if (this.occupants.TryGetValue(nickname, out var occupant))
             {
-                occupant.Status = status;
+                updateAction(occupant);
             }
         }
 
