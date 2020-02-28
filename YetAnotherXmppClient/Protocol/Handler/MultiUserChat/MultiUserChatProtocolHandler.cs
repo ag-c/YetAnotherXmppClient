@@ -220,8 +220,27 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             //UNDONE check role?
 
             var iq = new Iq(IqType.set, new XElement(XNames.mucadmin_query, 
-                                                new XElement(XNames.mucadmin_item, new XAttribute("nick", nickname), new XAttribute("role", "none"),
+                                                new XElement(XNames.mucadmin_item, new XAttribute("nick", nickname), new XAttribute("role", Role.None.ToString().ToLower()),
                                                     reason == null ? null : new XElement(XNames.mucadmin_reason, reason))));
+
+            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
+
+            return responseIq.Type == IqType.result;
+        }
+
+        public async Task<bool> GrantRoomOccupantVoiceAsync(string roomJid, string nickname, string reason = null)
+        {
+            if (!roomJid.IsBareJid())
+                throw new ArgumentException("Expected bare jid as room parameter!");
+
+            if (!this.rooms.ContainsKey(roomJid))
+                throw new InvalidOperationException("Not entered in room!");
+
+            //UNDONE check role?
+
+            var iq = new Iq(IqType.set, new XElement(XNames.mucadmin_query,
+                new XElement(XNames.mucadmin_item, new XAttribute("nick", nickname), new XAttribute("role", Role.Participant.ToString().ToLower()),
+                    reason == null ? null : new XElement(XNames.mucadmin_reason, reason))));
 
             var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
 
