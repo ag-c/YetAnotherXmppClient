@@ -28,7 +28,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
     public enum OccupantUpdateCause
     {
         Added,
-        Changed
+        Changed,
+        Removed
     }
 
     public class Room
@@ -134,6 +135,11 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public Task ChangeAvailabilityAsync(PresenceShow show, string status = null)
         {
             return this.protocolHandler.ChangeAvailabilityAsync(this.Jid, show, status);
+        }
+
+        public Task ExitAsync()
+        {
+            return this.protocolHandler.ExitRoomAsync(this.Jid);
         }
     }
 }

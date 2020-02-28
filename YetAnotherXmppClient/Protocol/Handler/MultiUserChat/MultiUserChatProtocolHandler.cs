@@ -137,7 +137,25 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return room;
         }
 
-        internal async Task ChangeNickname(string roomJid, string nickname)
+        public Task ExitRoomAsync(string roomJid)
+        {
+            if (!roomJid.IsBareJid())
+                throw new ArgumentException("Expected a bare JID as room parammeter!");
+
+            if (this.rooms.Remove(roomJid, out var room))
+            {
+                var presence = new Core.Stanza.Presence(PresenceType.unavailable)
+                                   {
+                                       From = this.RuntimeParameters["jid"],
+                                       To = roomJid + "/" + room.Self.Nickname
+                                   };
+                return this.XmppStream.WriteElementAsync(presence);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        internal async Task ChangeNicknameAsync(string roomJid, string nickname)
         {
             if(string.IsNullOrWhiteSpace(nickname))
                 throw new ArgumentException("Nickname cannot be null or whitespace");
