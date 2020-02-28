@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Xml.Linq;
+using YetAnotherXmppClient.Core.StanzaParts;
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
@@ -11,6 +13,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public string FullJid { get; }
         public Affiliation Affiliation { get; }
         public Role Role { get; }
+        public PresenceShow Show { get; internal set; }
+        public string Status { get; internal set; }
 
         internal Occupant(string nickname, string fullJid, Affiliation affiliation, Role role)
         {
@@ -29,6 +33,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
     public class Room
     {
+        private readonly MultiUserChatProtocolHandler protocolHandler;
+
         // <nickname, Occupant>
         private readonly ConcurrentDictionary<string, Occupant> occupants = new ConcurrentDictionary<string, Occupant>();
         private string errorText;
@@ -73,8 +79,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             remove => this.errorOccurred -= value;
         }
 
-        public Room(string jid)
+        internal Room(MultiUserChatProtocolHandler protocolHandler, string jid)
         {
+            this.protocolHandler = protocolHandler;
             this.Jid = jid;
         }
 
@@ -100,10 +107,31 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             this.SelfUpdated?.Invoke(this, this.Self);
         }
 
+        internal void UpdateOccupantsShow(string nickname, PresenceShow show)
+        {
+            if (this.occupants.TryGetValue(nickname, out var occupant))
+            {
+                occupant.Show = show;
+            }
+        }
+
+        internal void UpdateOccupantsStatus(string nickname, string status)
+        {
+            if (this.occupants.TryGetValue(nickname, out var occupant))
+            {
+                occupant.Status = status;
+            }
+        }
+
         internal void OnError(string errorText)
         {
             this.errorText = errorText;
             this.errorOccurred?.Invoke(this, errorText);
+        }
+
+        public Task ChangeAvailabilityAsync(PresenceShow show, string status = null)
+        {
+            return this.protocolHandler.ChangeAvailabilityAsync(this.Jid, show, status);
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Xml.Linq;
 using Serilog;
 using YetAnotherXmppClient.Core;
 using YetAnotherXmppClient.Core.Stanza;
+using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 using YetAnotherXmppClient.Infrastructure;
 using YetAnotherXmppClient.Infrastructure.Queries.MultiUserChat;
@@ -103,16 +104,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.EnterRoomAsync($"{roomname}@{server}", nickname, password, historyLimits);
         }
 
-        public async Task<Room> EnterRoomAsync(string roomJid, string nickname, string password = null, HistoryLimits historyLimits = null)
-
-    {
-        var jid = new Jid(roomJid, nickname);
+        public async Task<Room> EnterRoomAsync(string roomJid, string nickname, string password = null, HistoryLimits historyLimits = null) 
+        {
+            var jid = new Jid(roomJid, nickname);
             if (!jid.IsFull)
                 throw new ArgumentException("Couldn't construct full jid 'roomname@server/nickname' with given parameters!");
 
             if (!this.rooms.TryGetValue(jid.Bare, out var room))
             {
-                room = new Room(jid.Bare);
+                room = new Room(this, jid.Bare);
                 this.rooms.Add(jid.Bare, room);
             }
             //UNDONE already entered room with a different nickname?
@@ -137,7 +137,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return room;
         }
 
-        internal async Task ChangeNickName(string roomJid, string nickname)
+        internal async Task ChangeNickname(string roomJid, string nickname)
         {
             if(string.IsNullOrWhiteSpace(nickname))
                 throw new ArgumentException("Nickname cannot be null or whitespace");
@@ -152,6 +152,23 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                                };
             await this.XmppStream.WriteElementAsync(presence);
             //UNDONE response
+        }
+
+        public Task ChangeAvailabilityAsync(string roomJid, PresenceShow show, string status = null)
+        {
+            if(!roomJid.IsBareJid())
+                throw new ArgumentException("Expected a bare JID as room parammeter!");
+
+            if (!this.rooms.TryGetValue(roomJid, out var room))
+                throw new InvalidOperationException($"Not an occupant of room {roomJid}");
+
+            var presence = new Core.Stanza.Presence(show, status)
+                               {
+                                   From = this.RuntimeParameters["jid"],
+                                   To = roomJid + "/" + room.Self.Nickname
+                               };
+
+            return this.XmppStream.WriteElementAsync(presence);
         }
 
         private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
@@ -195,33 +212,46 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 return Task.CompletedTask;
             }
 
+            // Affiliation & Role & Full-JID
             var itemElem = xElem.Element(XNames.mucuser_item);
             var affiliation = Enum.Parse<Affiliation>(itemElem.Attribute("affiliation").Value, ignoreCase: true);
             var role = Enum.Parse<Role>(itemElem.Attribute("role").Value, ignoreCase: true);
             var fullJid = itemElem.Attribute("jid")?.Value;
 
-            var statusElems = xElem.Elements(XNames.mucuser_status);
+            var mucStatusElems = xElem.Elements(XNames.mucuser_status)?.ToArray();
 
             //"the "self-presence" sent by the room to the new user MUST include a status code of 110"
-            if (statusElems.AnyWithAttributeValue("code", StatusCodes.SelfPresence))
+            if (mucStatusElems.AnyWithAttributeValue("code", StatusCodes.SelfPresence))
             {
-                //UNDONE what to do with the "self-presence"?
+                //UNDONE
                 //"This self-presence MUST NOT be sent to the new occupant until the room has sent the presence of all other occupants
                 // to the new occupant; this enables the new occupant to know when it has finished receiving the room roster."
                 //"The service MAY rewrite the new occupant's roomnick (e.g., if roomnicks are locked down or based on some other policy)."
                 room.SetSelf(occupantJid.Resource, presence.To, affiliation, role);
                 return Task.CompletedTask;
             }
-            if (statusElems.AnyWithAttributeValue("code", StatusCodes.NonAnonymous))
+            if (mucStatusElems.AnyWithAttributeValue("code", StatusCodes.NonAnonymous))
             {
                 room.Type = RoomType.NonAnonymous;
             }
-            if (statusElems.AnyWithAttributeValue("code", StatusCodes.Logging))
+            if (mucStatusElems.AnyWithAttributeValue("code", StatusCodes.Logging))
             {
                 room.IsLogging = true;
             }
 
             room.AddOrUpdateOccupant(occupantJid.Resource, fullJid, affiliation, role);
+
+            // Show & Status
+            var showElem = xElem.Element("show");
+            var statusElem = xElem.Element("status");
+            if (showElem != null)
+            {
+                room.UpdateOccupantsShow(occupantJid.Resource, Enum.TryParse<PresenceShow>(showElem.Value, true, out var show) ? show : PresenceShow.Other);
+            }
+            if (statusElem != null)
+            {
+                room.UpdateOccupantsStatus(occupantJid.Resource, statusElem.Value);
+            }
 
             return Task.CompletedTask;
         }
@@ -280,6 +310,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             public const string NonAnonymous = "100";
             public const string SelfPresence = "110";
             public const string Logging = "170";
+            public const string NicknameModified = "210";
         }
     }
 }
