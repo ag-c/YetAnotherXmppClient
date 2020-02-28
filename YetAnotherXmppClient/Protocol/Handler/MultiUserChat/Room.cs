@@ -164,5 +164,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             return this.protocolHandler.GrantRoomOccupantVoiceAsync(this.Jid, nickname, reason);
         }
+
+        public Task<bool> RevokeOccupantVoiceAsync(string nickname, string reason = null)
+        {
+            return this.protocolHandler.RevokeRoomOccupantVoiceAsync(this.Jid, nickname, reason);
+        }
     }
 }

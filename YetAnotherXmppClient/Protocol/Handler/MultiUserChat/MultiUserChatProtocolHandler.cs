@@ -228,7 +228,17 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return responseIq.Type == IqType.result;
         }
 
-        public async Task<bool> GrantRoomOccupantVoiceAsync(string roomJid, string nickname, string reason = null)
+        public Task<bool> GrantRoomOccupantVoiceAsync(string roomJid, string nickname, string reason = null)
+        {
+            return this.ChangeRoomOccupantRoleAsync(roomJid, nickname, Role.Participant, reason);
+        }
+
+        public Task<bool> RevokeRoomOccupantVoiceAsync(string roomJid, string nickname, string reason = null)
+        {
+            return this.ChangeRoomOccupantRoleAsync(roomJid, nickname, Role.Visitor, reason);
+        }
+
+        private async Task<bool> ChangeRoomOccupantRoleAsync(string roomJid, string nickname, Role newRole, string reason = null)
         {
             if (!roomJid.IsBareJid())
                 throw new ArgumentException("Expected bare jid as room parameter!");
@@ -239,7 +249,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             //UNDONE check role?
 
             var iq = new Iq(IqType.set, new XElement(XNames.mucadmin_query,
-                new XElement(XNames.mucadmin_item, new XAttribute("nick", nickname), new XAttribute("role", Role.Participant.ToString().ToLower()),
+                new XElement(XNames.mucadmin_item, new XAttribute("nick", nickname), new XAttribute("role", newRole.ToString().ToLower()),
                     reason == null ? null : new XElement(XNames.mucadmin_reason, reason))));
 
             var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
