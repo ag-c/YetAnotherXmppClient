@@ -189,6 +189,26 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.XmppStream.WriteElementAsync(presence);
         }
 
+        public Task ChangeRoomSubjectAsync(string roomJid, string subject)
+        {
+            if (!roomJid.IsBareJid())
+                throw new ArgumentException("Expected bare jid as room parameter!");
+
+            if (!this.rooms.ContainsKey(roomJid))
+                throw new InvalidOperationException("Not entered in room!");
+
+            //UNDONE check role AND room configuration for 'muc#roomconfig_changesubject'?
+
+            var message = new Message(new XElement("subject", subject))
+                              {
+                                  From = this.RuntimeParameters["jid"],
+                                  To = roomJid,
+                                  Type = MessageType.groupchat
+                              };
+
+            return this.XmppStream.WriteElementAsync(message);
+        }
+
         private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
         {
             if(!roomJid.IsBareJid())

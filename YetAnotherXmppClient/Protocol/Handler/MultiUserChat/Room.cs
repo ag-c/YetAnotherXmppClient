@@ -149,5 +149,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             return this.protocolHandler.ExitRoomAsync(this.Jid);
         }
+
+        public Task ChangeSubjectAsync(string subject)
+        {
+            return this.protocolHandler.ChangeRoomSubjectAsync(this.Jid, subject);
+        }
     }
 }
