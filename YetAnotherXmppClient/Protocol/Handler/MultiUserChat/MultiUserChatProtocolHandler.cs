@@ -230,6 +230,13 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 return Task.CompletedTask;
             }
 
+            // Unavailable presence
+            if (presence.Type == PresenceType.unavailable)
+            {
+                room.RemoveOccupant(occupantJid.Resource);
+                return Task.CompletedTask;
+            }
+
             // Affiliation & Role & Full-JID
             var itemElem = xElem.Element(XNames.mucuser_item);
             var affiliation = Enum.Parse<Affiliation>(itemElem.Attribute("affiliation").Value, ignoreCase: true);

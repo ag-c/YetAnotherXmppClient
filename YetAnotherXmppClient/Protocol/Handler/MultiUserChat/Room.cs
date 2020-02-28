@@ -102,6 +102,14 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
         }
 
+        internal void RemoveOccupant(string nickname)
+        {
+            if (this.occupants.TryRemove(nickname, out var removedOccupant))
+            {
+                this.OccupantsUpdated?.Invoke(this, (removedOccupant, OccupantUpdateCause.Removed));
+            }
+        }
+
         internal void SetSelf(string nickname, string fullJid, Affiliation affiliation, Role role)
         {
             this.Self = new Occupant(nickname, fullJid, affiliation, role);
