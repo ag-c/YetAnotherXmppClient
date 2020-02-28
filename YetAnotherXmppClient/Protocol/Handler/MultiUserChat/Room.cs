@@ -47,7 +47,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public string Subject
         {
             get => this.subject;
-            set
+            internal set
             {
                 this.subject = value;
                 this.SubjectChanged?.Invoke(this, value);
