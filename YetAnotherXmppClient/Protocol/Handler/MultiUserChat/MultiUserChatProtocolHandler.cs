@@ -257,6 +257,25 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return responseIq.Type == IqType.result;
         }
 
+        internal async Task<bool> ChangeRoomOccupantAffiliationAsync(string roomJid, string bareUserJid, Affiliation affiliation, string reason = null)
+        {
+            if (!roomJid.IsBareJid())
+                throw new ArgumentException("Expected bare jid as room parameter!");
+
+            if (!this.rooms.ContainsKey(roomJid))
+                throw new InvalidOperationException("Not entered in room!");
+
+            //UNDONE check role for admin?
+
+            var iq = new Iq(IqType.set, new XElement(XNames.mucadmin_query,
+                new XElement(XNames.mucadmin_item, new XAttribute("jid", bareUserJid.ToBareJid()), new XAttribute("affiliation", affiliation.ToString().ToLower()),
+                    reason == null ? null : new XElement(XNames.mucadmin_reason, reason))));
+
+            var responseIq = await this.XmppStream.WriteIqAndReadReponseAsync(iq).ConfigureAwait(false);
+
+            return responseIq.Type == IqType.result;
+        }
+
         private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
         {
             if(!roomJid.IsBareJid())

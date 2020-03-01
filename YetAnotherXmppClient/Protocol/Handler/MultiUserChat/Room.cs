@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using YetAnotherXmppClient.Core.StanzaParts;
+using YetAnotherXmppClient.Extensions;
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
@@ -168,6 +169,17 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public Task<bool> RevokeOccupantVoiceAsync(string nickname, string reason = null)
         {
             return this.protocolHandler.RevokeRoomOccupantVoiceAsync(this.Jid, nickname, reason);
+        }        
+        
+        public Task<bool> BanOccupantAsync(string nickname, string reason = null)
+        {
+            if (!this.occupants.TryGetValue(nickname, out var occupant))
+            {
+                return Task.FromResult(false);
+            }
+
+            return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.Outcast, reason);
+
         }
     }
 }
