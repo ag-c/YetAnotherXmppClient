@@ -238,7 +238,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.ChangeRoomOccupantRoleAsync(roomJid, nickname, Role.Visitor, reason);
         }
 
-        private async Task<bool> ChangeRoomOccupantRoleAsync(string roomJid, string nickname, Role newRole, string reason = null)
+        public async Task<bool> ChangeRoomOccupantRoleAsync(string roomJid, string nickname, Role newRole, string reason = null)
         {
             if (!roomJid.IsBareJid())
                 throw new ArgumentException("Expected bare jid as room parameter!");
@@ -320,6 +320,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             // Unavailable presence
             if (presence.Type == PresenceType.unavailable)
             {
+                //UNDONE self?
                 room.RemoveOccupant(occupantJid.Resource);
                 return Task.CompletedTask;
             }
@@ -423,6 +424,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             public const string SelfPresence = "110";
             public const string Logging = "170";
             public const string NicknameModified = "210";
+            public const string BannedFromRoom = "301";
+            public const string RemovedFromRoom = "301"; //because of affiliation change
         }
     }
 }
