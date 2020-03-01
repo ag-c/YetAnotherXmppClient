@@ -180,5 +180,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.Outcast, reason);
         }
+
+        public Task<bool> GrantMembershipAsync(string nickname, string reason = null)
+        {
+            if (!this.occupants.TryGetValue(nickname, out var occupant))
+            {
+                return Task.FromResult(false);
+            }
+
+            return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.Member, reason);
+        }
     }
 }
