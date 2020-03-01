@@ -210,5 +210,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             return this.protocolHandler.ChangeRoomOccupantRoleAsync(this.Jid, nickname, Role.Moderator, reason);
         }
+
+        public Task<bool> RevokeModeratorStatusAsync(string nickname, string reason = null)
+        {
+            if (!this.occupants.ContainsKey(nickname))
+            {
+                return Task.FromResult(false);
+            }
+
+            return this.protocolHandler.ChangeRoomOccupantRoleAsync(this.Jid, nickname, Role.Participant, reason);
+        }
     }
 }
