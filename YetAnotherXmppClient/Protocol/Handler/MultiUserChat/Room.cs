@@ -179,7 +179,6 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
 
             return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.Outcast, reason);
-
         }
     }
 }
