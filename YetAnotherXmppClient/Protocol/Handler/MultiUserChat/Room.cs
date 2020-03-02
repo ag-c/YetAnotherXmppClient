@@ -221,7 +221,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.protocolHandler.ChangeRoomOccupantRoleAsync(this.Jid, nickname, Role.Participant, reason);
         }
 
-        public Task<bool> GrantOnerStatusAsync(string nickname, string reason = null)
+        public Task<bool> GrantOwnerStatusAsync(string nickname, string reason = null)
         {
             if (!this.occupants.TryGetValue(nickname, out var occupant))
             {
@@ -239,6 +239,30 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             }
 
             return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.Admin, reason);
+        }
+
+        public Task<bool> GrantAdminStatusAsync(string nickname, string reason = null)
+        {
+            if (!this.occupants.TryGetValue(nickname, out var occupant))
+            {
+                return Task.FromResult(false);
+            }
+
+            return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.Admin, reason);
+        }
+
+        public Task<bool> RevokeAdminStatusAsync(string nickname, string reason = null)
+        {
+            if (!this.occupants.TryGetValue(nickname, out var occupant))
+            {
+                return Task.FromResult(false);
+            }
+
+            //UNDONE
+            //"An owner might want to revoke a user's admin status; this is done by changing the user's affiliation to something other
+            // than "admin" or "owner" (typically to "member" in a members-only room or to "none" in other types of room)."
+
+            return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.None, reason);
         }
     }
 }
