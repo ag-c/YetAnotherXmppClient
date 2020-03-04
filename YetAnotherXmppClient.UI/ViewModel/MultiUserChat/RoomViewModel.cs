@@ -47,6 +47,12 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
             this.Subject = room.Subject;
             room.OccupantsUpdated += this.HandleOccupantsUpdated;
             room.SubjectChanged += this.HandleSubjectChanged;
+            room.ErrorOccurred += this.HandleErrorOccurred;
+        }
+
+        private void HandleErrorOccurred(object? sender, string errorText)
+        {
+            Interactions.ShowRoomError.Handle((this.room.Jid, errorText));
         }
 
         private Task SendMessageToAllOccupantsAsync(CancellationToken arg)
