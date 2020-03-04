@@ -276,7 +276,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return responseIq.Type == IqType.result;
         }
 
-        private async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
+        public async Task SendMessageToAllOccupantsAsync(string roomJid, string text)
         {
             if(!roomJid.IsBareJid())
                 throw new ArgumentException("Expected bare jid as room parameter!");

@@ -264,5 +264,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.None, reason);
         }
+
+        public Task SendMessageToAllOccupantsAsync(string text)
+        {
+            return this.protocolHandler.SendMessageToAllOccupantsAsync(this.Jid, text);
+        }
     }
 }
