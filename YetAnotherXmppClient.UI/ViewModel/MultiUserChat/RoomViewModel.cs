@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Reactive;
+using System.Threading;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using ReactiveUI;
 using YetAnotherXmppClient.Protocol.Handler.MultiUserChat;
@@ -19,6 +22,8 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
     public class RoomViewModel : ReactiveObject
     {
+        private readonly Room room;
+
         public string RoomJid { get; }
         public ObservableCollection<Occupant> Occupants { get; } = new ObservableCollection<Occupant>();
 
@@ -29,12 +34,24 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
             set => this.RaiseAndSetIfChanged(ref this.subject, value);
         }
 
+        public string TextToSend { get; set; }
+
+        public ReactiveCommand<Unit, Unit> SendCommand { get; }
+
         public RoomViewModel(Room room)
         {
+            this.room = room;
+            this.SendCommand = ReactiveCommand.CreateFromTask(this.SendMessageToAllOccupantsAsync);
+
             this.RoomJid = room.Jid;
             this.Subject = room.Subject;
             room.OccupantsUpdated += this.HandleOccupantsUpdated;
             room.SubjectChanged += this.HandleSubjectChanged;
+        }
+
+        private Task SendMessageToAllOccupantsAsync(CancellationToken arg)
+        {
+            return this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
         }
 
         private void HandleSubjectChanged(object? sender, string subject)
