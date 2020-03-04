@@ -1,4 +1,5 @@
-﻿using System.Reactive;
+﻿using System.Collections.ObjectModel;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,6 +16,15 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
         public ReactiveCommand<Unit, Unit> JoinRoomCommand { get; }
 
+        public ObservableCollection<RoomViewModel> Rooms { get; } = new ObservableCollection<RoomViewModel>();
+
+        private RoomViewModel selectedRoom;
+
+        public RoomViewModel SelectedRoom
+        {
+            get => this.selectedRoom;
+            set => this.RaiseAndSetIfChanged(ref this.selectedRoom, value);
+        }
 
         public MultiUserChatViewModel(IMediator mediator)
         {
@@ -26,6 +36,7 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
         {
             var (roomJid, nickname) = await Interactions.JoinRoom.Handle(Unit.Default);
             var room = await this.mediator.QueryAsync<EnterRoomQuery, Room>(new EnterRoomQuery(roomJid, nickname));
+            this.Rooms.Add(new RoomViewModel(room));
         }
     }
 }

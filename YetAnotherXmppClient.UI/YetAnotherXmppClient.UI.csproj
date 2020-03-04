@@ -18,6 +18,7 @@
     <None Remove="View\MoodWindow.xaml" />
     <None Remove="View\MultiUserChatWindow.xaml" />
     <None Remove="View\MultiUserChat\JoinRoomWindow.xaml" />
+    <None Remove="View\MultiUserChat\RoomControl.xaml" />
     <None Remove="View\PreferencesWindow.xaml" />
     <None Remove="View\PrivateXmlStorageWindow.xaml" />
     <None Remove="View\RosterView.xaml" />
@@ -51,6 +52,9 @@
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\MultiUserChat\MultiUserChatWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="View\MultiUserChat\RoomControl.xaml">
       <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
     <EmbeddedResource Update="View\PreferencesWindow.xaml">
