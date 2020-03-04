@@ -45,7 +45,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                                                                                   To = bareJid.ToBareJid()
                                                                               }).ConfigureAwait(false);
 
-            Expect(IqType.result, iqResp.Type, iqResp);
+            if (iqResp.Type == IqType.error)
+                return null;
 
             var vCardElem = iqResp.Element(XNames.vcard_temp_vcard);
             this.vCardElements.AddOrUpdate(bareJid.ToBareJid(), vCardElem, (_, __) => vCardElem);
