@@ -59,7 +59,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         public event EventHandler<(string Subject, string Nickname)> SubjectChanged;
 
-        public event EventHandler<(string MesssageText, string Nickname)> NewMessage; 
+        public event EventHandler<(string MesssageText, string Nickname, DateTime Time)> NewMessage; 
 
         public event EventHandler Exited; 
 
@@ -271,9 +271,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             this.SubjectChanged?.Invoke(this, (subject, byNickname));
         }
 
-        public void OnMessage(string messageText, string nickname)
+        public void OnMessage(string messageText, string nickname, DateTime time = default)
         {
-            this.NewMessage?.Invoke(this, (messageText, nickname));
+            this.NewMessage?.Invoke(this, (messageText, nickname, time));
         }
     }
 }

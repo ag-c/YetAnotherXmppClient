@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Threading;
@@ -111,11 +112,11 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
                 });
         }
 
-        private void HandleNewMessage(object? sender, (string MessageText, string Nickname) e)
+        private void HandleNewMessage(object? sender, (string MessageText, string Nickname, DateTime Time) e)
         {
             Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    this.Messages.Add(new OccupantMessage(e.Nickname, e.MessageText));
+                    this.Messages.Add(new OccupantMessage(e.Nickname, e.MessageText, e.Time));
                 });
         }
 

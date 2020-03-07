@@ -7,9 +7,9 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
         public DateTime Time { get; set; }
         public string Text { get; set; }
 
-        public RoomMessage(string text)
+        public RoomMessage(string text, DateTime time = default)
         {
-            this.Time = DateTime.Now;
+            this.Time = time == default ? DateTime.Now : time;
             this.Text = text;
         }
     }

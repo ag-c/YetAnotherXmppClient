@@ -403,19 +403,18 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                 var bodyElem = message.ElementWithLocalName("body");
                 if (bodyElem != null)
                 {
-                    room.OnMessage(bodyElem.Value, fromJid.Resource);
-                }
+                    var time = DateTime.Now;
+                    var delayElem = message.Element(XNames.delay_delay);
+                    if (delayElem != null)
+                    {
+                        //"Discussion history messages MUST be stamped with Delayed Delivery (XEP-0203) [14] information qualified by
+                        // the 'urn:xmpp:delay' namespace to indicate that they are sent with delayed delivery and to specify the times
+                        // at which they were originally sent. The 'from' attribute MUST be set to the JID of the room itself."
 
-                var delayElem = message.Element(XNames.delay_delay);
-                if (delayElem != null)
-                {
-                    //"Discussion history messages MUST be stamped with Delayed Delivery (XEP-0203) [14] information qualified by
-                    // the 'urn:xmpp:delay' namespace to indicate that they are sent with delayed delivery and to specify the times
-                    // at which they were originally sent. The 'from' attribute MUST be set to the JID of the room itself."
-
-                    //TODO
+                        time = DateTime.Parse(delayElem.Attribute("stamp").Value);
+                    }
+                    room.OnMessage(bodyElem.Value, fromJid.Resource, time);
                 }
-                //UNDONE room.AddMessage(..);
             }
         }
 
