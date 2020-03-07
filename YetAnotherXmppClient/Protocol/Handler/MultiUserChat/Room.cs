@@ -57,7 +57,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public event EventHandler<Occupant> SelfUpdated;
         public event EventHandler<(Occupant Occupant, OccupantUpdateCause Cause)> OccupantsUpdated;
 
-        public event EventHandler<(string Subject, string Nickname)> SubjectChanged; 
+        public event EventHandler<(string Subject, string Nickname)> SubjectChanged;
+
+        public event EventHandler<(string MesssageText, string Nickname)> NewMessage; 
 
         public event EventHandler Exited; 
 
@@ -267,6 +269,11 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             this.Subject = subject;
             this.SubjectChanged?.Invoke(this, (subject, byNickname));
+        }
+
+        public void OnMessage(string messageText, string nickname)
+        {
+            this.NewMessage?.Invoke(this, (messageText, nickname));
         }
     }
 }

@@ -400,6 +400,12 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
                     return;
                 }
 
+                var bodyElem = message.ElementWithLocalName("body");
+                if (bodyElem != null)
+                {
+                    room.OnMessage(bodyElem.Value, fromJid.Resource);
+                }
+
                 var delayElem = message.Element(XNames.delay_delay);
                 if (delayElem != null)
                 {

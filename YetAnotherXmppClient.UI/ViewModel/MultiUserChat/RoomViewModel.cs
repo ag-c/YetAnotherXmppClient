@@ -61,6 +61,7 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
             room.SelfUpdated += (sender, self) => this.
             room.OccupantsUpdated += this.HandleOccupantsUpdated;
             room.SubjectChanged += this.HandleSubjectChanged;
+            room.NewMessage += this.HandleNewMessage;
             room.ErrorOccurred += this.HandleErrorOccurred;
         }
 
@@ -88,6 +89,19 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
                                           {
                                               Time = DateTime.Now,
                                               Text = $"Room subject has been changed by {e.Nickname} to '{e.Subject}"
+                                          });
+                });
+        }
+
+        private void HandleNewMessage(object? sender, (string MessageText, string Nickname) e)
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    this.Messages.Add(new OccupantMessage()
+                                          {
+                                              Time = DateTime.Now,
+                                              Nickname = e.Nickname,
+                                              Text = e.MessageText
                                           });
                 });
         }
