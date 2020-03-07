@@ -14,7 +14,7 @@
     <TextBox Text="{Binding Nickname}" Grid.Row="1" Grid.Column="1" Margin="3" />
 
     <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="1">
-      <Button Content="Join" Command="{Binding JoinCommand}" Grid.Column="1" Margin="3"/>
+      <Button Content="Join" Command="{Binding JoinCommand}" IsDefault="True" Grid.Column="1" Margin="3"/>
       <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="3"/>
     </StackPanel>
   </Grid>
