@@ -7,7 +7,7 @@ using YetAnotherXmppClient.Extensions;
 
 namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 {
-    public class Occupant
+    public class Occupant : ICloneable, IEquatable<Occupant>
     {
         public string Nickname { get; }
         public string FullJid { get; }
@@ -22,6 +22,20 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             this.FullJid = fullJid;
             this.Affiliation = affiliation;
             this.Role = role;
+        }
+
+        public object Clone()
+        {
+            return new Occupant(this.Nickname, this.FullJid, this.Affiliation, this.Role)
+                       {
+                           Show = this.Show,
+                           Status = this.Status
+                       };
+        }
+
+        public bool Equals(Occupant other)
+        {
+            return this.Nickname == other?.Nickname;
         }
     }
 
@@ -54,8 +68,8 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         //UNDONE TypeUpdated event?
 
-        public event EventHandler<Occupant> SelfUpdated;
-        public event EventHandler<(Occupant Occupant, OccupantUpdateCause Cause)> OccupantsUpdated;
+        public event EventHandler<(Occupant OldSelf, Occupant NewSelf)> SelfUpdated;
+        public event EventHandler<(Occupant OldOccupant, Occupant NewOccupant, OccupantUpdateCause Cause)> OccupantsUpdated;
 
         public event EventHandler<(string Subject, string Nickname)> SubjectChanged;
 
@@ -83,13 +97,16 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
         internal void AddOrUpdateOccupant(string nickname, string fullJid, Affiliation affiliation, Role role)
         {
+            if (this.occupants.TryGetValue(nickname, out var oldOccupant))
+                oldOccupant = (Occupant)oldOccupant.Clone();
+
             var cause = OccupantUpdateCause.Added;
-            var occupant = this.occupants.AddOrUpdate(nickname, _ => new Occupant(nickname, fullJid, affiliation, role), (_, existing) =>
+            var newOccupant = this.occupants.AddOrUpdate(nickname, _ => new Occupant(nickname, fullJid, affiliation, role), (_, existing) =>
                 {
                     cause = OccupantUpdateCause.Changed;
                     return new Occupant(nickname, fullJid, affiliation, role);
                 });
-            this.OccupantsUpdated?.Invoke(this, (occupant, cause));
+            this.OccupantsUpdated?.Invoke(this, (oldOccupant, newOccupant, cause));
 
             if (fullJid != null) //UNDONE not really needed as advertised with status-code-100?!
             {
@@ -101,14 +118,15 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             if (this.occupants.TryRemove(nickname, out var removedOccupant))
             {
-                this.OccupantsUpdated?.Invoke(this, (removedOccupant, OccupantUpdateCause.Removed));
+                this.OccupantsUpdated?.Invoke(this, (removedOccupant, null, OccupantUpdateCause.Removed));
             }
         }
 
         internal void SetSelf(string nickname, string fullJid, Affiliation affiliation, Role role)
         {
+            var oldSelf = this.Self;
             this.Self = new Occupant(nickname, fullJid, affiliation, role);
-            this.SelfUpdated?.Invoke(this, this.Self);
+            this.SelfUpdated?.Invoke(this, (oldSelf, this.Self));
         }
 
         internal void UpdateOccupantsShow(string nickname, PresenceShow show)
