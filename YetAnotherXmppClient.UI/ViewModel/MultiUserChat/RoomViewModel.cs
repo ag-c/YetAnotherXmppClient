@@ -14,10 +14,30 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
     {
         public DateTime Time { get; set; }
         public string Text { get; set; }
+
+        public RoomMessage(string text)
+        {
+            this.Time = DateTime.Now;
+            this.Text = text;
+        }
     }
     public class OccupantMessage : RoomMessage
     {
         public string Nickname { get; set; }
+
+        public OccupantMessage(string nickname, string text)
+            : base(text)
+        {
+            this.Nickname = nickname;
+        }
+    }
+
+    public class ErrorMessage : RoomMessage
+    {
+        public ErrorMessage(string text)
+            : base(text)
+        {
+        }
     }
 
     public class RoomViewModel : ReactiveObject
@@ -75,9 +95,38 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
             return this.room.ExitAsync();
         }
 
-        private Task SendMessageToAllOccupantsAsync(CancellationToken arg)
+        private async Task SendMessageToAllOccupantsAsync(CancellationToken arg)
         {
-            return this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
+            if (await this.HandleIRCCommand(this.TextToSend))
+            {
+                return;
+            }
+
+            await this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
+        }
+
+        private async Task<bool> HandleIRCCommand(string text)
+        {
+            if (text.StartsWith("/"))
+            {
+                if (text.StartsWith("/topic"))
+                {
+                    var splittedCmd = text.Split(' ', 2);
+                    if (splittedCmd.Length == 2)
+                    {
+                        await this.room.ChangeSubjectAsync(splittedCmd[1]);
+                        return true;
+                    }
+
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            this.Messages.Add(new ErrorMessage("Incorrect command syntax"));
+                        });
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void HandleSubjectChanged(object? sender, (string Subject, string Nickname) e)
@@ -85,11 +134,7 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
             this.Subject = e.Subject;
             Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    this.Messages.Add(new RoomMessage
-                                          {
-                                              Time = DateTime.Now,
-                                              Text = $"Room subject has been changed by {e.Nickname} to '{e.Subject}"
-                                          });
+                    this.Messages.Add(new RoomMessage($"Room subject has been changed by {e.Nickname} to '{e.Subject}'"));
                 });
         }
 
@@ -97,12 +142,7 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
         {
             Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    this.Messages.Add(new OccupantMessage()
-                                          {
-                                              Time = DateTime.Now,
-                                              Nickname = e.Nickname,
-                                              Text = e.MessageText
-                                          });
+                    this.Messages.Add(new OccupantMessage(e.Nickname, e.MessageText));
                 });
         }
 
