@@ -25,7 +25,7 @@
         </DataTemplate>
       </ListBox.ItemTemplate>
     </ListBox>
-    <Grid RowDefinitions="*,Auto" Grid.Row="1" Grid.Column="1">
+    <Grid RowDefinitions="*,Auto" Grid.Row="1" Grid.Column="1" Margin="3">
       <ScrollViewer>
         <ItemsControl Items="{Binding Messages}" x:Name="tStack">
           <ItemsControl.ItemsPanel>
