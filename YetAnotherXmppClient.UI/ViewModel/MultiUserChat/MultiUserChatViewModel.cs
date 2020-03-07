@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading;
@@ -36,7 +38,14 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
         {
             var (roomJid, nickname) = await Interactions.JoinRoom.Handle(Unit.Default);
             var room = await this.mediator.QueryAsync<EnterRoomQuery, Room>(new EnterRoomQuery(roomJid, nickname));
+            room.Exited += this.HandleRoomExited;
             this.Rooms.Add(new RoomViewModel(room));
+        }
+
+        private void HandleRoomExited(object? sender, EventArgs e)
+        {
+            var room = (Room)sender;
+            this.Rooms.Remove(this.Rooms.First(vm => vm.RoomJid == room.Jid));
         }
     }
 }
