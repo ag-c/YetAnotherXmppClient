@@ -392,11 +392,11 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
 
             if (this.rooms.TryGetValue(fromJid.Bare, out var room))
             {
-                var subjectElem = message.Element("subject");
+                var subjectElem = message.ElementWithLocalName("subject");
                 if (subjectElem != null && !message.HasElement("body"))
                 {
                     //"only a message that contains a <subject/> but no <body/> element shall be considered a subject change for MUC purposes."
-                    room.Subject = subjectElem.Value;
+                    room.OnSubjectChange(subjectElem.Value, fromJid.Resource);
                     return;
                 }
 

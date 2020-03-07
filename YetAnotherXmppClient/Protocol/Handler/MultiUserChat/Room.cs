@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using YetAnotherXmppClient.Core.StanzaParts;
 using YetAnotherXmppClient.Extensions;
 
@@ -44,16 +43,7 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public string Jid { get; }
         public string Name { get; } //UNDONE 
 
-        private string subject;
-        public string Subject
-        {
-            get => this.subject;
-            internal set
-            {
-                this.subject = value;
-                this.SubjectChanged?.Invoke(this, value);
-            }
-        }
+        public string Subject { get; private set; }
 
         public RoomType Type { get; internal set; }
 
@@ -67,7 +57,9 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public event EventHandler<Occupant> SelfUpdated;
         public event EventHandler<(Occupant Occupant, OccupantUpdateCause Cause)> OccupantsUpdated;
 
-        public event EventHandler<string> SubjectChanged; 
+        public event EventHandler<(string Subject, string Nickname)> SubjectChanged; 
+
+        public event EventHandler Exited; 
 
         private event EventHandler<string> errorOccurred;
         public event EventHandler<string> ErrorOccurred
@@ -146,9 +138,10 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.protocolHandler.ChangeAvailabilityAsync(this.Jid, show, status);
         }
 
-        public Task ExitAsync()
+        public async Task ExitAsync()
         {
-            return this.protocolHandler.ExitRoomAsync(this.Jid);
+            await this.protocolHandler.ExitRoomAsync(this.Jid);
+            this.Exited?.Invoke(this, EventArgs.Empty);
         }
 
         public Task ChangeSubjectAsync(string subject)
@@ -268,6 +261,12 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         public Task SendMessageToAllOccupantsAsync(string text)
         {
             return this.protocolHandler.SendMessageToAllOccupantsAsync(this.Jid, text);
+        }
+
+        internal void OnSubjectChange(string subject, string byNickname)
+        {
+            this.Subject = subject;
+            this.SubjectChanged?.Invoke(this, (subject, byNickname));
         }
     }
 }

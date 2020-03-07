@@ -7,8 +7,15 @@
              x:Class="YetAnotherXmppClient.UI.View.MultiUserChat.RoomControl">
   <Grid RowDefinitions="Auto,*" ColumnDefinitions="Auto,*">
     <StackPanel Orientation="Horizontal" Grid.ColumnSpan="2" HorizontalAlignment="Right">
+      <TextBlock Text="Self: " Margin="3" />
+      <TextBlock Text="{Binding Self.Nickname}" Margin="3" />
+      <TextBlock Text="," Margin="3" />
+      <TextBlock Text="{Binding Self.Role}" Margin="3" />
+      <Separator />
       <TextBlock Text="Subject:" Margin="3" />
       <TextBlock Text="{Binding Subject}" Margin="3" />
+
+      <Button Content="Exit" Command="{Binding ExitCommand}" Margin="3" />
     </StackPanel>
     
     <ListBox Items="{Binding Occupants}" MinWidth="100" Grid.Row="1">
