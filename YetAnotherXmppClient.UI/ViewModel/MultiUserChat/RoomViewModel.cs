@@ -33,8 +33,12 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
         public ObservableCollection<RoomMessage> Messages { get; } = new ObservableCollection<RoomMessage>();
 
-
-        public string TextToSend { get; set; }
+        private string textToSend;
+        public string TextToSend
+        {
+            get => this.textToSend;
+            set => this.RaiseAndSetIfChanged(ref this.textToSend, value);
+        }
 
         public ReactiveCommand<Unit, Unit> ExitCommand { get; }
         public ReactiveCommand<Unit, Unit> SendCommand { get; }
@@ -66,12 +70,12 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
         private async Task SendMessageToAllOccupantsAsync(CancellationToken arg)
         {
-            if (await this.HandleIRCCommand(this.TextToSend))
+            if (!await this.HandleIRCCommand(this.TextToSend))
             {
-                return;
+                await this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
             }
 
-            await this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
+            this.TextToSend = null;
         }
 
         private async Task<bool> HandleIRCCommand(string text)
