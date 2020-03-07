@@ -52,11 +52,16 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
             this.RoomJid = room.Jid;
             this.Subject = room.Subject;
-            room.SelfUpdated += (sender, self) => this.
+            room.SelfUpdated += this.HandleSelfUpdated;
             room.OccupantsUpdated += this.HandleOccupantsUpdated;
             room.SubjectChanged += this.HandleSubjectChanged;
             room.NewMessage += this.HandleNewMessage;
             room.ErrorOccurred += this.HandleErrorOccurred;
+        }
+
+        private void HandleSelfUpdated(object? sender, (Occupant OldSelf, Occupant NewSelf) e)
+        {
+            this.OutputOccupantChange(e.OldSelf, e.NewSelf);
         }
 
         private void HandleErrorOccurred(object? sender, string errorText)
@@ -120,22 +125,41 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
                 });
         }
 
-        private void HandleOccupantsUpdated(object? sender, (Occupant Occupant, OccupantUpdateCause Cause) e)
+        private void HandleOccupantsUpdated(object? sender, (Occupant OldOccupant, Occupant NewOccupant, OccupantUpdateCause Cause) e)
         {
             Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     if (e.Cause == OccupantUpdateCause.Added)
                     {
-                        this.Occupants.Add(e.Occupant);
+                        this.Occupants.Add(e.NewOccupant);
                     }
                     else if (e.Cause == OccupantUpdateCause.Changed)
                     {
-                        //do we need something to do?
+                        this.OutputOccupantChange(e.OldOccupant, e.NewOccupant);
                     }
                     else if (e.Cause == OccupantUpdateCause.Removed)
                     {
-                        this.Occupants.Remove(e.Occupant);
+                        this.Occupants.Remove(e.OldOccupant);
                     }
+                });
+        }
+
+        private void OutputOccupantChange(Occupant oldOccupant, Occupant newOccupant)
+        {
+            if (oldOccupant == null || newOccupant == null)
+                return;
+
+            Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (oldOccupant.Nickname != newOccupant.Nickname)
+                        this.Messages.Add(new RoomMessage($"Nickname of {oldOccupant.Nickname} changed to {newOccupant.Nickname}"));
+                    if (oldOccupant.Role != newOccupant.Role)
+                        this.Messages.Add(new RoomMessage($"Role of {newOccupant.Nickname} changed from '{oldOccupant.Role}' to '{newOccupant.Role}'"));
+                    if (oldOccupant.Affiliation != newOccupant.Affiliation)
+                        this.Messages.Add(new RoomMessage($"Affilitation of {newOccupant.Nickname} changed from '{oldOccupant.Affiliation}' to '{newOccupant.Affiliation}'"));
+                    if (oldOccupant.Show != newOccupant.Show)
+                        this.Messages.Add(new RoomMessage($"Show of {newOccupant.Nickname} changed to '{newOccupant.Show}'"));
+                    //UNDONE status
                 });
         }
     }
