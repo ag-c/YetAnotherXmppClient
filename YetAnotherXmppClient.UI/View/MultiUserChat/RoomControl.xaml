@@ -34,18 +34,6 @@
               <!--IsItemsHost="True"-->
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
-          <!--<ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Grid ColumnDefinitions="Auto,Auto,*">
-                <TextBlock Text="{Binding DateTime}" Margin="3" Grid.Column="0" />
-                <StackPanel Orientation="Horizontal" Grid.Column="1">
-                  <TextBlock Text="{Binding From}" Foreground="Red" Margin="3,3,0,3"/>
-                  <TextBlock Text=":" Margin="0,3,3,3"  />
-                </StackPanel>
-                <TextBlock Text="{Binding Text}" Margin="3" Grid.Column="2" />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>-->
           <ItemsControl.DataTemplates>
             <DataTemplate DataType="{x:Type local:OccupantMessage}">
               <Grid ColumnDefinitions="Auto,Auto,*">
@@ -57,6 +45,12 @@
                 </StackPanel>
                 <TextBlock Text="{Binding Text}" Margin="3" Grid.Column="2" />
               </Grid>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type local:ErrorMessage}">
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Time}" Margin="3"/>
+                <TextBlock Text="{Binding Text}" Foreground="Red" Margin="3"/>
+              </StackPanel>
             </DataTemplate>
             <DataTemplate DataType="{x:Type local:RoomMessage}">
               <StackPanel Orientation="Horizontal">
