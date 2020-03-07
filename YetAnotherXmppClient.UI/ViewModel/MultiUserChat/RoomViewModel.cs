@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Threading;
@@ -10,36 +9,6 @@ using YetAnotherXmppClient.Protocol.Handler.MultiUserChat;
 
 namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 {
-    public class RoomMessage
-    {
-        public DateTime Time { get; set; }
-        public string Text { get; set; }
-
-        public RoomMessage(string text)
-        {
-            this.Time = DateTime.Now;
-            this.Text = text;
-        }
-    }
-    public class OccupantMessage : RoomMessage
-    {
-        public string Nickname { get; set; }
-
-        public OccupantMessage(string nickname, string text)
-            : base(text)
-        {
-            this.Nickname = nickname;
-        }
-    }
-
-    public class ErrorMessage : RoomMessage
-    {
-        public ErrorMessage(string text)
-            : base(text)
-        {
-        }
-    }
-
     public class RoomViewModel : ReactiveObject
     {
         private readonly Room room;
