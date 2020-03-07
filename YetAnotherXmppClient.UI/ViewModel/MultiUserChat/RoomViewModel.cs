@@ -119,10 +119,7 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
         private void HandleNewMessage(object? sender, (string MessageText, string Nickname, DateTime Time) e)
         {
-            Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    this.Messages.Add(new OccupantMessage(e.Nickname, e.MessageText, e.Time));
-                });
+            this.InternalAddMessageSorted(new OccupantMessage(e.Nickname, e.MessageText, e.Time));
         }
 
         private void HandleOccupantsUpdated(object? sender, (Occupant OldOccupant, Occupant NewOccupant, OccupantUpdateCause Cause) e)
@@ -160,6 +157,28 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
                     if (oldOccupant.Show != newOccupant.Show)
                         this.Messages.Add(new RoomMessage($"Show of {newOccupant.Nickname} changed to '{newOccupant.Show}'"));
                     //UNDONE status
+                });
+        }
+
+        private void InternalAddMessageSorted(RoomMessage message)
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var hasBeenAdded = false;
+                    for (int i = this.Messages.Count - 1; i >= 0 ; i--)
+                    {
+                        if (message.Time > this.Messages[i].Time)
+                        {
+                            this.Messages.Insert(i + 1, message);
+                            hasBeenAdded = true;
+                            break;
+                        }
+                    }
+
+                    if (!hasBeenAdded)
+                    {
+                        this.Messages.Insert(0, message);
+                    }
                 });
         }
     }
