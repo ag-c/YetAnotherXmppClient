@@ -301,19 +301,25 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
         {
             if (text.StartsWith("/"))
             {
-                if (text.StartsWith("/topic"))
+                var splittedCmd = text.Split(' ', 2);
+                if (splittedCmd.Length == 2)
                 {
-                    var splittedCmd = text.Split(' ', 2);
-                    if (splittedCmd.Length == 2)
+                    switch (splittedCmd[0])
                     {
-                        await this.ChangeSubjectAsync(splittedCmd[1]);
-                        return true;
+                        case "/topic":
+                            await this.ChangeSubjectAsync(splittedCmd[1]);
+                            return true;
+                        case "/ban":
+                            await this.BanOccupantAsync(splittedCmd[1]);
+                            return true;
                     }
-
-                    this.errorOccurred?.Invoke(this, "Incorrect command syntax");
-
-                    return true;
                 }
+                else
+                {
+                    this.errorOccurred?.Invoke(this, "Incorrect command syntax");
+                }
+
+                return true;
             }
 
             return false;
