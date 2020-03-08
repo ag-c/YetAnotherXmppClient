@@ -66,7 +66,10 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
         private void HandleErrorOccurred(object? sender, string errorText)
         {
-            Interactions.ShowRoomError.Handle((this.room.Jid, errorText));
+            Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    this.Messages.Add(new ErrorMessage(errorText));
+                });
         }
 
         private Task ExitAsync(CancellationToken arg)
@@ -76,37 +79,12 @@ namespace YetAnotherXmppClient.UI.ViewModel.MultiUserChat
 
         private async Task SendMessageToAllOccupantsAsync(CancellationToken arg)
         {
-            if (!await this.HandleIRCCommand(this.TextToSend))
-            {
-                await this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
-            }
+            await this.room.SendMessageToAllOccupantsAsync(this.TextToSend);
 
             this.TextToSend = null;
         }
 
-        private async Task<bool> HandleIRCCommand(string text)
-        {
-            if (text.StartsWith("/"))
-            {
-                if (text.StartsWith("/topic"))
-                {
-                    var splittedCmd = text.Split(' ', 2);
-                    if (splittedCmd.Length == 2)
-                    {
-                        await this.room.ChangeSubjectAsync(splittedCmd[1]);
-                        return true;
-                    }
 
-                    await Dispatcher.UIThread.InvokeAsync(() =>
-                        {
-                            this.Messages.Add(new ErrorMessage("Incorrect command syntax"));
-                        });
-                    return true;
-                }
-            }
-
-            return false;
-        }
 
         private void HandleSubjectChanged(object? sender, (string Subject, string Nickname) e)
         {

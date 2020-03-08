@@ -278,9 +278,12 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             return this.protocolHandler.ChangeRoomOccupantAffiliationAsync(this.Jid, occupant.FullJid.ToBareJid(), Affiliation.None, reason);
         }
 
-        public Task SendMessageToAllOccupantsAsync(string text)
+        public async Task SendMessageToAllOccupantsAsync(string text)
         {
-            return this.protocolHandler.SendMessageToAllOccupantsAsync(this.Jid, text);
+            if (await this.HandleIRCCommandAsync(text).ConfigureAwait(false))
+                return;
+
+            await this.protocolHandler.SendMessageToAllOccupantsAsync(this.Jid, text).ConfigureAwait(false);
         }
 
         internal void OnSubjectChange(string subject, string byNickname)
@@ -289,9 +292,31 @@ namespace YetAnotherXmppClient.Protocol.Handler.MultiUserChat
             this.SubjectChanged?.Invoke(this, (subject, byNickname));
         }
 
-        public void OnMessage(string messageText, string nickname, DateTime time = default)
+        internal void OnMessage(string messageText, string nickname, DateTime time = default)
         {
             this.NewMessage?.Invoke(this, (messageText, nickname, time));
+        }
+
+        private async Task<bool> HandleIRCCommandAsync(string text)
+        {
+            if (text.StartsWith("/"))
+            {
+                if (text.StartsWith("/topic"))
+                {
+                    var splittedCmd = text.Split(' ', 2);
+                    if (splittedCmd.Length == 2)
+                    {
+                        await this.ChangeSubjectAsync(splittedCmd[1]);
+                        return true;
+                    }
+
+                    this.errorOccurred?.Invoke(this, "Incorrect command syntax");
+
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
