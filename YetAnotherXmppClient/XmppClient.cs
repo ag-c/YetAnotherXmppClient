@@ -38,6 +38,10 @@ namespace YetAnotherXmppClient
 
         public async Task StartAsync(Jid jid, string password)
         {
+            // extend to full jid if resource has not been provided
+            if (!jid.IsFull)
+                jid = new Jid(jid, Guid.NewGuid().ToString());
+
             this.jid = jid;
             this.password = password;
             this.tcpClient = new TcpClient();
