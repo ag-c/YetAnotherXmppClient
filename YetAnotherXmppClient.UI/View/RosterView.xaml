@@ -14,7 +14,9 @@
 
   <Border BorderBrush="Gray" BorderThickness="1">
     <Grid RowDefinitions="Auto,*" >
-      <TextBlock Text="Roster" Background="LightSlateGray"/>
+      <Border BorderBrush="LightSlateGray" BorderThickness="1">
+        <TextBlock Text="Roster" Background="LightSlateGray"/>
+      </Border>
       <ListBox Items="{Binding RosterItems}" BorderThickness="0" SelectedItem="{Binding SelectedRosterItem, Mode=OneWayToSource}" MinHeight="150" Margin="3,0,3,3" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
         <ListBox.ContextMenu>
           <ContextMenu>
@@ -44,6 +46,11 @@
                 </TextBlock.Text>
                 <ToolTip.Tip>
                   <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
+                    <Grid.Styles>
+                      <Style Selector="TextBlock">
+                        <Setter Property="TextBlock.Foreground" Value="White"/>
+                      </Style>
+                    </Grid.Styles>
                     <Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Center" Grid.RowSpan="3">
                       <Image Source="{Binding Avatar}" Name="image" Width="100" Height="100" />
                     </Border>
