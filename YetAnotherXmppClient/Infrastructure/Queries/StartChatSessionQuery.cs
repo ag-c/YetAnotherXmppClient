@@ -1,4 +1,5 @@
-﻿using YetAnotherXmppClient.Protocol.Handler;
+﻿using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Protocol.Handler;
 
 namespace YetAnotherXmppClient.Infrastructure.Queries
 {
@@ -9,6 +10,11 @@ namespace YetAnotherXmppClient.Infrastructure.Queries
         public StartChatSessionQuery(string jid)
         {
             this.Jid = jid;
+        }
+
+        public StartChatSessionQuery(Jid jid)
+        {
+            this.Jid = jid.ToString();
         }
     }
 }
