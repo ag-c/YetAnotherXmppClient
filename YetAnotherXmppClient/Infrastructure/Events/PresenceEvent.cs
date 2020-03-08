@@ -1,4 +1,5 @@
 ﻿using YetAnotherXmppClient.Core;
+using YetAnotherXmppClient.Core.StanzaParts;
 
 namespace YetAnotherXmppClient.Infrastructure.Events
 {
@@ -7,5 +8,7 @@ namespace YetAnotherXmppClient.Infrastructure.Events
         public Jid Jid { get; set; }
 
         public bool IsAvailable { get; set; }
+
+        public PresenceShow? Show { get; set; }
     }
 }

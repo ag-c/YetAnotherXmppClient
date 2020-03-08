@@ -103,7 +103,8 @@ namespace YetAnotherXmppClient.Protocol.Handler
                 await this.Mediator.PublishAsync(new PresenceEvent
                                                      {
                                                          Jid = new Jid(presence.From),
-                                                         IsAvailable = presence.IsAvailable
+                                                         IsAvailable = presence.IsAvailable,
+                                                         Show = presence.Show
                                                      }).ConfigureAwait(false);
             }
             else if (presence.Type == PresenceType.subscribe)
