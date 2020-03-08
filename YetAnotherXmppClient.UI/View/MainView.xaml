@@ -5,20 +5,29 @@
              xmlns:view="clr-namespace:YetAnotherXmppClient.UI.View"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="YetAnotherXmppClient.UI.View.MainView">
-  <DockPanel>
-    <Menu DockPanel.Dock="Top" Margin="0,3,3,3">
-      <MenuItem Header="XMPP">
-        <MenuItem Header="Service Discovery.." Command="{Binding ShowServiceDiscoveryCommand}" />
-        <MenuItem Header="Blocking.." IsEnabled="{Binding IsBlockingFeatureSupported}" Command="{Binding ShowBlockingCommand}" />
-        <MenuItem Header="Private XML Storage.." IsEnabled="{Binding IsPrivateXmlStorageFeatureSupported}" Command="{Binding ShowPrivateXmlStorageCommand}" />
-        <MenuItem Header="Set mood.." Command="{Binding ShowMoodCommand}" />
-        <MenuItem Header="Multi user chat.." Command="{Binding ShowMucCommand}" />
-        <Separator/>
-        <MenuItem Header="Options.." Command="{Binding ShowPreferencesCommand}" />
-        <MenuItem Header="Log out" Command="{Binding LogoutCommand}" />
-        <!--<MenuItem Header="_Exit"/>-->
-      </MenuItem>
-    </Menu>
+    <DockPanel>
+    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto">
+        <Menu  Margin="0,3,3,3">
+          <MenuItem Header="XMPP">
+            <MenuItem Header="Service Discovery.." Command="{Binding ShowServiceDiscoveryCommand}" />
+            <MenuItem Header="Blocking.." IsEnabled="{Binding IsBlockingFeatureSupported}" Command="{Binding ShowBlockingCommand}" />
+            <MenuItem Header="Private XML Storage.." IsEnabled="{Binding IsPrivateXmlStorageFeatureSupported}" Command="{Binding ShowPrivateXmlStorageCommand}" />
+            <MenuItem Header="Set mood.." Command="{Binding ShowMoodCommand}" />
+            <MenuItem Header="Multi user chat.." Command="{Binding ShowMucCommand}" />
+            <Separator/>
+            <MenuItem Header="Options.." Command="{Binding ShowPreferencesCommand}" />
+            <MenuItem Header="Log out" Command="{Binding LogoutCommand}" />
+            <!--<MenuItem Header="_Exit"/>-->
+          </MenuItem>
+        </Menu>
+
+      <Grid Grid.Column="1">
+        <StackPanel Orientation="Horizontal">
+          <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
+          <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Grid>
+    </Grid>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="130,*">
       <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
@@ -26,13 +35,7 @@
           <AddRosterItemControl />
         </Popup.Child>
       </Popup>-->
-      <Grid ColumnDefinitions="*,Auto,Auto,Auto" Grid.ColumnSpan="2">
-        <StackPanel Orientation="Horizontal">
-          <TextBlock Text="Connected JID:" VerticalAlignment="Center" Margin="3"/>
-          <TextBox IsReadOnly="true" Text="{Binding ConnectedJid}" Margin="3" MinWidth="75" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-        </StackPanel>
-      </Grid>
-      <Separator HorizontalAlignment="Stretch" Grid.Row="1" Grid.ColumnSpan="2" BorderThickness="1" BorderBrush="Gray"/>
+
 
       <view:RosterView DataContext="{Binding Roster}" Grid.Row="2" Margin="3"/>
       <!--  -->
@@ -41,8 +44,10 @@
       <ComboBox Items="{Binding PresenceShowValues}" SelectedItem="{Binding SelectedPresenceShowValue}" Grid.Row="3" Margin="3,0,3,3"/>
 
       <Border Grid.Row="2" Grid.Column="1" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Stretch" Margin="3,3,3,3">
-        <Grid RowDefinitions="Auto,*"  Grid.RowSpan="2" VerticalAlignment="Stretch" >
-          <TextBlock Text="Chat sessions" Background="LightSlateGray"/>
+        <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch" >
+          <Border BorderBrush="LightSlateGray" BorderThickness="1">
+            <TextBlock Text="Chat sessions" Background="LightSlateGray" />
+          </Border>
 
           <TabControl Name="chatSessionsTabControl" Items="{Binding ChatSessions}" SelectedItem="{Binding SelectedChatSession}" Grid.Row="1" Grid.Column="1" Margin="3">
             <TabControl.ItemTemplate>
