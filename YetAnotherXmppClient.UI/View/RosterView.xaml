@@ -10,6 +10,7 @@
   <UserControl.Resources>
         <converter:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
         <converter:IsOnlineBooleanToBrushConverter x:Key="isOnlineToBrushiValueConverter"/>
+        <converter:PresenceShowToBrushConverter x:Key="presenceShowToBrushConverter"/>
   </UserControl.Resources>
 
   <Border BorderBrush="Gray" BorderThickness="1">
@@ -24,7 +25,7 @@
           </ContextMenu>
         </ListBox.ContextMenu>
         <ListBox.ItemTemplate >
-          <DataTemplate >
+          <DataTemplate>
             <StackPanel Orientation="Horizontal" Height="24">
               <StackPanel.ContextMenu>
                 <ContextMenu>
@@ -37,32 +38,35 @@
                   <MenuItem Header="Last Activity.." Command="{Binding $parent[UserControl].DataContext.ShowLastActivityCommand}"/>
                 </ContextMenu>
               </StackPanel.ContextMenu>
-                <TextBlock VerticalAlignment="Center" Foreground="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}">
-                <TextBlock.Text>
-                  <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
-                    <Binding Path="Name" />
-                    <Binding Path="Jid" />
-                  </MultiBinding>
-                </TextBlock.Text>
-                <ToolTip.Tip>
-                  <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
-                    <Grid.Styles>
-                      <Style Selector="TextBlock">
-                        <Setter Property="TextBlock.Foreground" Value="White"/>
-                      </Style>
-                    </Grid.Styles>
-                    <Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Center" Grid.RowSpan="3">
-                      <Image Source="{Binding Avatar}" Name="image" Width="100" Height="100" />
-                    </Border>
-                    <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3" Grid.Column="1"/>
-                    <TextBlock Text="{Binding Path=Jid}" Grid.Column="2" Margin="3"/>
-                    <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="1" Margin="3"/>
-                    <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="2" Margin="3"/>
-                    <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Margin="3"/>
-                    <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="2" Margin="3"/>
-                  </Grid>
-                </ToolTip.Tip>
-              </TextBlock>
+              <Grid ColumnDefinitions="Auto,*">
+                <Ellipse Width="11" Height="11" Fill="{Binding Show, Converter={StaticResource presenceShowToBrushConverter}}" Stroke="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}" StrokeThickness="2" Margin="3"/>
+                <TextBlock VerticalAlignment="Center" Grid.Column="1">
+                  <TextBlock.Text>
+                    <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
+                      <Binding Path="Name" />
+                      <Binding Path="Jid" />
+                    </MultiBinding>
+                  </TextBlock.Text>
+                  <ToolTip.Tip>
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
+                      <Grid.Styles>
+                        <Style Selector="TextBlock">
+                          <Setter Property="TextBlock.Foreground" Value="White"/>
+                        </Style>
+                      </Grid.Styles>
+                      <Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Center" Grid.RowSpan="3">
+                        <Image Source="{Binding Avatar}" Name="image" Width="100" Height="100" />
+                      </Border>
+                      <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3" Grid.Column="1"/>
+                      <TextBlock Text="{Binding Path=Jid}" Grid.Column="2" Margin="3"/>
+                      <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="1" Margin="3"/>
+                      <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="2" Margin="3"/>
+                      <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Margin="3"/>
+                      <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="2" Margin="3"/>
+                    </Grid>
+                  </ToolTip.Tip>
+                </TextBlock>
+              </Grid>
             </StackPanel>
           </DataTemplate>
         </ListBox.ItemTemplate>

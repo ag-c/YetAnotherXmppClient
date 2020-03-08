@@ -29,7 +29,7 @@
       </Grid>
     </Grid>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="130,*">
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="Auto,*">
       <!--<Popup Name="popUp" IsOpen="{Binding ShowAddRosterItemPopup}" PlacementTarget="{Binding ElementName=myWindow}" PlacementMode="Pointer" VerticalOffset="30" HorizontalOffset="100">
           <Popup.Child>
           <AddRosterItemControl />
@@ -37,13 +37,15 @@
       </Popup>-->
 
 
-      <view:RosterView DataContext="{Binding Roster}" Grid.Row="2" Margin="3"/>
+      <view:RosterView DataContext="{Binding Roster}" Grid.Row="1" Margin="3"/>
       <!--  -->
       <!--IsEnabled="{Binding $parent[Window].DataContext.IsProtocolNegotiationComplete}"-->
 
-      <ComboBox Items="{Binding PresenceShowValues}" SelectedItem="{Binding SelectedPresenceShowValue}" Grid.Row="3" Margin="3,0,3,3"/>
+      <ComboBox Items="{Binding PresenceShowValues}" SelectedItem="{Binding SelectedPresenceShowValue}" Grid.Row="2" Margin="3,0,3,3"/>
 
-      <Border Grid.Row="2" Grid.Column="1" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Stretch" Margin="3,3,3,3">
+      <!--<GridSplitter Grid.Row="1" Grid.Column="1" Width="5" VerticalAlignment="Stretch" />-->
+      
+      <Border Grid.Row="1" Grid.Column="1" BorderBrush="Gray" BorderThickness="1" VerticalAlignment="Stretch" Margin="3,3,3,3">
         <Grid RowDefinitions="Auto,*" VerticalAlignment="Stretch" >
           <Border BorderBrush="LightSlateGray" BorderThickness="1">
             <TextBlock Text="Chat sessions" Background="LightSlateGray" />
@@ -61,20 +63,7 @@
               </DataTemplate>
             </TabControl.ContentTemplate>
           </TabControl>
-      <!--<CheckBox Name = "PCheckBox" Margin = "198,94,208,194" Content = "Checked Me" />
-        <Popup IsOpen = "{Binding ElementName = PCheckBox,Path = IsChecked}"
-           PlacementTarget = "{Binding ElementName = PCheckBox}">
-
-          <Canvas Width = "125" Height = "100" Background = "LightGray">
-            <Canvas.RenderTransform>
-              <RotateTransform x:Name = "theTransform" />
-            </Canvas.RenderTransform>
-            <TextBlock TextWrapping = "Wrap" Foreground = "Blue"
-               Text = "Hi, this is Popup" />
-          </Canvas>
-        </Popup>-->
-
-    </Grid>
+        </Grid>
       </Border>
     </Grid>
   </DockPanel>

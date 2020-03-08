@@ -43,6 +43,13 @@ namespace YetAnotherXmppClient.UI.ViewModel
             get => this.isOnline;
             set => this.RaiseAndSetIfChanged(ref this.isOnline, value);
         }
+
+        private PresenceShow? show;
+        public PresenceShow? Show
+        {
+            get => this.show;
+            set => this.RaiseAndSetIfChanged(ref this.show, value);
+        }
     }
 
     public class RosterViewModel : ReactiveObject, 
@@ -201,7 +208,11 @@ namespace YetAnotherXmppClient.UI.ViewModel
                 var item = this.RosterItems.FirstOrDefault(ri => ri.Jid == evt.Jid.Bare);
                 if (item != null)
                 {
-                    Dispatcher.UIThread.InvokeAsync(() => item.IsOnline = evt.IsAvailable);
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                        {
+                            item.IsOnline = evt.IsAvailable;
+                            item.Show = evt.Show;
+                        });
                 }
             }
         }
