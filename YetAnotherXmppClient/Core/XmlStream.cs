@@ -19,8 +19,7 @@ namespace YetAnotherXmppClient.Core
         private readonly AsyncLock readerLock = new AsyncLock();
         private readonly AsyncLock writerLock = new AsyncLock();
 
-        private readonly List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callbac)> exclusiveMatchingCallbacks = new List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callbac)>();
-        private readonly List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callback, bool IsOneTime)> matchingCallbacks = new List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callback, bool IsOneTime)>();
+        private readonly List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callback, bool IsOneTime, bool IsExclusive)> matchingCallbacks = new List<(Func<XElement, bool> MatchFunc, Func<XElement, Task> Callback, bool IsOneTime, bool IsExclusive)>();
 
         public Stream UnderlyingStream { get; private set; }
 
@@ -52,23 +51,18 @@ namespace YetAnotherXmppClient.Core
             return new StreamWriter(stream);
         }
 
-        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Func<XElement, Task> callback, bool oneTime = false)
+        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Func<XElement, Task> callback, bool oneTime = false, bool isExclusive = false)
         {
-            this.matchingCallbacks.Add((matchFunc, callback, oneTime));
+            this.matchingCallbacks.Add((matchFunc, callback, oneTime, isExclusive));
         }
 
-        public void RegisterExclusiveElementCallback(Func<XElement, bool> matchFunc, Func<XElement, Task> callback)
-        {
-            this.exclusiveMatchingCallbacks.Add((matchFunc, callback));
-        }
-
-        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Action<XElement> callback, bool oneTime = false)
+        public void RegisterElementCallback(Func<XElement, bool> matchFunc, Action<XElement> callback, bool oneTime = false, bool isExclusive = false)
         {
             this.matchingCallbacks.Add((matchFunc, xe =>
                                                {
                                                    callback(xe);
                                                    return Task.CompletedTask;
-                                               }, oneTime));
+                                               }, oneTime, isExclusive));
         }
 
         protected async Task<XElement> ReadUntilElementMatchesAsync(Func<XElement, bool> matchFunc)
@@ -138,7 +132,7 @@ namespace YetAnotherXmppClient.Core
 
                     Log.Logger.XmppStreamContent($"Read from stream: {xElem}");
 
-                    await this.ProcessInboundElementAsync(xElem).ConfigureAwait(false);
+                    this.ProcessInboundElement(xElem);
 
                     this.ongoingOp = false;
                     this.readResult.SetResult(xElem);
@@ -163,34 +157,21 @@ namespace YetAnotherXmppClient.Core
             }
         }
 
-        private async Task ProcessInboundElementAsync(XElement xElem)
+        private void ProcessInboundElement(XElement xElem)
         {
             var hasMatch = false;
-            //First look for match with the exlusive handlers; taking only first handler available
-            for (var i = this.exclusiveMatchingCallbacks.Count - 1; i >= 0; i--)
+ 
+            for (var i = this.matchingCallbacks.Count - 1; i >= 0; i--)
             {
-                var (matchFunc, callback) = this.exclusiveMatchingCallbacks[i];
+                var (matchFunc, callback, isOneTime, isExclusive) = this.matchingCallbacks[i];
                 if (matchFunc(xElem))
                 {
                     hasMatch = true;
                     Task.Run(async () => await callback(xElem).ConfigureAwait(false));
-                    break;
-                }
-            }
-
-            //Now look for a match with the remainding non-exclusive handlers, only if there wasn't a exclusive handler match
-            if (!hasMatch)
-            {
-                for (var i = this.matchingCallbacks.Count - 1; i >= 0; i--)
-                {
-                    var (matchFunc, callback, isOneTime) = this.matchingCallbacks[i];
-                    if (matchFunc(xElem))
-                    {
-                        hasMatch = true;
-                        Task.Run(async () => await callback(xElem).ConfigureAwait(false));
-                        if (isOneTime)
-                            this.matchingCallbacks.RemoveAt(i);
-                    }
+                    if (isOneTime)
+                        this.matchingCallbacks.RemoveAt(i);
+                    if (isExclusive)
+                        break;
                 }
             }
 

@@ -122,9 +122,10 @@ namespace YetAnotherXmppClient.Core
 
         public void RegisterExclusiveMessageContentCallback(XName contentName, IMessageReceivedCallback callback)
         {
-            this.RegisterExclusiveElementCallback(
+            this.RegisterElementCallback(
                 xe => xe.Name.LocalName == "message" && xe.Elements().Any(e => e.Name == contentName),
-                xe => callback.HandleMessageReceivedAsync(Message.FromXElement(xe))
+                xe => callback.HandleMessageReceivedAsync(Message.FromXElement(xe)),
+                isExclusive: true
             );
         }
 
