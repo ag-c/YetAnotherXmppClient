@@ -38,19 +38,6 @@ namespace YetAnotherXmppClient.UI.View.MultiUserChat
                             }
                             interaction.SetOutput((roomJid, nickname));
                         }));
-                    d(Interactions
-                        .ShowRoomError
-                        .RegisterHandler(
-                            async interaction =>
-                                {
-                                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                                        {
-                                            var window = MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Room error",
-                                                $"Error occurred in room {interaction.Input.RoomJid}:\n{interaction.Input.ErrorText}", ButtonEnum.Ok);
-                                            await window.Show();
-                                        });
-                                    interaction.SetOutput(Unit.Default);
-                                }));
                 });
 #if DEBUG
             this.AttachDevTools();
