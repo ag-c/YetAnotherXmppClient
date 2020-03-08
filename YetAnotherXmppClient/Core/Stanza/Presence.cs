@@ -56,22 +56,12 @@ namespace YetAnotherXmppClient.Core.Stanza
             set => this.SetAttributeValue("to", value);
         }
 
-        public PresenceShow? Show => EnumHelper.Parse<PresenceShow>(this.Element("show")?.Value);
+        public PresenceShow? Show => EnumHelper.Parse<PresenceShow>(this.ElementWithLocalName("show")?.Value);
 
-        public IEnumerable<string> Stati => this.Elements("status")?.Select(xe => xe.Value);
+        public IEnumerable<string> Stati => this.ElementsWithLocalName("status")?.Select(xe => xe.Value);
 
         
-        public int? Priority
-        {
-            get
-            {
-                if (int.TryParse(this.Element("priority")?.Value, out var prio))
-                {
-                    return prio;
-                }
-                return null;
-            }
-        }
+        public int? Priority => int.TryParse(this.ElementWithLocalName("priority")?.Value, out var prio) ? prio : (int?)null;
 
         public bool IsAvailable => !this.Type.HasValue; //UNDONE is this correct?
 
