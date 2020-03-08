@@ -11,58 +11,60 @@
         <converter:PriorityMultiValueConverter x:Key="priorityMultiValueConverter"/>
         <converter:IsOnlineBooleanToBrushConverter x:Key="isOnlineToBrushiValueConverter"/>
   </UserControl.Resources>
-  
-  <Grid RowDefinitions="Auto,*" >
-    <TextBlock Text="Roster" Margin="3,0,0,0"/>
-    <ListBox Items="{Binding RosterItems}" SelectedItem="{Binding SelectedRosterItem, Mode=OneWayToSource}" MinHeight="150" Margin="3,0,3,3" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-      <ListBox.ContextMenu>
-        <ContextMenu>
-          <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
-        </ContextMenu>
-      </ListBox.ContextMenu>
-      <ListBox.ItemTemplate >
-        <DataTemplate >
-          <StackPanel Orientation="Horizontal" Height="24">
-            <StackPanel.ContextMenu>
-              <ContextMenu>
-                <MenuItem Header="Start chat session" Command="{Binding $parent[UserControl].DataContext.StartChatCommand}" />
-                <Separator/>
-                <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
-                <MenuItem Header="Remove Item" Command="{Binding $parent[UserControl].DataContext.DeleteRosterItemCommand}"/>
-                <Separator/>
-                <MenuItem Header="Service Discovery.." Command="{Binding $parent[UserControl].DataContext.ShowServiceDiscoveryCommand}"/>
-                <MenuItem Header="Last Activity.." Command="{Binding $parent[UserControl].DataContext.ShowLastActivityCommand}"/>
-              </ContextMenu>
-            </StackPanel.ContextMenu>
-              <TextBlock VerticalAlignment="Center" Foreground="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}">
-              <TextBlock.Text>
-                <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
-                  <Binding Path="Name" />
-                  <Binding Path="Jid" />
-                </MultiBinding>
-              </TextBlock.Text>
-              <ToolTip.Tip>
-                <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
-                  <Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Center" Grid.RowSpan="3">
-                    <Image Source="{Binding Avatar}" Name="image" Width="100" Height="100" />
-                  </Border>
-                  <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3" Grid.Column="1"/>
-                  <TextBlock Text="{Binding Path=Jid}" Grid.Column="2" Margin="3"/>
-                  <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="1" Margin="3"/>
-                  <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="2" Margin="3"/>
-                  <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Margin="3"/>
-                  <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="2" Margin="3"/>
-                </Grid>
-              </ToolTip.Tip>
-            </TextBlock>
-          </StackPanel>
-        </DataTemplate>
-      </ListBox.ItemTemplate>
-    </ListBox>
-    <!--<StackPanel Orientation="Horizontal" Grid.Row="2">
-        <Button Content="Add.." Command="{Binding AddRosterItemCommand}" Margin="3" />
-        <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
-      </StackPanel>
-      <Button Content="Start  chat session" Name="startChatButton" HorizontalAlignment="Stretch" Margin="3" Grid.Row="3"/>-->
-  </Grid>
+
+  <Border BorderBrush="Gray" BorderThickness="1">
+    <Grid RowDefinitions="Auto,*" >
+      <TextBlock Text="Roster" Background="LightSlateGray"/>
+      <ListBox Items="{Binding RosterItems}" BorderThickness="0" SelectedItem="{Binding SelectedRosterItem, Mode=OneWayToSource}" MinHeight="150" Margin="3,0,3,3" Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+        <ListBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
+          </ContextMenu>
+        </ListBox.ContextMenu>
+        <ListBox.ItemTemplate >
+          <DataTemplate >
+            <StackPanel Orientation="Horizontal" Height="24">
+              <StackPanel.ContextMenu>
+                <ContextMenu>
+                  <MenuItem Header="Start chat session" Command="{Binding $parent[UserControl].DataContext.StartChatCommand}" />
+                  <Separator/>
+                  <MenuItem Header="Add Item.." Command="{Binding $parent[UserControl].DataContext.AddRosterItemCommand}"/>
+                  <MenuItem Header="Remove Item" Command="{Binding $parent[UserControl].DataContext.DeleteRosterItemCommand}"/>
+                  <Separator/>
+                  <MenuItem Header="Service Discovery.." Command="{Binding $parent[UserControl].DataContext.ShowServiceDiscoveryCommand}"/>
+                  <MenuItem Header="Last Activity.." Command="{Binding $parent[UserControl].DataContext.ShowLastActivityCommand}"/>
+                </ContextMenu>
+              </StackPanel.ContextMenu>
+                <TextBlock VerticalAlignment="Center" Foreground="{Binding IsOnline, Converter={StaticResource isOnlineToBrushiValueConverter}}">
+                <TextBlock.Text>
+                  <MultiBinding Converter="{StaticResource priorityMultiValueConverter}">
+                    <Binding Path="Name" />
+                    <Binding Path="Jid" />
+                  </MultiBinding>
+                </TextBlock.Text>
+                <ToolTip.Tip>
+                  <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,Auto">
+                    <Border BorderBrush="Red" BorderThickness="1" HorizontalAlignment="Center" Grid.RowSpan="3">
+                      <Image Source="{Binding Avatar}" Name="image" Width="100" Height="100" />
+                    </Border>
+                    <TextBlock Text="Jid:" FontWeight="SemiBold" Margin="3" Grid.Column="1"/>
+                    <TextBlock Text="{Binding Path=Jid}" Grid.Column="2" Margin="3"/>
+                    <TextBlock Text="Name:" FontWeight="SemiBold" Grid.Row="1" Grid.Column="1" Margin="3"/>
+                    <TextBlock Text="{Binding Path=Name}" Grid.Row="1" Grid.Column="2" Margin="3"/>
+                    <TextBlock Text="Subscription:" FontWeight="SemiBold" Grid.Row="2" Grid.Column="1" Margin="3"/>
+                    <TextBlock Text="{Binding Path=Subscription}" Grid.Row="2" Grid.Column="2" Margin="3"/>
+                  </Grid>
+                </ToolTip.Tip>
+              </TextBlock>
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+      <!--<StackPanel Orientation="Horizontal" Grid.Row="2">
+          <Button Content="Add.." Command="{Binding AddRosterItemCommand}" Margin="3" />
+          <Button Content="Remove" Command="{Binding DeleteRosterItemCommand}" Margin="3" />
+        </StackPanel>
+        <Button Content="Start  chat session" Name="startChatButton" HorizontalAlignment="Stretch" Margin="3" Grid.Row="3"/>-->
+    </Grid>
+  </Border>
 </UserControl>
